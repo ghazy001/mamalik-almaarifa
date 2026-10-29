@@ -1,13 +1,13 @@
-# Architecture — foundation and M2 offline match
+# Architecture — deterministic core, local match and private online rooms
 
 ```text
-Future browser intents → shared schema → trusted room adapter → game-core
+Online browser intents → shared schema → session-bound room adapter → game-core
                                                          ↓
-Future browser renderer ← shared public schema ← allowlisted publicView
+Online browser renderer ← shared recipient snapshot ← allowlisted publicView
 
 Current web: Next.js shell + /map with a server-created public map projection
             → lazy Phaser renderer + equivalent Arabic DOM preselection
-Current game service: persistent Node/Colyseus + HTTP /health, no rooms
+Current game service: persistent Node/Colyseus + HTTP /health + private kingdom rooms
 
 Current /play: local explicit-time session → game-core → public view
                   ↑ human intents / scripted opponents     ↓
@@ -18,7 +18,7 @@ Current /play: local explicit-time session → game-core → public view
 
 - `game-core` has no package runtime dependencies. It uses types, graph topology, explicit seeded shuffle, action/context reducers, scoring and serialization projection. It never reads clocks, networks, environment variables, random globals or databases. `structuredClone` copies only serializable state. Static map/defaults are frozen. Server callers own the current state.
 - `shared` depends on Zod and defines strict versioned wire objects. It does not import private rules types. This keeps server-only question answers out of browser dependencies.
-- `game-server` depends on both. `processIntent` validates input and maps an authenticated transport player ID into a core action; it is a tested seam, **not an exposed room/endpoint**. `snapshot` validates the allowlisted projection. M3 will supply a monotonic `performance.now()`-based match-relative clock, authenticated seats, serialized room execution, timers and rate limits. Do not use Date/client time as a competitive clock.
+- `game-server` depends on both and the development fixtures. `processIntent` validates input and maps a transport-bound guest player ID into a core action; the private room calls this tested boundary. `snapshot` validates the allowlisted projection. The room supplies a monotonic `performance.now()`-based clock, session-bound seats, serialized execution, timers and message limits. Accounts are not implemented. Do not use Date/client time as a competitive clock.
 - `web` uses Next.js App Router, React, Tailwind and a customized shadcn-style Radix Slot Button. `/map` now has a lazy Phaser 4.2.1 host and equivalent DOM target controls. Its server/build-side `preview.ts` constructs the canonical initial state through core transitions, validates `publicView`, derives legal IDs and sends an explicit presentation-only model. No core values, private state or question content are imported by the client scene. `geography.ts` defines artwork positions/names, never adjacency. A UI reducer handles preselection/hover without applying gameplay actions or ownership changes. See ADR 0002.
 - `config` provides strict TS settings, including unchecked-index and exact-optional checks. Packages expose only their built public entrypoint.
 
@@ -28,19 +28,19 @@ Current /play: local explicit-time session → game-core → public view
 
 `web/src/features/match/local-session.ts` is a per-match, framework-independent local authority adapter. It receives explicit monotonic time, drains scheduled bot/deadline events before human intents, calls existing core functions and publishes cached public views through a subscription API. React supplies `performance.now()` relative to the component lifetime, subscribes with `useSyncExternalStore`, and runs a 100 ms timer/visibility catch-up adapter. No real clock or new domain rules were added to game-core.
 
-Private simulation state and the development question pack remain inside the session, not React props or Phaser scenes. This separation is architectural only: the entire offline controller/answer bank is bundled and inspectable in the browser. M3 must use server room authority instead. Human-involved resolution review waits for Continue; bot-only resolution advances automatically. Restart replaces the match generation and discards pending state. See ADR 0003 and M2_OFFLINE_MATCH for schedules/content sources/limits.
+Private simulation state and the development question pack remain inside the session, not React props or Phaser scenes. This separation is architectural only: the entire offline controller/answer bank is bundled and inspectable in the browser. The M3 online route uses separate server room authority instead. Human-involved resolution review waits for Continue; bot-only resolution advances automatically. Restart replaces the match generation and discards pending state. See ADR 0003 and M2_OFFLINE_MATCH for schedules/content sources/limits.
 
-The native Arabic dialog handles question focus/minimize/reopen; countdowns continue while minimized or backgrounded. Only resolution views contain correct choices, explanations and source notes. The human's selected-choice acknowledgement is recipient-local. Phaser accepts model updates and transient resolved effects without a new canvas per tick; reduced-motion skips particles/tweens and DOM controls work if graphics fail. No room endpoints, public matchmaking, durable results, accounts or database were added.
+The native Arabic dialog handles question focus/minimize/reopen; countdowns continue while minimized or backgrounded. Only resolution views contain correct choices, explanations and source notes. The human's selected-choice acknowledgement is recipient-local. Phaser accepts model updates and transient resolved effects without a new canvas per tick; reduced-motion skips particles/tweens and DOM controls work if graphics fail. This offline route opens no room connection. Public matchmaking, durable results, accounts and a database remain further work.
 
-pnpm workspaces and Turbo orchestrate four executable packages plus shared config. Dependent builds precede typecheck/test/build and consumer dev startup; library watchers run alongside both dev services. Libraries compile ESM and declarations with NodeNext; Next uses bundler resolution. Node 22.22.1 is pinned because current Colyseus requires Node 22. Stable Next.js 16.4.3 and Colyseus 0.18.23/transport 0.18.4 were checked via the registry; exact resolved transitive versions are in the lockfile. TypeScript 5.9 remains a compatible stable compiler. No global package upgrade is required.
+pnpm workspaces and Turbo orchestrate web/server services, three built libraries (core, shared and development fixtures), and shared config. Dependent builds precede typecheck/test/build and consumer dev startup; library watchers run alongside both dev services. Libraries compile ESM and declarations with NodeNext; Next uses bundler resolution. Node 22.22.1 is pinned because current Colyseus requires Node 22. Stable Next.js 16.4.3 and Colyseus 0.18.23/transport 0.18.4 were checked via the registry; exact resolved transitive versions are in the lockfile. TypeScript 5.9 remains a compatible stable compiler. No global package upgrade is required.
 
 Framework references: [Next.js installation](https://nextjs.org/docs/app/getting-started/installation), [Colyseus server](https://docs.colyseus.io/server) and [WebSocket transport](https://docs.colyseus.io/server/transport/ws). Installed package declarations and registry metadata determine the exact compatible APIs used here.
 
-The game service uses Colyseus's default local in-memory driver/presence, no Redis or databases. No game rooms are registered. Health returns `gameplayRoomsEnabled: false`. Startup config validates local defaults; Ctrl+C/SIGTERM calls Colyseus graceful shutdown. Startup/stop logs contain lifecycle events only. Match persistence, draining active rooms and recovery are not implemented. Next and Colyseus must eventually be hosted separately; long-lived rooms cannot depend on serverless request lifetimes.
+The game service uses Colyseus's default local in-memory driver/presence, no Redis or databases. The private `kingdom` room is registered. Health returns milestone M3 and `gameplayRoomsEnabled: true`. Startup config validates local defaults; Ctrl+C/SIGTERM calls Colyseus graceful shutdown. Startup/stop and room logs contain lifecycle events only, with independent random log references rather than invite codes, tokens or names. Graceful shutdown broadcasts an abort before closing rooms. Match persistence, rolling-deploy draining and crash recovery are not implemented. Next and Colyseus must eventually be hosted separately; long-lived rooms cannot depend on serverless request lifetimes.
 
 ## Trust, timing and determinism
 
-Only schema-validated player intents cross the boundary. Identity and time are supplied by the trusted caller. Privileged BEGIN/ADVANCE/RESOLVE/FORFEIT/ABORT actions have no command schema. M1 does not claim authentication exists. Each room in M3 must serialize actions on one authoritative state and run deadlines through the same reducer.
+Only schema-validated player intents cross the boundary. Identity and time are supplied by the trusted caller. Privileged BEGIN/ADVANCE/RESOLVE/FORFEIT/ABORT actions have no command schema. Guest session binding is not account authentication. Private rooms serialize actions on one authoritative state and run deadlines through the same reducer.
 
 Accepted commands have actor-scoped idempotency keys and content fingerprints; exact retries are no-ops and changed payloads are errors. A first accepted answer cannot be replaced. Rejections retain the original object and do not grow the ledger. Rule version, deterministic seed input and explicit clock/question context support replay. Public snapshots expose no deck, answer submissions or timestamps. Correct-choice disclosure appears only in resolved outcomes.
 
@@ -48,4 +48,12 @@ At M1's bounded maximum of 120 turns the state/ledger remains small, so copying 
 
 ## Verification and deployment boundary
 
-Vitest covers pure rules, malformed protocol, the real HTTP health service and the map projection/preselection boundary. Playwright inspects desktop/mobile/landscape RTL, keyboard use, mouse/touch hit testing, canvas failure fallback, navigation cleanup and axe violations; automated checks do not replace Arabic human testing or full WCAG review. CI repeats formatting/lint/typecheck/tests/build/simulation/browser checks. No deployment, remote repository, database, billing, or cloud infrastructure is provisioned.
+Vitest covers pure rules, malformed protocol, the real HTTP health service and the map projection/preselection boundary. Playwright inspects desktop/mobile/landscape RTL, keyboard use, mouse/touch hit testing, canvas failure fallback, navigation cleanup and axe violations; automated checks do not replace Arabic human testing or full WCAG review. CI repeats formatting/lint/typecheck/tests/build/simulation/browser checks. The repository has its user-authorized GitHub remote; no deployment, database, billing or cloud infrastructure is provisioned by this increment.
+
+## M3 private-room authority
+
+`kingdom-room.ts` owns three guest seats, session binding, private invite IDs, monotonic receipt time, rate/message/lifetime bounds and Colyseus reconnection. `match-session.ts` owns server-only orchestration and private MatchState; it supplies explicit time/questions to game-core. Synchronous command handlers complete validation/reduction before another action executes. Each recipient gets a strict complete public snapshot with its legal targets and own answer acknowledgement. There is no private Schema state tree to accidentally synchronize. The online client replaces snapshots in sequence order and treats browser countdowns as advisory.
+
+`/online` is a request-rendered Next page: `GAME_SERVER_URL` is validated as an HTTP(S) URL and passed as public configuration to the network adapter. It has no API route that decides gameplay. Phaser and the quiz dialog are shared presentation; the offline authority adapter remains isolated in `/play`. The development question pack is an independent package consumed by the game service and explicit offline demo only. Tests ensure the online route does not load it, although the pack remains public through the offline demo/source and is not a protected release bank.
+
+The SDK reserves/restores the same transport seat after a drop or page reload. Reconnection tokens stay in per-tab sessionStorage; invitation links contain only the room ID. Explicit leave clears the token and forfeits; a crash has no recovery guarantee. See ADR 0004, PROTOCOL.md and M3_PRIVATE_ROOMS.md for exact wire/lifecycle behavior and incomplete M3 work.

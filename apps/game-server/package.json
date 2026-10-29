@@ -17,10 +17,12 @@
     "@mamalik/game-core": "workspace:*",
     "@mamalik/shared": "workspace:*",
     "zod": "^4.1.0",
-    "dotenv": "^17.2.0"
+    "dotenv": "^17.2.0",
+    "@mamalik/question-fixtures": "workspace:*"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
-    "@mamalik/config": "workspace:*"
+    "@mamalik/config": "workspace:*",
+    "@colyseus/sdk": "0.18.8"
   }
 }

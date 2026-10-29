@@ -1,8 +1,8 @@
 # Rules v1 — M1 reversible defaults
 
-Status: implemented headless rules and M2 local browser simulation, not networked gameplay. These defaults are for playtesting, not a claim of balance. Rule snapshot version: `1`.
+Status: implemented headless rules, M2 local simulation and the first M3 private three-guest room slice. These defaults are for playtesting, not a claim of balance. Rule snapshot version: `1`.
 
-M2 uses the same domain rules. Its local controller supplies simulated authoritative time and question context in the browser; answers are therefore inspectable. UI-only Continue holds human result review and starts the next turn at the actual continuation time. This is a local presentation/scheduling policy, not a new network command. Bot selection/answer policies are documented in ADR 0003; online authority/fairness remain M3 work.
+M2 uses the same domain rules. Its local controller supplies simulated authoritative time and question context in the browser; answers are therefore inspectable. UI-only Continue holds human result review and starts the next turn at the actual continuation time. This is a local presentation/scheduling policy, not a new network command. Bot selection/answer policies are documented in ADR 0003; online authority now lives in the M3 private game room; latency fairness remains a documented limit.
 
 ## Setup and map
 
@@ -24,7 +24,7 @@ A selected target receives the next unused ID from the seeded deck. A match requ
 
 The default answer window is 15 seconds. A choice is valid only from a participant, for the current question/turn, received in `[openedAt, deadline)`. Only the first answer per participant counts; a second idempotency key cannot replace it. `now` is finite, nonnegative and monotonic, supplied by a trusted caller. Client time is never accepted. Server RESOLVE requires all participants answered or `now >= deadline`; missing answers are incorrect. Correct answers are never projected before resolution, and submissions are never projected, even after resolution.
 
-Correct beats incorrect. If both are correct, the earlier server receipt wins. Exact equal receipt times favor the defender. Neither correct means the defender keeps the territory; on neutral ground it stays neutral. There is **no latency compensation** in M1: server receipt timing favors lower latency. This is a documented fairness limitation; M3 must measure latency and review a bounded fairness policy before public competitive use. Tests cover equality and deadline ordering; this is not proof of network fairness.
+Correct beats incorrect. If both are correct, the earlier server receipt wins. Exact equal receipt times favor the defender. Neither correct means the defender keeps the territory; on neutral ground it stays neutral. There is **no latency compensation** in Rules v1 (including the current private-room slice): server receipt timing favors lower latency. This is a documented fairness limitation; M3 must measure latency and review a bounded fairness policy before public competitive use. Tests cover equality and deadline ordering; this is not proof of network fairness.
 
 ## Captures, elimination and results
 
@@ -36,7 +36,7 @@ Server FORFEIT neutralizes all of that player's lands and eliminates them. Durin
 
 Every player action has a stable match ID, turn number, actor derived from transport and an idempotency key. An exact retry is a successful no-op, including after turn progression or finish. Reusing that actor/key with different content is rejected. Invalid actions return the original state; successful actions copy it. The accepted action ledger is retained for the bounded match lifetime (at most three READY actions plus three actions per turn); rejected spam is not retained. Server lifecycle actions are not exposed as network commands.
 
-M3 policy proposal: reserve a disconnected seat for 30 seconds; timers continue, so missed answers/timeouts still apply; server forfeits on grace expiry. Reconnect only restores a transport-derived identity and sanitized snapshot, never a new seat or a client clock. This is **documented but not implemented** in M1. No rooms, identity, network rate limiting, or reconnect endpoint are advertised. On process loss/deploy the M1 in-memory model cannot recover a match; future rooms must report an abort unless persistence is added. No durable result promise is made.
+M3 private-room policy: reserve a disconnected seat for 30 seconds; timers continue, so missed answers/timeouts still apply; server forfeits on grace expiry. Reconnect only restores a transport-derived identity and sanitized snapshot, never a new seat or a client clock. This is implemented in the private-room slice via Colyseus session-bound guest identity and bearer reconnection tokens. Explicit departure forfeits immediately; grace expiry forfeits only after the reservation expires. Timers continue. A prepared three-seat lobby aborts on permanent departure; an incomplete lobby can reuse a vacated seat. Network result review lasts three seconds and advances automatically. Server shutdown reports an abort; process loss cannot recover an in-memory match. No durable result promise is made. See M3_PRIVATE_ROOMS.md for message bounds, room expiry and content/security limits.
 
 ## Decisions still requiring evidence
 

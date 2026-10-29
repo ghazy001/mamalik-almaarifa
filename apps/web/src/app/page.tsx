@@ -33,8 +33,8 @@ export default function Home() {
         <nav aria-label="التنقل الرئيسي">
           <a href="#rules">اكتشف قواعد المملكة</a>
           <span className="version-label">
-            <bdi dir="ltr">M2</bdi>
-            <span>اللعب المحلي</span>
+            <bdi dir="ltr">M3</bdi>
+            <span>غرف خاصة</span>
           </span>
         </nav>
       </header>
@@ -62,13 +62,18 @@ export default function Home() {
                 </Link>
               </Button>
               <Button asChild variant="outline">
+                <Link href="/online" prefetch={false}>
+                  غرفة خاصة لثلاثة لاعبين
+                </Link>
+              </Button>
+              <Button asChild variant="outline">
                 <Link href="/map" prefetch={false}>
                   استكشف خريطة المملكة
                 </Link>
               </Button>
             </div>
             <p className="availability">
-              مباراة كاملة ضد خصمين مبرمجين · اللعب عبر الإنترنت غير متاح بعد
+              مباراة محلية أو غرفة خاصة · ثلاثة ضيوف دون حسابات
             </p>
           </div>
           <div className="heraldry" aria-hidden="true">
@@ -151,13 +156,13 @@ export default function Home() {
             <h2 id="foundation-title">مملكة جميلة، بقواعد راسخة.</h2>
             <p>
               تضم هذه النسخة قواعد حتمية قابلة للاختبار، ومحاكاة تقنية كاملة،
-              ومباراة محلية كاملة ضد خصمين مبرمجين. لم تُفتح الغرف أو المباريات
-              عبر الإنترنت بعد.
+              ومباراة محلية كاملة ضد خصمين مبرمجين، وغرف خاصة لثلاثة لاعبين
+              حقيقيين. الحسابات وحفظ النتائج غير متاحين بعد.
             </p>
           </div>
           <span className="foundation-tag">
             <span className="status-dot" />
-            تطوير محلي · <bdi dir="ltr">M2</bdi>
+            تطوير محلي · <bdi dir="ltr">M3</bdi>
           </span>
         </section>
       </main>

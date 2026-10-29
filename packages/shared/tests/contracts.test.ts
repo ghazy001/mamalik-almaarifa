@@ -1,11 +1,80 @@
 import { describe, expect, it } from 'vitest';
-import { commandSchema, eventSchema, parseCommand } from '../src/index.js';
+import {
+  clockReplySchema,
+  commandSchema,
+  eventSchema,
+  joinOptionsSchema,
+  parseCommand,
+  roomSnapshotSchema,
+} from '../src/index.js';
 const base = {
   protocolVersion: 1,
   matchId: 'm_1',
   turn: 1,
   idempotencyKey: 'key_1',
 };
+describe('guest room boundaries', () => {
+  it('accepts trimmed Arabic names and rejects account/rule/identity injection', () => {
+    expect(joinOptionsSchema.parse({ name: '  معرفة  ' })).toEqual({
+      name: 'معرفة',
+    });
+    for (const invalid of [
+      { name: '' },
+      { name: '<b>اسم</b>' },
+      { name: 'اسم\nآخر' },
+      { name: 'اسم', playerId: 'p_gold' },
+      { name: 'اسم', rules: { maxTurns: 1 } },
+      { name: 'اسم', seed: 1 },
+    ])
+      expect(joinOptionsSchema.safeParse(invalid).success).toBe(false);
+  });
+  it('uses a strict recipient snapshot envelope and rejects private fields or unknown versions', () => {
+    const envelope = {
+      protocolVersion: 1,
+      sequence: 0,
+      roomId: 'a'.repeat(16),
+      playerId: 'p_teal',
+      serverNow: 10,
+      closed: false,
+      seats: [{ playerId: 'p_teal', name: 'معرفة', connected: true }],
+      state: null,
+      legalTargetIds: [],
+      standings: [],
+      rules: { maxTurns: 36, selectionMs: 10000, answerMs: 15000 },
+      ownChoiceId: null,
+      reveal: null,
+    };
+    expect(roomSnapshotSchema.safeParse(envelope).success).toBe(true);
+    for (const invalid of [
+      { ...envelope, protocolVersion: 2 },
+      { ...envelope, answers: {} },
+      { ...envelope, seed: 1 },
+      { ...envelope, sequence: -1 },
+      {
+        ...envelope,
+        seats: [
+          ...envelope.seats,
+          ...envelope.seats,
+          ...envelope.seats,
+          ...envelope.seats,
+        ],
+      },
+    ])
+      expect(roomSnapshotSchema.safeParse(invalid).success).toBe(false);
+  });
+  it('validates correlated advisory clock replies without accepting a client deadline', () => {
+    expect(
+      clockReplySchema.safeParse({ nonce: 'sample', serverNow: 100 }).success,
+    ).toBe(true);
+    for (const invalid of [
+      { nonce: '', serverNow: 100 },
+      { nonce: 'sample', serverNow: -1 },
+      { nonce: 'sample', serverNow: Infinity },
+      { nonce: 'sample', serverNow: 100, deadline: 10000 },
+    ])
+      expect(clockReplySchema.safeParse(invalid).success).toBe(false);
+  });
+});
 describe('strict versioned protocol', () => {
   it.each([
     { ...base, type: 'READY' },

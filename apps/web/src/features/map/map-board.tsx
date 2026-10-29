@@ -17,12 +17,14 @@ export function MapBoard({
   onIntent,
   effect = null,
   caption = 'معاينة محلية',
+  milestone = 'M2',
 }: {
   model: MapModel;
   selection: MapSelection;
   onIntent: (intent: MapIntent) => void;
   effect?: MapEffect | null;
   caption?: string;
+  milestone?: 'M2' | 'M3';
 }) {
   return (
     <section className="map-board" aria-labelledby="board-title">
@@ -32,7 +34,7 @@ export function MapBoard({
           <h2 id="board-title">كل طريق يبدأ بقرار.</h2>
         </div>
         <span className="map-local-label">
-          {caption} · <bdi>M2</bdi>
+          {caption} · <bdi>{milestone}</bdi>
         </span>
       </div>
       <div className="map-legend" aria-label="ممالك اللاعبين">

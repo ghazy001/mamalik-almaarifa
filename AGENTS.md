@@ -192,7 +192,7 @@ Deliver:
 
 Original isometric map scene, territory hover/touch selection, accessible Arabic question overlay, transitions, battle effects, scripted opponents. **Done:** user finishes complete local match without backend room coordination.
 
-### M3 — Real-time multiplayer **(NEXT MILESTONE)**
+### M3 — Real-time multiplayer **(CURRENT MILESTONE)**
 
 Three-client Colyseus rooms, invites/basic matchmaking, sync, phase timers, answer validation, reconnect/forfeit. **Done:** three real browser sessions reliably finish a match under reasonable latency and reconnect scenarios.
 

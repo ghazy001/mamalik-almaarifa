@@ -42,10 +42,23 @@ export function BattleDialog({
   view,
   onAnswer,
   onContinue,
+  answerPending = false,
 }: {
-  view: LocalView;
+  view: Pick<
+    LocalView,
+    | 'state'
+    | 'map'
+    | 'humanId'
+    | 'humanChoiceId'
+    | 'humanInvolved'
+    | 'canAnswer'
+    | 'remainingMs'
+    | 'windowMs'
+    | 'reveal'
+  >;
   onAnswer: (choiceId: string, questionId: string) => void;
-  onContinue: () => void;
+  onContinue?: () => void;
+  answerPending?: boolean;
 }) {
   const resolved = view.state.phase === 'RESOLUTION';
   const question = resolved ? view.reveal?.question : view.state.question;
@@ -138,14 +151,16 @@ export function BattleDialog({
                 : 'إجابتك غير صحيحة.'
               : view.reveal?.humanInvolved
                 ? 'انتهت المهلة دون إجابة منك.'
-                : 'حُسمت مواجهة الخصمين المبرمجين.'
+                : 'حُسمت مواجهة المملكتين.'
             : view.humanInvolved
               ? view.humanChoiceId
-                ? 'تم تسجيل إجابتك. ننتظر حسم المواجهة.'
+                ? answerPending
+                  ? 'جارٍ إرسال إجابتك…'
+                  : 'تم تسجيل إجابتك. ننتظر حسم المواجهة.'
                 : question.defenderId === view.humanId
                   ? 'أنت تدافع عن هذه الأرض. اختر إجابة واحدة.'
                   : 'اختر إجابة واحدة قبل انتهاء المهلة.'
-              : 'أنت تراقب مواجهة الخصمين المبرمجين.'}
+              : 'أنت تراقب مواجهة المملكتين.'}
         </p>
         <div className="battle-choices">
           {question.choices.map((choice, index) => {
@@ -187,7 +202,13 @@ export function BattleDialog({
                 onClick={() => onAnswer(choice.id, question.id)}
               >
                 <span>{label}</span>
-                <small>{choice.id === ownChoice ? 'تم اختيارها' : ''}</small>
+                <small>
+                  {choice.id === ownChoice
+                    ? answerPending
+                      ? 'جارٍ الإرسال'
+                      : 'تم اختيارها'
+                    : ''}
+                </small>
               </button>
             );
           })}
@@ -204,10 +225,15 @@ export function BattleDialog({
             )}
           </div>
         )}
-        {resolved && (
+        {resolved && onContinue && (
           <Button className="battle-continue" onClick={onContinue}>
             متابعة الدور التالي
           </Button>
+        )}
+        {resolved && !onContinue && (
+          <p className="battle-guidance">
+            يبدأ الدور التالي تلقائيًا بقرار الخادم.
+          </p>
         )}
         {!resolved && (
           <p className="battle-local-note">
@@ -216,9 +242,7 @@ export function BattleDialog({
           </p>
         )}
         {!resolved && (
-          <p className="battle-local-note">
-            لعب محلي · لا تظهر صحة الإجابات قبل الحسم.
-          </p>
+          <p className="battle-local-note">لا تظهر صحة الإجابات قبل الحسم.</p>
         )}
       </dialog>
     </>

@@ -2,10 +2,12 @@ import { Server } from '@colyseus/core';
 import { WebSocketTransport } from '@colyseus/ws-transport';
 import { PROTOCOL_VERSION } from '@mamalik/shared';
 import type { Request, Response } from 'express';
+import { kingdomRoom } from './kingdom-room.js';
+import type { RoomSettings } from './kingdom-room.js';
 
-/** No registered game rooms in M1. HTTP health + persistent WS runtime only. */
-export function createGameService() {
-  return new Server({
+/** Persistent private-room service. Settings are server-injected, not client options. */
+export function createGameService(settings: RoomSettings = {}) {
+  const service = new Server({
     greet: false,
     gracefullyShutdown: false,
     transport: new WebSocketTransport({
@@ -19,11 +21,13 @@ export function createGameService() {
         response.json({
           status: 'ok',
           service: 'mamalik-game-server',
-          milestone: 'M1',
+          milestone: 'M3',
           protocolVersion: PROTOCOL_VERSION,
-          gameplayRoomsEnabled: false,
+          gameplayRoomsEnabled: true,
         });
       });
     },
   });
+  service.define('kingdom', kingdomRoom(settings));
+  return service;
 }

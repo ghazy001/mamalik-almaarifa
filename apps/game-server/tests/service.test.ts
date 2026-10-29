@@ -80,9 +80,9 @@ describe('standalone Colyseus health service', () => {
     expect(await response.json()).toEqual({
       status: 'ok',
       service: 'mamalik-game-server',
-      milestone: 'M1',
+      milestone: 'M3',
       protocolVersion: 1,
-      gameplayRoomsEnabled: false,
+      gameplayRoomsEnabled: true,
     });
   });
 });

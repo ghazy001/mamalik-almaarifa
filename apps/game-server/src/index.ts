@@ -29,7 +29,7 @@ try {
       event: 'service_started',
       host: config.GAME_SERVER_HOST,
       port: config.GAME_SERVER_PORT,
-      milestone: 'M1',
+      milestone: 'M3',
     }),
   );
 } catch {

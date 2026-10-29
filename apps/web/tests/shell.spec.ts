@@ -13,7 +13,7 @@ test('Arabic shell is responsive, keyboard accessible, and honest about developm
     'المعرفة',
   );
   await expect(
-    page.getByText('لم تُفتح الغرف أو المباريات عبر الإنترنت بعد.', {
+    page.getByText('الحسابات وحفظ النتائج غير متاحين بعد.', {
       exact: false,
     }),
   ).toBeVisible();

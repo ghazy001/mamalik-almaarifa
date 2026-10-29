@@ -1,5 +1,7 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalEnv": ["GAME_SERVER_URL"],
+  "globalPassThroughEnv": ["PORT", "GAME_SERVER_HOST", "GAME_SERVER_PORT"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

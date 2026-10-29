@@ -1,9 +1,9 @@
 import { applyAction, publicView } from '@mamalik/game-core';
 import type { Context, MatchState, PlayerAction } from '@mamalik/game-core';
 import { parseCommand, publicStateSchema } from '@mamalik/shared';
-import type { ErrorCode, PublicState } from '@mamalik/shared';
+import type { PublicState } from '@mamalik/shared';
 
-/** Tested boundary for future room integration; not a network endpoint. */
+/** Validates intent and derives actor from trusted room transport, never JSON. */
 export function processIntent(
   state: MatchState,
   input: unknown,
@@ -17,7 +17,7 @@ export function processIntent(
     return {
       ok: false as const,
       state,
-      error: 'NOT_IMPLEMENTED' satisfies ErrorCode,
+      error: 'NOT_IMPLEMENTED' as const,
     };
   const scope = {
     actor: authenticatedPlayerId,

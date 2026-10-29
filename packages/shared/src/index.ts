@@ -19,6 +19,8 @@ export const errorCodeSchema = z.enum([
   'MALFORMED_COMMAND',
   'UNSUPPORTED_VERSION',
   'NOT_IMPLEMENTED',
+  'RATE_LIMITED',
+  'ROOM_CLOSED',
 ]);
 const scope = {
   protocolVersion: z.literal(PROTOCOL_VERSION),
@@ -65,7 +67,7 @@ const choiceSchema = z.strictObject({
   id: idSchema,
   text: z.string().min(1).max(200),
 });
-const questionSchema = z.strictObject({
+export const questionSchema = z.strictObject({
   id: idSchema,
   text: z.string().min(1).max(500),
   choices: z.tuple([choiceSchema, choiceSchema, choiceSchema, choiceSchema]),
@@ -139,7 +141,7 @@ const eventScope = {
   turn: z.number().int().min(0).max(120),
   sequence: z.number().int().nonnegative(),
 };
-/** Server events are specified for M3; M1 defines schemas without opening rooms. */
+/** v1 event schemas. Private rooms emit errors/acks; other changes use full snapshots. */
 export const eventSchema = z.discriminatedUnion('type', [
   z.strictObject({
     ...eventScope,
@@ -186,3 +188,58 @@ export const eventSchema = z.discriminatedUnion('type', [
   }),
 ]);
 export type ServerEvent = z.infer<typeof eventSchema>;
+
+/** Guest room transport v1. Seat identity is never supplied in player commands. */
+export const joinOptionsSchema = z.strictObject({
+  name: z
+    .string()
+    .trim()
+    .min(1)
+    .max(40)
+    .refine(
+      (value) =>
+        !/[<>]/.test(value) &&
+        ![...value].some((character) => character.charCodeAt(0) < 32),
+    ),
+});
+export const syncRequestSchema = z.strictObject({ nonce: idSchema });
+export const roomSnapshotSchema = z.strictObject({
+  protocolVersion: z.literal(PROTOCOL_VERSION),
+  sequence: z.number().int().nonnegative(),
+  roomId: idSchema,
+  playerId: idSchema,
+  serverNow: z.number().finite().nonnegative(),
+  closed: z.boolean(),
+  seats: z
+    .array(
+      z.strictObject({
+        playerId: idSchema,
+        name: z.string().min(1).max(40),
+        connected: z.boolean(),
+      }),
+    )
+    .max(3),
+  state: publicStateSchema.nullable(),
+  legalTargetIds: z.array(idSchema).max(15),
+  standings: z.array(placementSchema).max(3),
+  rules: z.strictObject({
+    maxTurns: z.number().int().min(1).max(120),
+    selectionMs: z.number().int().min(100).max(60000),
+    answerMs: z.number().int().min(100).max(60000),
+  }),
+  ownChoiceId: idSchema.nullable(),
+  reveal: z
+    .strictObject({
+      question: questionSchema,
+      explanation: z.string().min(1).max(1000),
+      source: z
+        .strictObject({ label: z.string().max(200), url: z.url() })
+        .nullable(),
+    })
+    .nullable(),
+});
+export const clockReplySchema = z.strictObject({
+  nonce: idSchema,
+  serverNow: z.number().finite().nonnegative(),
+});
+export type RoomSnapshot = z.infer<typeof roomSnapshotSchema>;

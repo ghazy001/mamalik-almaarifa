@@ -1,6 +1,6 @@
 # ممالك المعرفة · Mamalik Al-Ma'rifa
 
-Original Arabic-first strategy trivia. The M1 foundation and M2 offline match are implemented: deterministic rules, strict protocol schemas, an RTL web shell, a standalone Colyseus health service, and original interactive Phaser terrain. Play a complete local match against two scripted opponents at `/play`. Online game rooms are not implemented.
+Original Arabic-first strategy trivia. The M1 foundation and M2 offline match are implemented: deterministic rules, strict protocol schemas, an RTL web shell, a standalone Colyseus health service, and original interactive Phaser terrain. Play a complete local match against two scripted opponents at `/play`, or invite two real guests to an authoritative private room at `/online`. M3 is in progress; public matchmaking is not implemented.
 
 ## Local setup
 
@@ -28,6 +28,14 @@ pnpm build
 pnpm --filter @mamalik/web start
 pnpm --filter @mamalik/game-server start
 ```
+
+## Play a private three-player match
+
+Open `/online`, enter a guest name and create a private room. Share its code/link with two other tabs or browser profiles, then have all three players select **أنا جاهز**. The persistent game service decides turns, questions, deadlines, ownership and results. Unexpected drops reserve the same seat for 30 seconds while timers continue; reload recovery uses a per-tab sessionStorage token. Explicit leave forfeits. Results are in memory.
+
+`GAME_SERVER_URL` defaults to `http://127.0.0.1:2567`. Export it before starting Next/Turbo or put it in `apps/web/.env.local` when changing the browser-reachable service URL. No rebuild is needed for this request-time public endpoint. Root `.env` is read by the game service, not automatically by Next. Loopback URLs work on this computer only; this increment is not a deployment.
+
+See [M3 private-room behavior, verification and limits](docs/M3_PRIVATE_ROOMS.md). Guest seats are transport identities, not accounts. The shared development question fixtures are public through the offline demo/source; reviewed server-only content and persistent results remain M4.
 
 ## Play a local match
 
@@ -58,21 +66,22 @@ pnpm test:e2e
 
 The simulation uses explicit seed `2026`, synthetic question fixtures and three scripted players. It completes 36 turns with 177 accepted actions and emits a TURN_LIMIT result with `p_gold` winning. It is deterministic, not live multiplayer or a content demo. Tests replay its action/context log and compare the exact final private state.
 
-Browser checks use a dedicated production server on port 3100 and Chromium at desktop, mobile and short landscape sizes, with overflow, Arabic direction, keyboard, console-error and axe checks. They do not reuse an existing process. Screenshots are saved under `apps/web/test-results/`. Run `pnpm build` before `pnpm test:e2e`; CI installs Chromium with OS dependencies. Review the [verification record](docs/VERIFICATION.md) for actual commands/results and remaining gaps.
+Browser checks use a production web build on 3100 and the real authoritative room in a trusted six-turn server fixture on 2571 and Chromium at desktop, mobile and short landscape sizes, with overflow, Arabic direction, keyboard, console-error and axe checks. They do not reuse an existing process. Screenshots are saved under `apps/web/test-results/`. Run `pnpm build` before `pnpm test:e2e`; CI installs Chromium with OS dependencies. Review the [M3 record](docs/M3_PRIVATE_ROOMS.md) for current results/limits and the [historical M1 record](docs/VERIFICATION.md).
 
 ## Project layout
 
 ```text
-apps/web/             Next.js App Router, Arabic shell, design tokens, Playwright
-apps/game-server/     Colyseus bootstrap, /health, validated config, intent adapter
+apps/web/             Arabic shell, offline/online presentation, design tokens, Playwright
+apps/game-server/     Private Colyseus rooms, timers, reconnect, /health, intent adapter
 packages/game-core/   Pure state machine, topology, battle/scoring rules, simulation
 packages/shared/      Zod commands, events, public-state contract, protocol errors
+packages/question-fixtures/ Development questions for server and explicit offline demo
 packages/config/      Shared strict TypeScript configuration
 docs/                 Design, exact rules, architecture, protocol, milestones, ADR
 .github/workflows/    Reproducible quality gates
 ```
 
-Database/auth packages, Howler, and game rooms deliberately begin in later milestones. Phaser powers public snapshot rendering for the preview and offline match. See [rules and reversible assumptions](docs/GAME_RULES.md), [architecture](docs/ARCHITECTURE.md), [protocol](docs/PROTOCOL.md) and [milestones](docs/MILESTONES.md). Preserve `AGENTS.md` as the engineering charter.
+Database/auth packages, reviewed content and Howler begin in later milestones. Private guest rooms are implemented; public matchmaking remains further M3 work. Phaser powers public snapshot rendering for the preview and offline match. See [rules and reversible assumptions](docs/GAME_RULES.md), [architecture](docs/ARCHITECTURE.md), [protocol](docs/PROTOCOL.md) and [milestones](docs/MILESTONES.md). Preserve `AGENTS.md` as the engineering charter.
 
 ## Five concepts to learn
 

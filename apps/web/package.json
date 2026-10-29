@@ -23,7 +23,9 @@
     "@radix-ui/react-slot": "^1.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "tailwind-merge": "^3.3.0"
+    "tailwind-merge": "^3.3.0",
+    "@mamalik/question-fixtures": "workspace:*",
+    "@colyseus/sdk": "0.18.8"
   },
   "devDependencies": {
     "@mamalik/config": "workspace:*",

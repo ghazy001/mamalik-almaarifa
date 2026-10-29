@@ -188,11 +188,11 @@ Deliver:
 
 **Done when:** fresh install reproducibly works, web/server boot, checks pass, deterministic headless three-player match completes through rules, and documented unresolved game decisions are clearly identified. No real networked gameplay or finished art is required.
 
-### M2 — Visual offline vertical slice **(CURRENT MILESTONE)**
+### M2 — Visual offline vertical slice **(COMPLETED)**
 
 Original isometric map scene, territory hover/touch selection, accessible Arabic question overlay, transitions, battle effects, scripted opponents. **Done:** user finishes complete local match without backend room coordination.
 
-### M3 — Real-time multiplayer
+### M3 — Real-time multiplayer **(NEXT MILESTONE)**
 
 Three-client Colyseus rooms, invites/basic matchmaking, sync, phase timers, answer validation, reconnect/forfeit. **Done:** three real browser sessions reliably finish a match under reasonable latency and reconnect scenarios.
 

@@ -1,5 +1,7 @@
 # M2 progress — interactive map preselection
 
+Historical first-slice record. The full match increment is described in [M2_OFFLINE_MATCH.md](M2_OFFLINE_MATCH.md); `/map` remains the paused preview.
+
 Status: first slice implemented; **M2 is not complete**. Rules/protocol version 1 are unchanged. No networked gameplay, questions, opponents or battle results were added in this increment.
 
 ## Delivered behavior

@@ -2,20 +2,26 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { createMapRenderer } from './renderer';
-import type { MapIntent, MapModel, MapSelection } from './model';
+import type { MapEffect, MapIntent, MapModel, MapSelection } from './model';
 
 export default function PhaserMap({
   model,
   selection,
   onIntent,
+  effect = null,
 }: {
   model: MapModel;
   selection: MapSelection;
   onIntent: (intent: MapIntent) => void;
+  effect?: MapEffect | null;
 }) {
   const parent = useRef<HTMLDivElement>(null);
   const renderer = useRef<ReturnType<typeof createMapRenderer> | null>(null);
   const currentSelection = useRef(selection);
+  const currentModel = useRef(model);
+  const currentEffect = useRef(effect);
+  currentModel.current = model;
+  currentEffect.current = effect;
   const [status, setStatus] = useState<'loading' | 'ready' | 'fallback'>(
     'loading',
   );
@@ -34,13 +40,14 @@ export default function PhaserMap({
         if (disposed) return;
         renderer.current = module.createMapRenderer(
           mount,
-          model,
+          currentModel.current,
           onIntent,
           () => {
             if (!disposed) setStatus('ready');
           },
         );
         renderer.current.setSelection(currentSelection.current);
+        renderer.current.setEffect(currentEffect.current);
       })
       .catch(() => {
         if (!disposed) setStatus('fallback');
@@ -51,7 +58,14 @@ export default function PhaserMap({
       renderer.current = null;
       mount.remove();
     };
-  }, [model, onIntent]);
+  }, [onIntent]);
+
+  useEffect(() => {
+    renderer.current?.setModel(model);
+  }, [model]);
+  useEffect(() => {
+    renderer.current?.setEffect(effect);
+  }, [effect]);
 
   useEffect(() => {
     renderer.current?.setSelection(selection);

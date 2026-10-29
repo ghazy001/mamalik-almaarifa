@@ -1,6 +1,6 @@
 # M1 verification record
 
-This is the historical M1 record. See [M2_MAP_SLICE.md](M2_MAP_SLICE.md) for the current map increment and updated test counts.
+This is the historical M1 record. See [M2_OFFLINE_MATCH.md](M2_OFFLINE_MATCH.md) for the complete local match and current verification, or [M2_MAP_SLICE.md](M2_MAP_SLICE.md) for its earlier map-only increment.
 
 Environment: macOS arm64; Node **22.22.1**, pnpm **10.0.0**. The interactive shell originally selected Node 20.20.0; validation explicitly prepended the installed Node 22.22.1 binary directory to PATH. `.nvmrc` and `.npmrc` now enforce the intended runtime. No external service keys were used.
 

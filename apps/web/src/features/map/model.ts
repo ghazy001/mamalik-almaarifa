@@ -14,7 +14,7 @@ export interface MapPlayer {
 }
 /** Presentation-only projection: no private state, question, clock or answers. */
 export interface MapModel {
-  readonly activePlayerId: string;
+  readonly activePlayerId: string | null;
   readonly players: readonly MapPlayer[];
   readonly territories: readonly MapTerritory[];
   readonly legalTargetIds: readonly string[];
@@ -22,6 +22,12 @@ export interface MapModel {
 export interface MapSelection {
   readonly selectedId: string | null;
   readonly hoveredId: string | null;
+}
+export interface MapEffect {
+  readonly key: string;
+  readonly targetId: string;
+  readonly captured: boolean;
+  readonly ownerId: string | null;
 }
 export type MapIntent =
   | { type: 'SELECT_TARGET'; targetId: string }

@@ -31,10 +31,10 @@ export default function Home() {
           </span>
         </a>
         <nav aria-label="التنقل الرئيسي">
-          <a href="#rules">كيف تُبنى المملكة؟</a>
+          <a href="#rules">اكتشف قواعد المملكة</a>
           <span className="version-label">
             <bdi dir="ltr">M2</bdi>
-            <span>معاينة الخريطة</span>
+            <span>اللعب المحلي</span>
           </span>
         </nav>
       </header>
@@ -57,16 +57,18 @@ export default function Home() {
             </p>
             <div className="hero-actions">
               <Button asChild>
-                <Link href="/map" prefetch={false}>
-                  استكشف خريطة المملكة <span aria-hidden="true">←</span>
+                <Link href="/play" prefetch={false}>
+                  العب مباراة محلية <span aria-hidden="true">←</span>
                 </Link>
               </Button>
               <Button asChild variant="outline">
-                <a href="#rules">اكتشف قواعد المملكة</a>
+                <Link href="/map" prefetch={false}>
+                  استكشف خريطة المملكة
+                </Link>
               </Button>
             </div>
             <p className="availability">
-              خريطة تفاعلية محلية · المباريات عبر الإنترنت غير متاحة بعد
+              مباراة كاملة ضد خصمين مبرمجين · اللعب عبر الإنترنت غير متاح بعد
             </p>
           </div>
           <div className="heraldry" aria-hidden="true">
@@ -149,8 +151,8 @@ export default function Home() {
             <h2 id="foundation-title">مملكة جميلة، بقواعد راسخة.</h2>
             <p>
               تضم هذه النسخة قواعد حتمية قابلة للاختبار، ومحاكاة تقنية كاملة،
-              ومعاينة تفاعلية للخريطة. لم تُفتح الغرف أو المباريات عبر الإنترنت
-              بعد.
+              ومباراة محلية كاملة ضد خصمين مبرمجين. لم تُفتح الغرف أو المباريات
+              عبر الإنترنت بعد.
             </p>
           </div>
           <span className="foundation-tag">

@@ -1,6 +1,6 @@
 # ممالك المعرفة · Mamalik Al-Ma'rifa
 
-Original Arabic-first strategy trivia. **M1 complete; M2 started:** deterministic headless rules, strict protocol schemas, an RTL web shell, a standalone Colyseus health service, and an original interactive Phaser map preview. No complete playable browser match or networked game room yet.
+Original Arabic-first strategy trivia. The M1 foundation and M2 offline match are implemented: deterministic rules, strict protocol schemas, an RTL web shell, a standalone Colyseus health service, and original interactive Phaser terrain. Play a complete local match against two scripted opponents at `/play`. Online game rooms are not implemented.
 
 ## Local setup
 
@@ -29,11 +29,19 @@ pnpm --filter @mamalik/web start
 pnpm --filter @mamalik/game-server start
 ```
 
-## Map preview — first M2 slice
+## Play a local match
+
+Open `/play`, or choose **العب مباراة محلية** from the home page. You control فيروز against two explicitly scripted opponents. Start, select an adjacent target through the canvas or Arabic territory controls, then **ابدأ التحدّي**. Answer within 15 seconds and review the resolution/source before continuing. The map and scores update through the shared rules. Defend your lands when attacked; capture all castles or lead on score at the 36-turn limit. Results include placements and **مباراة جديدة**.
+
+Escape/**تصغير المواجهة** minimizes the native quiz dialog; **إعادة فتح المواجهة** restores it. Timers continue while minimized or backgrounded. Human-involved result screens wait for Continue; bot-only turns progress automatically. Reload/navigation discards the in-memory match. Questions/answers are bundled development fixtures and inspectable; there is no anti-cheat, persistence or multiplayer claim. The local match needs no Colyseus connection or cloud credentials.
+
+See [M2 match architecture, question sources and verification](docs/M2_OFFLINE_MATCH.md) for exact behavior, limits and the five key implementation concepts.
+
+## Map preview
 
 Visit `/map` (or use **استكشف خريطة المملكة** on the home page). It shows all 15 canonical territories and three castles with original procedural isometric artwork. Only the active kingdom's two neutral neighbors are selectable. Click/tap a lit tile, or use Tab and Space/Enter on an available territory button. Selection and hover highlight the same map state; **مسح الاختيار** clears it.
 
-This is paused local preselection: it does not start a duel, consume a turn, run a timer or change ownership. Question battles/scripted opponents are the next M2 work. If canvas support fails, the Arabic territory controls still work. Phaser is dynamically imported only on the map route, and fonts/artwork need no remote asset service. See [M2 progress and verification](docs/M2_MAP_SLICE.md).
+This is paused local preselection: it does not start a duel, consume a turn, run a timer or change ownership. Use `/play` for the complete local match. If canvas support fails, Arabic DOM controls still work on both routes. Phaser is dynamically imported only when a map is needed, and fonts/artwork need no remote asset service. See the [historical first-slice record](docs/M2_MAP_SLICE.md).
 
 ## Verification and simulation
 
@@ -64,7 +72,7 @@ docs/                 Design, exact rules, architecture, protocol, milestones, A
 .github/workflows/    Reproducible quality gates
 ```
 
-Database/auth packages, Howler, and game rooms deliberately begin in later milestones. Phaser now powers the isolated map preview. See [rules and reversible assumptions](docs/GAME_RULES.md), [architecture](docs/ARCHITECTURE.md), [protocol](docs/PROTOCOL.md) and [milestones](docs/MILESTONES.md). Preserve `AGENTS.md` as the engineering charter.
+Database/auth packages, Howler, and game rooms deliberately begin in later milestones. Phaser powers public snapshot rendering for the preview and offline match. See [rules and reversible assumptions](docs/GAME_RULES.md), [architecture](docs/ARCHITECTURE.md), [protocol](docs/PROTOCOL.md) and [milestones](docs/MILESTONES.md). Preserve `AGENTS.md` as the engineering charter.
 
 ## Five concepts to learn
 

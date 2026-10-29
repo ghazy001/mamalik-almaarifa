@@ -430,8 +430,12 @@ footer p {
   .brand small {
     font-size: 9px;
   }
-  nav > a,
-  .version-label > span {
+  nav {
+    gap: 0;
+    max-width: 100px;
+    font-size: 10px;
+  }
+  .version-label {
     display: none;
   }
   .hero {

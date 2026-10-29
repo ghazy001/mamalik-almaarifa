@@ -1,4 +1,4 @@
-# Architecture — foundation and first M2 map slice
+# Architecture — foundation and M2 offline match
 
 ```text
 Future browser intents → shared schema → trusted room adapter → game-core
@@ -8,6 +8,10 @@ Future browser renderer ← shared public schema ← allowlisted publicView
 Current web: Next.js shell + /map with a server-created public map projection
             → lazy Phaser renderer + equivalent Arabic DOM preselection
 Current game service: persistent Node/Colyseus + HTTP /health, no rooms
+
+Current /play: local explicit-time session → game-core → public view
+                  ↑ human intents / scripted opponents     ↓
+               React quiz/results + public Phaser map updates
 ```
 
 ## Package boundaries
@@ -19,6 +23,14 @@ Current game service: persistent Node/Colyseus + HTTP /health, no rooms
 - `config` provides strict TS settings, including unchecked-index and exact-optional checks. Packages expose only their built public entrypoint.
 
 ## Execution and build
+
+### Offline match boundary
+
+`web/src/features/match/local-session.ts` is a per-match, framework-independent local authority adapter. It receives explicit monotonic time, drains scheduled bot/deadline events before human intents, calls existing core functions and publishes cached public views through a subscription API. React supplies `performance.now()` relative to the component lifetime, subscribes with `useSyncExternalStore`, and runs a 100 ms timer/visibility catch-up adapter. No real clock or new domain rules were added to game-core.
+
+Private simulation state and the development question pack remain inside the session, not React props or Phaser scenes. This separation is architectural only: the entire offline controller/answer bank is bundled and inspectable in the browser. M3 must use server room authority instead. Human-involved resolution review waits for Continue; bot-only resolution advances automatically. Restart replaces the match generation and discards pending state. See ADR 0003 and M2_OFFLINE_MATCH for schedules/content sources/limits.
+
+The native Arabic dialog handles question focus/minimize/reopen; countdowns continue while minimized or backgrounded. Only resolution views contain correct choices, explanations and source notes. The human's selected-choice acknowledgement is recipient-local. Phaser accepts model updates and transient resolved effects without a new canvas per tick; reduced-motion skips particles/tweens and DOM controls work if graphics fail. No room endpoints, public matchmaking, durable results, accounts or database were added.
 
 pnpm workspaces and Turbo orchestrate four executable packages plus shared config. Dependent builds precede typecheck/test/build and consumer dev startup; library watchers run alongside both dev services. Libraries compile ESM and declarations with NodeNext; Next uses bundler resolution. Node 22.22.1 is pinned because current Colyseus requires Node 22. Stable Next.js 16.4.3 and Colyseus 0.18.23/transport 0.18.4 were checked via the registry; exact resolved transitive versions are in the lockfile. TypeScript 5.9 remains a compatible stable compiler. No global package upgrade is required.
 

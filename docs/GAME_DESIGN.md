@@ -14,6 +14,8 @@ The first M2 map is **أرخبيل المنار**: original raised isometric isl
 
 ## Milestone boundaries
 
+The M2 `/play` experience now connects that same map to a complete local match: one human and two explicitly scripted opponents, timed four-choice questions for attack/defense, answer locking, result reveal with source notes, captured ownership/flags, score updates, castle elimination and a results/replay screen. A native dialog can be minimized without pausing time. Human result review waits for Continue; observer/bot turns progress quickly. Short capture/defense effects respect reduced motion. The fixture questions are original development content with source notes/calculation checks, not an editorially approved release bank. This is inspectable browser simulation; M3 server authority and M4 review/persistence remain deferred.
+
 M1 tests the rules without a renderer. M2 adds a complete offline match with original Phaser isometric terrain, accessible DOM targets and question overlays. Its bots remain explicitly scripted. M3 introduces actual room coordination and timers. Reviewed sourced questions and identity/persistence belong to M4. Audio and the full art pass belong to M5.
 
 No power-up economy, pay-to-win mechanics, live generated questions, public chat or deferred social systems are included. Cosmetic polish must never hide uncertain rules or create a misleading multiplayer claim.

@@ -1,6 +1,8 @@
 # Rules v1 — M1 reversible defaults
 
-Status: implemented headless rules, not networked gameplay. These defaults are for playtesting, not a claim of balance. Rule snapshot version: `1`.
+Status: implemented headless rules and M2 local browser simulation, not networked gameplay. These defaults are for playtesting, not a claim of balance. Rule snapshot version: `1`.
+
+M2 uses the same domain rules. Its local controller supplies simulated authoritative time and question context in the browser; answers are therefore inspectable. UI-only Continue holds human result review and starts the next turn at the actual continuation time. This is a local presentation/scheduling policy, not a new network command. Bot selection/answer policies are documented in ADR 0003; online authority/fairness remain M3 work.
 
 ## Setup and map
 

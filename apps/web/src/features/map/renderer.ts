@@ -1,7 +1,13 @@
 import Phaser from 'phaser';
 import { WORLD_HEIGHT, WORLD_WIDTH } from './geography';
 import { EMPTY_SELECTION } from './model';
-import type { MapIntent, MapModel, MapSelection, MapTerritory } from './model';
+import type {
+  MapEffect,
+  MapIntent,
+  MapModel,
+  MapSelection,
+  MapTerritory,
+} from './model';
 
 type Graphics = Phaser.GameObjects.Graphics;
 type Vertex = readonly [number, number];
@@ -185,6 +191,30 @@ function terrain(
     ],
     true,
   );
+  if (color !== null)
+    polygon(
+      g,
+      [
+        [x - 61, y],
+        [x, y - 32],
+        [x + 61, y],
+        [x, y + 32],
+      ],
+      color,
+      0.2,
+    );
+  if (!node.castle && color !== null) {
+    g.lineStyle(2, 0xd5d9c4).lineBetween(x + 40, y + 3, x + 40, y - 24);
+    polygon(
+      g,
+      [
+        [x + 41, y - 24],
+        [x + 58, y - 20],
+        [x + 41, y - 13],
+      ],
+      color,
+    );
+  }
   // Small deterministic details are artwork only; they never affect gameplay.
   if (node.castle && color !== null) castle(g, x, y - 2, color);
   else if (index % 5 === 2) {
@@ -245,22 +275,42 @@ function terrain(
 
 export function createMapRenderer(
   parent: HTMLDivElement,
-  model: MapModel,
+  initialModel: MapModel,
   onIntent: (intent: MapIntent) => void,
   onReady: () => void,
 ) {
   let selection: MapSelection = EMPTY_SELECTION;
+  let model = initialModel;
+  let effect: MapEffect | null = null;
+  let lastEffectKey: string | null = null;
   let disposed = false;
-  const nodes = new Map(model.territories.map((node) => [node.id, node]));
+  let nodes = new Map(model.territories.map((node) => [node.id, node]));
 
   class KingdomScene extends Phaser.Scene {
     private overlay: Graphics | null = null;
+    private initialized = false;
     constructor() {
       super('kingdom-map');
     }
 
     create() {
       if (disposed) return;
+      this.initialized = true;
+      this.paintMap();
+      this.playEffect();
+      this.input.on('gameout', () =>
+        onIntent({ type: 'HOVER_TARGET', targetId: null }),
+      );
+      this.game.canvas.setAttribute('tabindex', '-1');
+      this.game.events.once(Phaser.Core.Events.POST_RENDER, () => {
+        if (!disposed) onReady();
+      });
+    }
+
+    paintMap() {
+      if (!this.initialized || disposed) return;
+      this.tweens.killAll();
+      this.children.removeAll(true);
       const sea = this.add.graphics();
       sea.fillStyle(0x0b2130).fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
       for (let i = 0; i < 6; i++)
@@ -325,14 +375,51 @@ export function createMapRenderer(
         );
       }
       this.overlay = this.add.graphics().setDepth(1000);
-      this.input.on('gameout', () =>
-        onIntent({ type: 'HOVER_TARGET', targetId: null }),
-      );
       this.drawSelection();
-      this.game.canvas.setAttribute('tabindex', '-1');
-      this.game.events.once(Phaser.Core.Events.POST_RENDER, () => {
-        if (!disposed) onReady();
+    }
+
+    playEffect() {
+      if (
+        !this.initialized ||
+        disposed ||
+        !effect ||
+        effect.key === lastEffectKey
+      )
+        return;
+      lastEffectKey = effect.key;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const node = nodes.get(effect.targetId);
+      if (!node) return;
+      const owner = model.players.find(
+        (player) => player.id === effect!.ownerId,
+      );
+      const color = owner ? Number.parseInt(owner.color.slice(1), 16) : gold;
+      const ring = this.add
+        .ellipse(node.x, node.y + 10, 130, 62)
+        .setFillStyle(color, 0)
+        .setStrokeStyle(4, color)
+        .setDepth(1100);
+      this.tweens.add({
+        targets: ring,
+        scaleX: 1.6,
+        scaleY: 1.6,
+        alpha: 0,
+        duration: 750,
+        onComplete: () => ring.destroy(),
       });
+      if (effect.captured)
+        for (let index = 0; index < 6; index++) {
+          const angle = (index * Math.PI) / 3;
+          const dot = this.add.circle(node.x, node.y, 3, color).setDepth(1101);
+          this.tweens.add({
+            targets: dot,
+            x: node.x + Math.cos(angle) * 65,
+            y: node.y + Math.sin(angle) * 35 - 20,
+            alpha: 0,
+            duration: 650,
+            onComplete: () => dot.destroy(),
+          });
+        }
     }
 
     drawSelection() {
@@ -405,6 +492,16 @@ export function createMapRenderer(
   });
   resize.observe(parent);
   return {
+    setModel(value: MapModel) {
+      if (model === value) return;
+      model = value;
+      nodes = new Map(model.territories.map((node) => [node.id, node]));
+      scene.paintMap();
+    },
+    setEffect(value: MapEffect | null) {
+      effect = value;
+      scene.playEffect();
+    },
     setSelection(value: MapSelection) {
       selection = value;
       scene.drawSelection();

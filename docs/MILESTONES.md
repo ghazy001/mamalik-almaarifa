@@ -8,11 +8,13 @@ Rules remain reversible playtest assumptions: equal-distance castles, seeded ord
 
 ## M2 — Visual offline vertical slice
 
-First slice implemented at `/map`: dynamically loaded Phaser 4.2.1 renders the canonical 15 territories and three castles with original isometric geometry, visible topology, ownership and legal-target outlines. A server-created presentation model contains only public map data plus domain-derived legal IDs. Canvas and accessible Arabic DOM controls share preselection/hover intents; no ownership or turn changes occur. Renderer disposal, resize handling and a DOM fallback are included. See M2_MAP_SLICE.md for verification.
+Completed at `/play`: an entire local match against two explicitly scripted opponents, original Phaser isometric terrain, adjacent-target selection through canvas or Arabic DOM controls, timed four-choice questions, human attack/defense, resolved answer explanations, ownership updates, capture/defense effects, scores, castle elimination, placements and replay. The existing `/map` route remains a paused exploration preview.
 
-M2 is **in progress**, not complete. Next: add a local match controller and accessible Arabic question overlay, then battle resolution/transitions and scripted opponents until an entire offline match completes. Keep private simulation data outside the scene and never describe local browser state as cheat-resistant network authority. No rules changed in this first slice.
+The explicit-time local controller delegates all domain outcomes to game-core. The native Arabic dialog and DOM territory controls work without canvas precision; timers continue while minimized/backgrounded and reduced motion omits effects. All 79 unit/integration tests and 18 Chromium journeys passed, including full matches/replay on desktop, portrait and landscape. See M2_OFFLINE_MATCH.md for exact commands, sources and limits. Offline fixture answers remain inspectable, results are in memory and networked gameplay is not implemented. No M1 rules/protocol changed.
 
 ## M3 — Real-time multiplayer
+
+Next milestone; not started. Recommended first slice: an authoritative three-seat private Colyseus room using existing validated intents/public snapshots, with a three-browser integration test before adding matchmaking/reconnect UX.
 
 Authoritative three-client Colyseus rooms, private invites/basic matchmaking, verified seat identities, serial commands, monotonic timers, public snapshots/events, recipient-scoped acknowledgments, reconnect/forfeit and safe room drain. Validate full matches under reasonable latency, duplicate/reordered packets, backgrounding and disconnections. Review fairness policy before competition.
 

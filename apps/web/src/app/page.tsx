@@ -1,5 +1,6 @@
 import { Button } from '../components/ui/button';
 import { KingdomMark } from '../components/kingdom-mark';
+import Link from 'next/link';
 
 const steps = [
   {
@@ -32,8 +33,8 @@ export default function Home() {
         <nav aria-label="التنقل الرئيسي">
           <a href="#rules">كيف تُبنى المملكة؟</a>
           <span className="version-label">
-            <bdi dir="ltr">M1</bdi>
-            <span>مرحلة التأسيس</span>
+            <bdi dir="ltr">M2</bdi>
+            <span>معاينة الخريطة</span>
           </span>
         </nav>
       </header>
@@ -56,16 +57,16 @@ export default function Home() {
             </p>
             <div className="hero-actions">
               <Button asChild>
-                <a href="#rules">
-                  اكتشف قواعد المملكة <span aria-hidden="true">←</span>
-                </a>
+                <Link href="/map" prefetch={false}>
+                  استكشف خريطة المملكة <span aria-hidden="true">←</span>
+                </Link>
               </Button>
               <Button asChild variant="outline">
-                <a href="#foundation">عن هذه النسخة</a>
+                <a href="#rules">اكتشف قواعد المملكة</a>
               </Button>
             </div>
             <p className="availability">
-              نسخة تأسيسية · اللعب التفاعلي قادم في مرحلة لاحقة
+              خريطة تفاعلية محلية · المباريات عبر الإنترنت غير متاحة بعد
             </p>
           </div>
           <div className="heraldry" aria-hidden="true">
@@ -147,14 +148,14 @@ export default function Home() {
             <p className="eyebrow">نبني الأساس أولًا</p>
             <h2 id="foundation-title">مملكة جميلة، بقواعد راسخة.</h2>
             <p>
-              هذه واجهة مرحلة التأسيس. تشمل قواعد حتمية قابلة للاختبار، ومحاكاة
-              تقنية كاملة، وخدمة خادم مستقلة. لم تُفتح الغرف أو المباريات عبر
-              الإنترنت بعد.
+              تضم هذه النسخة قواعد حتمية قابلة للاختبار، ومحاكاة تقنية كاملة،
+              ومعاينة تفاعلية للخريطة. لم تُفتح الغرف أو المباريات عبر الإنترنت
+              بعد.
             </p>
           </div>
           <span className="foundation-tag">
             <span className="status-dot" />
-            تطوير محلي · <bdi dir="ltr">M1</bdi>
+            تطوير محلي · <bdi dir="ltr">M2</bdi>
           </span>
         </section>
       </main>

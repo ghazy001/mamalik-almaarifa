@@ -1,6 +1,6 @@
 # ممالك المعرفة · Mamalik Al-Ma'rifa
 
-Original Arabic-first strategy trivia. **M1 foundation:** deterministic headless rules, strict protocol schemas, a restrained RTL web shell, and a standalone Colyseus health service. No playable browser match or networked game room yet.
+Original Arabic-first strategy trivia. **M1 complete; M2 started:** deterministic headless rules, strict protocol schemas, an RTL web shell, a standalone Colyseus health service, and an original interactive Phaser map preview. No complete playable browser match or networked game room yet.
 
 ## Local setup
 
@@ -28,6 +28,12 @@ pnpm build
 pnpm --filter @mamalik/web start
 pnpm --filter @mamalik/game-server start
 ```
+
+## Map preview — first M2 slice
+
+Visit `/map` (or use **استكشف خريطة المملكة** on the home page). It shows all 15 canonical territories and three castles with original procedural isometric artwork. Only the active kingdom's two neutral neighbors are selectable. Click/tap a lit tile, or use Tab and Space/Enter on an available territory button. Selection and hover highlight the same map state; **مسح الاختيار** clears it.
+
+This is paused local preselection: it does not start a duel, consume a turn, run a timer or change ownership. Question battles/scripted opponents are the next M2 work. If canvas support fails, the Arabic territory controls still work. Phaser is dynamically imported only on the map route, and fonts/artwork need no remote asset service. See [M2 progress and verification](docs/M2_MAP_SLICE.md).
 
 ## Verification and simulation
 
@@ -58,7 +64,7 @@ docs/                 Design, exact rules, architecture, protocol, milestones, A
 .github/workflows/    Reproducible quality gates
 ```
 
-Database/auth packages, Phaser, Howler, and game rooms deliberately begin in later milestones. See [rules and reversible assumptions](docs/GAME_RULES.md), [architecture](docs/ARCHITECTURE.md), [protocol](docs/PROTOCOL.md) and [milestones](docs/MILESTONES.md). Preserve `AGENTS.md` as the engineering charter.
+Database/auth packages, Howler, and game rooms deliberately begin in later milestones. Phaser now powers the isolated map preview. See [rules and reversible assumptions](docs/GAME_RULES.md), [architecture](docs/ARCHITECTURE.md), [protocol](docs/PROTOCOL.md) and [milestones](docs/MILESTONES.md). Preserve `AGENTS.md` as the engineering charter.
 
 ## Five concepts to learn
 

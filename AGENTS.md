@@ -175,7 +175,7 @@ Use conventional commits (`feat`, `fix`, `test`, `docs`, `refactor`, `chore`). N
 
 ## 8. Milestones and completion contracts
 
-### M1 — Foundation and deterministic rules **(CURRENT MILESTONE)**
+### M1 — Foundation and deterministic rules **(COMPLETED)**
 
 Deliver:
 
@@ -188,7 +188,7 @@ Deliver:
 
 **Done when:** fresh install reproducibly works, web/server boot, checks pass, deterministic headless three-player match completes through rules, and documented unresolved game decisions are clearly identified. No real networked gameplay or finished art is required.
 
-### M2 — Visual offline vertical slice
+### M2 — Visual offline vertical slice **(CURRENT MILESTONE)**
 
 Original isometric map scene, territory hover/touch selection, accessible Arabic question overlay, transitions, battle effects, scripted opponents. **Done:** user finishes complete local match without backend room coordination.
 

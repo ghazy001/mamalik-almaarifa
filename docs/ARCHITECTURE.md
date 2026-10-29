@@ -1,11 +1,12 @@
-# Architecture — M1
+# Architecture — foundation and first M2 map slice
 
 ```text
 Future browser intents → shared schema → trusted room adapter → game-core
                                                          ↓
 Future browser renderer ← shared public schema ← allowlisted publicView
 
-Current web shell: independent static Next.js page
+Current web: Next.js shell + /map with a server-created public map projection
+            → lazy Phaser renderer + equivalent Arabic DOM preselection
 Current game service: persistent Node/Colyseus + HTTP /health, no rooms
 ```
 
@@ -14,7 +15,7 @@ Current game service: persistent Node/Colyseus + HTTP /health, no rooms
 - `game-core` has no package runtime dependencies. It uses types, graph topology, explicit seeded shuffle, action/context reducers, scoring and serialization projection. It never reads clocks, networks, environment variables, random globals or databases. `structuredClone` copies only serializable state. Static map/defaults are frozen. Server callers own the current state.
 - `shared` depends on Zod and defines strict versioned wire objects. It does not import private rules types. This keeps server-only question answers out of browser dependencies.
 - `game-server` depends on both. `processIntent` validates input and maps an authenticated transport player ID into a core action; it is a tested seam, **not an exposed room/endpoint**. `snapshot` validates the allowlisted projection. M3 will supply a monotonic `performance.now()`-based match-relative clock, authenticated seats, serialized room execution, timers and rate limits. Do not use Date/client time as a competitive clock.
-- `web` uses Next.js App Router, React, Tailwind and a customized shadcn-style Radix Slot Button. It imports no private engine/question content. M2 can place a client-only Phaser host behind a dynamically loaded scene, fed sanitized state and emitting intents. Critical quiz/target actions must also have DOM controls.
+- `web` uses Next.js App Router, React, Tailwind and a customized shadcn-style Radix Slot Button. `/map` now has a lazy Phaser 4.2.1 host and equivalent DOM target controls. Its server/build-side `preview.ts` constructs the canonical initial state through core transitions, validates `publicView`, derives legal IDs and sends an explicit presentation-only model. No core values, private state or question content are imported by the client scene. `geography.ts` defines artwork positions/names, never adjacency. A UI reducer handles preselection/hover without applying gameplay actions or ownership changes. See ADR 0002.
 - `config` provides strict TS settings, including unchecked-index and exact-optional checks. Packages expose only their built public entrypoint.
 
 ## Execution and build
@@ -35,4 +36,4 @@ At M1's bounded maximum of 120 turns the state/ledger remains small, so copying 
 
 ## Verification and deployment boundary
 
-Vitest covers pure rules, malformed protocol and the real HTTP health service. Playwright inspects desktop/mobile/landscape RTL, keyboard use and axe violations; automated checks do not replace Arabic human testing or full WCAG review. CI repeats formatting/lint/typecheck/tests/build/simulation/browser checks. No deployment, remote repository, database, billing, or cloud infrastructure is provisioned.
+Vitest covers pure rules, malformed protocol, the real HTTP health service and the map projection/preselection boundary. Playwright inspects desktop/mobile/landscape RTL, keyboard use, mouse/touch hit testing, canvas failure fallback, navigation cleanup and axe violations; automated checks do not replace Arabic human testing or full WCAG review. CI repeats formatting/lint/typecheck/tests/build/simulation/browser checks. No deployment, remote repository, database, billing, or cloud infrastructure is provisioned.

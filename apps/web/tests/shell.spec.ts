@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-test('Arabic shell is responsive, keyboard accessible, and honest about M1', async ({
+test('Arabic shell is responsive, keyboard accessible, and honest about development status', async ({
   page,
 }, testInfo) => {
   const errors: string[] = [];

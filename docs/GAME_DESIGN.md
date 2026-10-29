@@ -6,7 +6,9 @@ The MVP aims for 10–15-minute matches; M1's 36 turns and timers are provisiona
 
 ## Experience foundation
 
-Ink/navy surfaces, teal/sapphire faction accents, restrained gold, locally bundled Noto Sans Arabic, and original geometric heraldry establish the M1 direction. There is no borrowed game branding or artwork. The shell explains the loop and explicitly labels itself a foundation; its links lead to real page sections rather than simulated lobby actions.
+Ink/navy surfaces, teal/sapphire faction accents, restrained gold, locally bundled Noto Sans Arabic, and original geometric heraldry establish the direction. There is no borrowed game branding or artwork. The shell explains the loop and now links to `/map`, a paused local preselection preview. It explicitly says online rooms are not available.
+
+The first M2 map is **أرخبيل المنار**: original raised isometric islands, procedural trees/hills, three faction castle silhouettes, depth sorted layers and visible routes matching the canonical graph. This visual archipelago changes no rules or move costs. Arabic territory names and numbered DOM controls provide meaning independent of canvas precision and color. Only the active castle's two legal neighbors are selectable in this initial snapshot. Selection draws a bright route and outline; it never awards territory. No ambient animation or audio is enabled in this slice, including for reduced-motion users. Full scenes, battle effects, zoom/pan and measured mobile performance remain later M2/polish work.
 
 `tokens.css` owns colors/radius; Tailwind and a customized shadcn-style Button own reusable interaction styles. Native RTL, logical margins/borders, isolated LTR identifiers, visible focus and a skip link form the accessibility baseline. Decorative heraldry is hidden from assistive technology; critical information is real DOM text. Motion respects reduced-motion preferences. Noto Sans Arabic is supplied by the `@fontsource` package with its bundled open-font license. Radix/shadcn patterns are MIT licensed.
 

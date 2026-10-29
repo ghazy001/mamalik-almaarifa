@@ -8,7 +8,9 @@ Rules remain reversible playtest assumptions: equal-distance castles, seeded ord
 
 ## M2 — Visual offline vertical slice
 
-First task: build a dynamically loaded Phaser host and render the canonical 15 territories with original isometric geometry. Feed it sanitized snapshots and emit target intents. Pair every actionable territory with an accessible Arabic DOM target control. Demonstrate hover/touch/keyboard selection without moving rules into the scene. Then add a DOM quiz, explicit phase transitions/effects and scripted opponents, until an entire offline match completes.
+First slice implemented at `/map`: dynamically loaded Phaser 4.2.1 renders the canonical 15 territories and three castles with original isometric geometry, visible topology, ownership and legal-target outlines. A server-created presentation model contains only public map data plus domain-derived legal IDs. Canvas and accessible Arabic DOM controls share preselection/hover intents; no ownership or turn changes occur. Renderer disposal, resize handling and a DOM fallback are included. See M2_MAP_SLICE.md for verification.
+
+M2 is **in progress**, not complete. Next: add a local match controller and accessible Arabic question overlay, then battle resolution/transitions and scripted opponents until an entire offline match completes. Keep private simulation data outside the scene and never describe local browser state as cheat-resistant network authority. No rules changed in this first slice.
 
 ## M3 — Real-time multiplayer
 

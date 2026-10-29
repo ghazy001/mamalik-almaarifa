@@ -43,6 +43,8 @@ export function BattleDialog({
   onAnswer,
   onContinue,
   answerPending = false,
+  connectionNotice = '',
+  onRestore,
 }: {
   view: Pick<
     LocalView,
@@ -59,6 +61,8 @@ export function BattleDialog({
   onAnswer: (choiceId: string, questionId: string) => void;
   onContinue?: () => void;
   answerPending?: boolean;
+  connectionNotice?: string;
+  onRestore?: () => void;
 }) {
   const resolved = view.state.phase === 'RESOLUTION';
   const question = resolved ? view.reveal?.question : view.state.question;
@@ -142,26 +146,30 @@ export function BattleDialog({
           <p className="battle-original-question">{question.text}</p>
         )}
         <p className="battle-guidance" role="status">
-          {resolved
-            ? ownChoice
-              ? ownChoice === correct
-                ? outcome?.winner !== view.humanId
-                  ? 'إجابتك صحيحة؛ حُسمت المواجهة وفق قاعدة السرعة والتعادل.'
-                  : 'إجابتك صحيحة.'
-                : 'إجابتك غير صحيحة.'
-              : view.reveal?.humanInvolved
-                ? 'انتهت المهلة دون إجابة منك.'
-                : 'حُسمت مواجهة المملكتين.'
-            : view.humanInvolved
-              ? view.humanChoiceId
-                ? answerPending
-                  ? 'جارٍ إرسال إجابتك…'
-                  : 'تم تسجيل إجابتك. ننتظر حسم المواجهة.'
-                : question.defenderId === view.humanId
-                  ? 'أنت تدافع عن هذه الأرض. اختر إجابة واحدة.'
-                  : 'اختر إجابة واحدة قبل انتهاء المهلة.'
-              : 'أنت تراقب مواجهة المملكتين.'}
+          {connectionNotice ||
+            (resolved
+              ? ownChoice
+                ? ownChoice === correct
+                  ? outcome?.winner !== view.humanId
+                    ? 'إجابتك صحيحة؛ حُسمت المواجهة وفق قاعدة السرعة والتعادل.'
+                    : 'إجابتك صحيحة.'
+                  : 'إجابتك غير صحيحة.'
+                : view.reveal?.humanInvolved
+                  ? 'انتهت المهلة دون إجابة منك.'
+                  : 'حُسمت مواجهة المملكتين.'
+              : view.humanInvolved
+                ? view.humanChoiceId
+                  ? answerPending
+                    ? 'جارٍ إرسال إجابتك…'
+                    : 'تم تسجيل إجابتك. ننتظر حسم المواجهة.'
+                  : question.defenderId === view.humanId
+                    ? 'أنت تدافع عن هذه الأرض. اختر إجابة واحدة.'
+                    : 'اختر إجابة واحدة قبل انتهاء المهلة.'
+                : 'أنت تراقب مواجهة المملكتين.')}
         </p>
+        {connectionNotice && onRestore && (
+          <Button onClick={onRestore}>استعادة الاتصال</Button>
+        )}
         <div className="battle-choices">
           {question.choices.map((choice, index) => {
             const label = (

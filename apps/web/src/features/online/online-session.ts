@@ -40,6 +40,9 @@ export function createOnlineSession(endpoint: string) {
   let lastSync = -Infinity;
   let generation = 0;
   let cancelledThrough = 0;
+  let recovering = false;
+  let recoveryFloor: number | null = null;
+  let refreshTimer: ReturnType<typeof setTimeout> | null = null;
   const pings = new Map<string, number>();
   const listeners = new Set<() => void>();
   const publish = (patch: Partial<OnlineView>) => {
@@ -65,12 +68,34 @@ export function createOnlineSession(endpoint: string) {
     }
   };
   const sync = () => {
-    if (!room?.connection.isOpen) return;
+    if (
+      !alive ||
+      !room?.connection.isOpen ||
+      performance.now() - lastSync < 250
+    )
+      return;
     const nonce = crypto.randomUUID();
     pings.set(nonce, performance.now());
     if (pings.size > 4) pings.delete(pings.keys().next().value!);
     lastSync = performance.now();
     room.send('sync', { nonce });
+  };
+  const clearRefresh = () => {
+    if (refreshTimer !== null) clearTimeout(refreshTimer);
+    refreshTimer = null;
+  };
+  const refresh = () => {
+    if (!alive || !room?.connection.isOpen) return;
+    bestRtt = Infinity;
+    const delay = Math.max(0, 250 - (performance.now() - lastSync));
+    if (delay === 0) {
+      clearRefresh();
+      sync();
+    } else if (refreshTimer === null)
+      refreshTimer = setTimeout(() => {
+        refreshTimer = null;
+        sync();
+      }, delay);
   };
   function attach(next: Room) {
     room = next;
@@ -80,13 +105,20 @@ export function createOnlineSession(endpoint: string) {
     room.reconnection.minUptime = 0;
     room.reconnection.maxEnqueuedMessages = 0;
     room.onMessage('snapshot', (input: unknown) => {
-      if (!isCurrent()) return;
+      if (!isCurrent() || !next.connection.isOpen) return;
       const parsed = roomSnapshotSchema.safeParse(input);
       if (!parsed.success) {
         publish({ error: 'وصلت حالة غير متوافقة؛ أعد الاتصال.' });
         return;
       }
       const data = parsed.data;
+      // A buffered pre-drop message cannot unlock actions. The recovery sync
+      // clock precedes its full snapshot on the authoritative transport.
+      if (
+        recovering &&
+        (recoveryFloor === null || data.serverNow < recoveryFloor)
+      )
+        return;
       const previous = view.snapshot;
       if (
         previous?.roomId === data.roomId &&
@@ -94,15 +126,23 @@ export function createOnlineSession(endpoint: string) {
       )
         return;
       if (offset === null) offset = data.serverNow - performance.now();
+      const recovered = recovering;
+      recovering = false;
+      recoveryFloor = null;
       const sameQuestion =
         previous?.state?.question?.id === data.state?.question?.id &&
         previous?.state?.turn === data.state?.turn;
       publish({
         snapshot: data,
         status: data.closed ? 'closed' : 'connected',
+        error: recovered ? '' : view.error,
         pendingAnswer:
           sameQuestion && !data.ownChoiceId ? view.pendingAnswer : null,
-        estimatedNow: Math.max(data.serverNow, performance.now() + offset),
+        estimatedNow: Math.max(
+          view.estimatedNow,
+          data.serverNow,
+          performance.now() + offset,
+        ),
       });
       save();
     });
@@ -114,6 +154,8 @@ export function createOnlineSession(endpoint: string) {
       if (sent === undefined) return;
       pings.delete(parsed.data.nonce);
       const received = performance.now();
+      if (recovering)
+        recoveryFloor = Math.max(recoveryFloor ?? 0, parsed.data.serverNow);
       const rtt = received - sent;
       if (rtt <= bestRtt) {
         bestRtt = rtt;
@@ -125,14 +167,34 @@ export function createOnlineSession(endpoint: string) {
       if (!isCurrent()) return;
       const parsed = eventSchema.safeParse(input);
       if (!parsed.success) return;
-      if (parsed.data.type === 'COMMAND_REJECTED')
+      const event = parsed.data;
+      const snapshot = view.snapshot;
+      const state = snapshot?.state;
+      if (
+        view.status !== 'connected' ||
+        !state ||
+        event.matchId !== state.matchId ||
+        event.turn !== state.turn ||
+        event.sequence < snapshot.sequence
+      )
+        return;
+      if (event.type === 'COMMAND_REJECTED')
         publish({
-          error: `رُفض الإجراء (${parsed.data.error}). راجع الدور والمهلة.`,
-          pendingAnswer: null,
+          error: `رُفض الإجراء (${event.error}). راجع الدور والمهلة.`,
+          pendingAnswer:
+            event.idempotencyKey === `SUBMIT_ANSWER_${state.turn}`
+              ? null
+              : view.pendingAnswer,
         });
+      else if (event.type === 'ANSWER_ACKNOWLEDGED' && view.pendingAnswer)
+        refresh();
     });
     room.onDrop(() => {
       if (!isCurrent()) return;
+      recovering = true;
+      recoveryFloor = null;
+      pings.clear();
+      clearRefresh();
       publish({
         status: 'reconnecting',
         pendingAnswer: null,
@@ -142,11 +204,19 @@ export function createOnlineSession(endpoint: string) {
     room.onReconnect(() => {
       if (!isCurrent()) return;
       offset = null;
+      recovering = true;
+      recoveryFloor = null;
       bestRtt = Infinity;
       pings.clear();
       publish({ status: 'reconnecting', error: '' });
-      save();
-      sync();
+      // The SDK rotates its bearer token and sends JOIN_ROOM acknowledgement
+      // after invoking this callback. Run after that finally block.
+      queueMicrotask(() => {
+        if (!isCurrent()) return;
+        save();
+        lastSync = -Infinity;
+        sync();
+      });
     });
     room.onLeave(() => {
       if (isCurrent())
@@ -154,14 +224,14 @@ export function createOnlineSession(endpoint: string) {
           status: 'closed',
           pendingAnswer: null,
           error:
-            'انتهى الاتصال بالغرفة. يمكنك محاولة الاستعادة خلال مهلة الثلاثين ثانية.',
+            'توقفت محاولة الاتصال. يمكنك إعادة المحاولة إن كانت مهلة الاستعادة ما تزال سارية.',
         });
     });
     room.onError(() => {
       if (isCurrent()) publish({ error: 'تعذّر إكمال الاتصال بالغرفة.' });
     });
     save();
-    publish({ status: 'connected', error: '' });
+    publish({ status: 'connecting', error: '' });
     sync();
   }
   async function connect(
@@ -181,10 +251,17 @@ export function createOnlineSession(endpoint: string) {
       error: '',
       snapshot: null,
       searching: kind === 'queue',
+      estimatedNow: 0,
+      rttMs: null,
+      pendingAnswer: null,
     });
     offset = null;
     bestRtt = Infinity;
     pings.clear();
+    clearRefresh();
+    lastSync = -Infinity;
+    recovering = false;
+    recoveryFloor = null;
     try {
       const client = new Client(endpoint);
       let next: Room;
@@ -250,6 +327,7 @@ export function createOnlineSession(endpoint: string) {
     },
     suspend() {
       alive = false;
+      clearRefresh();
       generation++;
       if (room) {
         room.reconnection.enabled = false;
@@ -257,15 +335,18 @@ export function createOnlineSession(endpoint: string) {
       }
     },
     tick() {
+      if (!alive) return;
       if (offset !== null)
         publish({
           estimatedNow: Math.max(
+            view.estimatedNow,
             view.snapshot?.serverNow ?? 0,
             performance.now() + offset,
           ),
         });
       if (performance.now() - lastSync > 5000) sync();
     },
+    refresh,
     send(
       type: 'READY' | 'SELECT_TARGET' | 'SUBMIT_ANSWER',
       fields: {
@@ -276,6 +357,11 @@ export function createOnlineSession(endpoint: string) {
     ) {
       const state = view.snapshot?.state;
       if (!state || view.status !== 'connected' || !room?.connection.isOpen)
+        return;
+      if (
+        type === 'SUBMIT_ANSWER' &&
+        (view.pendingAnswer || view.snapshot?.ownChoiceId)
+      )
         return;
       const command = {
         protocolVersion: PROTOCOL_VERSION,
@@ -296,6 +382,7 @@ export function createOnlineSession(endpoint: string) {
     },
     async leave() {
       forget();
+      clearRefresh();
       cancelledThrough = generation;
       generation++;
       const previous = room;

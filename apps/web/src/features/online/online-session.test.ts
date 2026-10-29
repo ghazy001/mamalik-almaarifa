@@ -59,6 +59,7 @@ const initial = (): RoomSnapshot => ({
   reveal: null,
 });
 beforeEach(() => {
+  vi.restoreAllMocks();
   vi.clearAllMocks();
   const values = new Map<string, string>();
   vi.stubGlobal('sessionStorage', {
@@ -66,6 +67,193 @@ beforeEach(() => {
     setItem: (key: string, value: string) => values.set(key, value),
     removeItem: (key: string) => values.delete(key),
   });
+});
+
+function duel(): RoomSnapshot {
+  const state = publicView(
+    createMatch({
+      id: 'm_test',
+      seed: 1,
+      players: ['p_teal', 'p_blue', 'p_gold'].map((id) => ({ id, name: id })),
+      questionIds: Array.from({ length: 36 }, (_, index) => `q_${index}`),
+    }),
+  );
+  return {
+    ...initial(),
+    sequence: 10,
+    state: {
+      ...state,
+      turn: 1,
+      phase: 'DUEL',
+      activePlayerId: 'p_teal',
+      question: {
+        id: 'q_0',
+        text: 'سؤال اختبار',
+        targetId: 't_01',
+        attackerId: 'p_teal',
+        defenderId: null,
+        deadline: 15100,
+        choices: [
+          { id: 'a', text: 'أ' },
+          { id: 'b', text: 'ب' },
+          { id: 'c', text: 'ج' },
+          { id: 'd', text: 'د' },
+        ],
+      },
+    },
+  };
+}
+
+it('waits for correlated post-reconnect state, rotates the saved token and restores an accepted answer', async () => {
+  const room = fakeRoom();
+  sdk.create.mockResolvedValueOnce(room);
+  const session = createOnlineSession('http://127.0.0.1:2567');
+  await session.connect('create', 'معرفة');
+  const oldNonce = room.send.mock.calls.at(-1)![1].nonce;
+  room.messages.get('snapshot')!(duel());
+  session.send('SUBMIT_ANSWER', { questionId: 'q_0', choiceId: 'a' });
+  room.connection.isOpen = false;
+  room.events.get('drop')!();
+  expect(session.getSnapshot().pendingAnswer).toBeNull();
+  room.connection.isOpen = true;
+  room.events.get('reconnect')!();
+  // Match the SDK ordering: callback first, token rotation in its finally block.
+  room.reconnectionToken = 'rotated_token';
+  room.messages.get('snapshot')!({ ...duel(), sequence: 11, serverNow: 200 });
+  expect(session.getSnapshot().status).toBe('reconnecting');
+  await Promise.resolve();
+  expect(JSON.parse(sessionStorage.getItem('mamalik.room.v2')!).token).toBe(
+    'rotated_token',
+  );
+  const nonce = room.send.mock.calls.at(-1)![1].nonce;
+  room.messages.get('clock')!({ nonce: oldNonce, serverNow: 200 });
+  room.messages.get('snapshot')!({ ...duel(), sequence: 11, serverNow: 201 });
+  expect(session.getSnapshot().status).toBe('reconnecting');
+  session.send('SUBMIT_ANSWER', { questionId: 'q_0', choiceId: 'b' });
+  room.messages.get('clock')!({ nonce, serverNow: 900 });
+  room.messages.get('snapshot')!({ ...duel(), sequence: 11, serverNow: 899 });
+  expect(session.getSnapshot().status).toBe('reconnecting');
+  room.messages.get('snapshot')!({
+    ...duel(),
+    sequence: 12,
+    serverNow: 910,
+    ownChoiceId: 'a',
+  });
+  expect(session.getSnapshot()).toMatchObject({
+    status: 'connected',
+    error: '',
+    snapshot: { ownChoiceId: 'a' },
+  });
+  expect(session.getSnapshot().snapshot?.state?.question?.deadline).toBe(15100);
+  session.send('SUBMIT_ANSWER', { questionId: 'q_0', choiceId: 'b' });
+  expect(
+    room.send.mock.calls.filter(([type]) => type === 'command'),
+  ).toHaveLength(1);
+});
+
+it('ignores delayed rejections and cannot replace a pending answer', async () => {
+  const room = fakeRoom();
+  sdk.create.mockResolvedValueOnce(room);
+  const session = createOnlineSession('http://127.0.0.1:2567');
+  await session.connect('create', 'معرفة');
+  room.messages.get('snapshot')!(duel());
+  session.send('SUBMIT_ANSWER', { questionId: 'q_0', choiceId: 'a' });
+  session.send('SUBMIT_ANSWER', { questionId: 'q_0', choiceId: 'b' });
+  expect(
+    room.send.mock.calls.filter(([type]) => type === 'command'),
+  ).toHaveLength(1);
+  const rejection = {
+    protocolVersion: PROTOCOL_VERSION,
+    type: 'COMMAND_REJECTED',
+    matchId: 'm_test',
+    turn: 1,
+    sequence: 10,
+    idempotencyKey: 'SUBMIT_ANSWER_1',
+    error: 'ALREADY_ANSWERED',
+  };
+  for (const stale of [
+    { ...rejection, turn: 0 },
+    { ...rejection, sequence: 9 },
+    { ...rejection, matchId: 'm_old' },
+  ]) {
+    room.messages.get('event')!(stale);
+    expect(session.getSnapshot()).toMatchObject({
+      pendingAnswer: 'a',
+      error: '',
+    });
+  }
+  room.messages.get('event')!({
+    ...rejection,
+    idempotencyKey: 'SELECT_TARGET_1',
+  });
+  expect(session.getSnapshot().pendingAnswer).toBe('a');
+  room.messages.get('event')!(rejection);
+  expect(session.getSnapshot().pendingAnswer).toBeNull();
+});
+
+it('refreshes after a suspended display, throttles probes and never moves advisory time backward', async () => {
+  let now = 100;
+  vi.spyOn(performance, 'now').mockImplementation(() => now);
+  const room = fakeRoom();
+  sdk.create.mockResolvedValueOnce(room);
+  const session = createOnlineSession('http://127.0.0.1:2567');
+  await session.connect('create', 'معرفة');
+  const first = room.send.mock.calls.at(-1)![1].nonce;
+  room.messages.get('snapshot')!(duel());
+  now = 600;
+  session.tick();
+  const before = session.getSnapshot().estimatedNow;
+  room.messages.get('clock')!({ nonce: first, serverNow: 300 });
+  session.tick();
+  expect(session.getSnapshot().estimatedNow).toBeGreaterThanOrEqual(before);
+  now = 1000;
+  for (let index = 0; index < 30; index++) session.refresh();
+  expect(room.send.mock.calls.filter(([type]) => type === 'sync')).toHaveLength(
+    2,
+  );
+  const nonce = room.send.mock.calls.at(-1)![1].nonce;
+  now = 1005;
+  room.messages.get('clock')!({ nonce, serverNow: 14000 });
+  session.tick();
+  expect(session.getSnapshot().estimatedNow).toBeGreaterThanOrEqual(14000);
+  session.suspend();
+  now = 7000;
+  session.refresh();
+  session.tick();
+  expect(room.send.mock.calls.filter(([type]) => type === 'sync')).toHaveLength(
+    2,
+  );
+});
+
+it('can manually restore a closed transport without clearing its saved seat', async () => {
+  const old = fakeRoom();
+  const next = fakeRoom();
+  sdk.create.mockResolvedValueOnce(old);
+  sdk.reconnect.mockResolvedValueOnce(next);
+  const session = createOnlineSession('http://127.0.0.1:2567');
+  await session.connect('create', 'معرفة');
+  old.messages.get('snapshot')!(duel());
+  old.events.get('leave')!();
+  expect(session.getSnapshot().status).toBe('closed');
+  await session.connect('restore');
+  expect(sdk.reconnect).toHaveBeenCalledWith('private_test_token');
+  expect(session.getSnapshot()).toMatchObject({
+    status: 'connecting',
+    snapshot: null,
+  });
+  next.messages.get('snapshot')!({ ...duel(), ownChoiceId: 'a' });
+  old.messages.get('snapshot')!({ ...duel(), sequence: 100 });
+  expect(session.getSnapshot().snapshot?.ownChoiceId).toBe('a');
+});
+
+it('does not save a late reconnect token after an explicit departure', async () => {
+  const room = fakeRoom();
+  sdk.create.mockResolvedValueOnce(room);
+  const session = createOnlineSession('http://127.0.0.1:2567');
+  await session.connect('create', 'معرفة');
+  room.events.get('reconnect')!();
+  await session.leave();
+  expect(sessionStorage.getItem('mamalik.room.v2')).toBeNull();
 });
 it('rejects malformed/out-of-order snapshots and ignores late messages from a departed room', async () => {
   const old = fakeRoom();

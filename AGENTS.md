@@ -192,11 +192,11 @@ Deliver:
 
 Original isometric map scene, territory hover/touch selection, accessible Arabic question overlay, transitions, battle effects, scripted opponents. **Done:** user finishes complete local match without backend room coordination.
 
-### M3 — Real-time multiplayer **(CURRENT MILESTONE)**
+### M3 — Real-time multiplayer **(COMPLETED — LOCAL GUEST SCOPE)**
 
 Three-client Colyseus rooms, invites/basic matchmaking, sync, phase timers, answer validation, reconnect/forfeit. **Done:** three real browser sessions reliably finish a match under reasonable latency and reconnect scenarios.
 
-### M4 — Identity, content, persistence
+### M4 — Identity, content, persistence **(NEXT MILESTONE)**
 
 Supabase Auth, question CMS/review with sources, PostgreSQL migrations, history/basic ranking, admin authorization. **Done:** audited question workflow and durable accurate results.
 

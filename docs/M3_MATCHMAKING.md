@@ -1,6 +1,6 @@
 # M3 — Basic guest matchmaking
 
-M3 remains in progress. `/online` now supports real guest matchmaking as well as private invitations. Queue admission reuses the same server-authoritative gameplay, deadlines, public snapshots and reconnect/forfeit behavior. There are no queue bots or account/ranking systems.
+This is the historical second-slice verification record. The subsequent recovery increment and current M3 status are documented in M3_RESILIENCE.md. `/online` now supports real guest matchmaking as well as private invitations. Queue admission reuses the same server-authoritative gameplay, deadlines, public snapshots and reconnect/forfeit behavior. There are no queue bots or account/ranking systems.
 
 ## Manual test
 

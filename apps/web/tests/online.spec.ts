@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { MAP } from '@mamalik/game-core';
 import { findFixture } from '../src/features/match/questions';
+import { installSocketFaults } from './support/socket-faults';
 test.use({
   actionTimeout: 10000,
   trace: {
@@ -89,7 +90,7 @@ async function chooseTarget(page: Page, playerId: string) {
   }
 }
 
-test('three browsers matchmake or join an invitation, reconnect and finish the same authoritative match', async ({
+test('three browsers finish the same match through lost frames, in-question reconnect, reload and frozen-tab recovery', async ({
   page,
   browser,
 }, testInfo) => {
@@ -112,6 +113,13 @@ test('three browsers matchmake or join an invitation, reconnect and finish the s
     await contexts[1]!.newPage(),
   ];
   const errors: string[] = [];
+  const faults = new Map(
+    await Promise.all(
+      pages.map(
+        async (client) => [client, await installSocketFaults(client)] as const,
+      ),
+    ),
+  );
   for (const client of pages)
     client.on('pageerror', (error) => errors.push(error.message));
   try {
@@ -200,6 +208,9 @@ test('three browsers matchmake or join an invitation, reconnect and finish the s
       p_gold: pages[2]!,
     };
     let battles = 0;
+    let recoveredQuestion = false;
+    let recoveredReload = false;
+    let recoveredFrozen = false;
     for (let guard = 0; guard < 45; guard++) {
       const root = page.locator('.online-match');
       if ((await root.getAttribute('data-phase')) === 'FINISHED') break;
@@ -226,7 +237,8 @@ test('three browsers matchmake or join an invitation, reconnect and finish the s
         .locator('dialog[open]')
         .getAttribute('data-question-id');
       const correct = findFixture(questionId!).question.correctChoiceId;
-      if (!battles++) {
+      battles++;
+      if (battles === 1) {
         expect(
           (
             await new AxeBuilder({ page: current })
@@ -236,18 +248,168 @@ test('three browsers matchmake or join an invitation, reconnect and finish the s
         ).toEqual([]);
         await current.screenshot({ path: testInfo.outputPath('question.png') });
       }
+      const deadline = await current
+        .locator('.online-match')
+        .getAttribute('data-question-deadline');
+      if (battles === 2) {
+        const transport = faults.get(current)!;
+        await transport.drop();
+        await expect(current.locator('.online-match')).toHaveAttribute(
+          'data-status',
+          'reconnecting',
+        );
+        await expect(
+          current.locator('dialog[open] .battle-guidance'),
+        ).toContainText(/انقطع الاتصال|نستعيد حالة/);
+        await expect(current.locator('[data-choice-id]:enabled')).toHaveCount(
+          0,
+        );
+        await current.screenshot({
+          path: testInfo.outputPath('reconnecting.png'),
+        });
+        transport.resume();
+        await expect(current.locator('.online-match')).toHaveAttribute(
+          'data-status',
+          'connected',
+        );
+        await expect(current.locator('dialog[open]')).toHaveAttribute(
+          'data-question-id',
+          questionId!,
+        );
+        await expect(current.locator('.online-match')).toHaveAttribute(
+          'data-question-deadline',
+          deadline!,
+        );
+        await expect(current.locator('.online-match')).toHaveAttribute(
+          'data-player-id',
+          actor!,
+        );
+        recoveredQuestion = true;
+      }
+      let frozen: { page: Page; resume: () => Promise<void> } | null = null;
+      if (battles === 3) {
+        await current.reload();
+        await expect(current.locator('.online-match')).toHaveAttribute(
+          'data-status',
+          'connected',
+        );
+        await expect(current.locator('dialog[open]')).toHaveAttribute(
+          'data-question-id',
+          questionId!,
+        );
+        await expect(current.locator('.online-match')).toHaveAttribute(
+          'data-question-deadline',
+          deadline!,
+        );
+        recoveredReload = true;
+        for (const observer of pages.filter((client) => client !== current)) {
+          if (await observer.locator('[data-choice-id]:enabled').count())
+            continue;
+          const cdp = await observer.context().newCDPSession(observer);
+          await cdp.send('Page.setWebLifecycleState', { state: 'frozen' });
+          frozen = {
+            page: observer,
+            resume: async () => {
+              await cdp.send('Page.setWebLifecycleState', { state: 'active' });
+              await cdp.detach();
+            },
+          };
+          break;
+        }
+        expect(frozen).not.toBeNull();
+      }
+      const transport = faults.get(current)!;
+      const replayOld = battles === 1 ? transport.captureSnapshot() : null;
+      if (battles === 1) {
+        transport.suppress(true);
+        transport.duplicateNextCommand();
+      }
       await current.locator(`[data-choice-id="${correct}"]`).click();
       for (const client of pages.filter((client) => client !== current)) {
+        if (client === frozen?.page) continue;
         const answer = client.locator(`[data-choice-id="${correct}"]:enabled`);
         if (await answer.count()) await answer.click();
       }
-      await expect(root).toHaveAttribute('data-phase', /RESOLUTION|FINISHED/);
+      if (battles === 1) {
+        const witness = pages.find((client) => client !== current)!;
+        await expect(witness.locator('.online-match')).toHaveAttribute(
+          'data-phase',
+          /RESOLUTION|FINISHED/,
+        );
+        expect(transport.stats().suppressed).toBeGreaterThan(0);
+        expect(transport.stats().duplicated).toBe(1);
+        // Watch DOM sequence monotonicity while old/duplicate frames arrive.
+        await current
+          .locator('.online-match')
+          .evaluate((element: HTMLElement) => {
+            let previous = Number(element.dataset.sequence);
+            element.dataset.sequenceRegressed = 'false';
+            new MutationObserver(() => {
+              const next = Number(element.dataset.sequence);
+              if (next < previous) element.dataset.sequenceRegressed = 'true';
+              previous = next;
+            }).observe(element, {
+              attributes: true,
+              attributeFilter: ['data-sequence'],
+            });
+          });
+        transport.suppress(false);
+        await current.evaluate(() => window.dispatchEvent(new Event('online')));
+        await expect(current.locator('.online-match')).toHaveAttribute(
+          'data-phase',
+          /RESOLUTION|ATTACK_SELECTION|FINISHED/,
+        );
+        const sequence = Number(
+          await current.locator('.online-match').getAttribute('data-sequence'),
+        );
+        replayOld!();
+        replayOld!();
+        await current.evaluate(() =>
+          window.dispatchEvent(new Event('pageshow')),
+        );
+        await expect
+          .poll(
+            async () =>
+              Number(
+                await current
+                  .locator('.online-match')
+                  .getAttribute('data-sequence'),
+              ),
+            { timeout: 7000 },
+          )
+          .toBeGreaterThan(sequence);
+        await expect(current.locator('.online-match')).toHaveAttribute(
+          'data-sequence-regressed',
+          'false',
+        );
+      }
+      const progressing =
+        frozen?.page === page ? current.locator('.online-match') : root;
+      if (battles !== 1)
+        await expect(progressing).toHaveAttribute(
+          'data-phase',
+          /RESOLUTION|FINISHED/,
+        );
       // Server owns the three-second review interval; clients have no Continue command.
-      await expect(root).toHaveAttribute(
+      await expect(progressing).toHaveAttribute(
         'data-phase',
         /ATTACK_SELECTION|FINISHED/,
         { timeout: 20000 },
       );
+      if (frozen) {
+        const turn = await progressing.getAttribute('data-turn');
+        await frozen.resume();
+        await frozen.page.bringToFront();
+        await expect(frozen.page.locator('.online-match')).toHaveAttribute(
+          'data-turn',
+          turn!,
+        );
+        await expect(frozen.page.locator('.online-match')).toHaveAttribute(
+          'data-phase',
+          /ATTACK_SELECTION|FINISHED/,
+        );
+        recoveredFrozen = true;
+      }
     }
     for (const client of pages) {
       await expect(client.locator('.online-match')).toHaveAttribute(
@@ -258,11 +420,20 @@ test('three browsers matchmake or join an invitation, reconnect and finish the s
       await expect(client.locator('#online-results-title')).toBeFocused();
     }
     expect(battles).toBeGreaterThan(0);
+    expect({ recoveredQuestion, recoveredReload, recoveredFrozen }).toEqual({
+      recoveredQuestion: true,
+      recoveredReload: true,
+      recoveredFrozen: true,
+    });
     const result = await page.locator('.match-placements').innerText();
     for (const client of pages)
       expect(await client.locator('.match-placements').innerText()).toBe(
         result,
       );
+    // All three results are verified. Release guest renderers after the frozen
+    // tab case before axe opens its helper page in the surviving context.
+    await Promise.all(contexts.map((context) => context.close()));
+    await page.bringToFront();
     expect(
       (
         await new AxeBuilder({ page })
@@ -276,9 +447,9 @@ test('three browsers matchmake or join an invitation, reconnect and finish the s
       ),
     ).toBe(true);
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
-    await page.screenshot({
+    await page.locator('.match-results').screenshot({
       path: testInfo.outputPath('results.png'),
-      fullPage: true,
+      timeout: 10000,
     });
     // Inspect scripts actually loaded by /online, including framework prefetches.
     const scripts = await page.evaluate(() =>

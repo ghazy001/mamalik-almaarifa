@@ -38,12 +38,24 @@ export function OnlineMatch({ endpoint }: { endpoint: string }) {
     setCode(new URLSearchParams(window.location.search).get('room') ?? '');
     const restore = window.setTimeout(() => session.restoreIfSaved(), 0);
     const timer = window.setInterval(() => session.tick(), 100);
-    const visible = () => session.tick();
+    const visible = () => {
+      if (document.visibilityState === 'visible') {
+        session.tick();
+        session.refresh();
+      }
+    };
+    const wake = () => session.refresh();
     document.addEventListener('visibilitychange', visible);
+    document.addEventListener('resume', wake);
+    window.addEventListener('pageshow', wake);
+    window.addEventListener('online', wake);
     return () => {
       window.clearTimeout(restore);
       window.clearInterval(timer);
       document.removeEventListener('visibilitychange', visible);
+      document.removeEventListener('resume', wake);
+      window.removeEventListener('pageshow', wake);
+      window.removeEventListener('online', wake);
       session.suspend();
     };
   }, [session]);
@@ -115,6 +127,8 @@ export function OnlineMatch({ endpoint }: { endpoint: string }) {
       data-match-id={state?.matchId ?? ''}
       data-active-player-id={state?.activePlayerId ?? ''}
       data-room-mode={snapshot?.mode ?? ''}
+      data-sequence={snapshot?.sequence ?? 0}
+      data-question-deadline={state?.question?.deadline ?? ''}
     >
       <p className="online-connection" role="status">
         {connected
@@ -130,6 +144,16 @@ export function OnlineMatch({ endpoint }: { endpoint: string }) {
         <p className="match-notice" role="alert">
           {view.error}
         </p>
+      )}
+      {snapshot && (view.status === 'closed' || view.status === 'error') && (
+        <div className="online-entry-actions">
+          <Button onClick={() => void session.connect('restore')}>
+            استعادة الاتصال
+          </Button>
+          <Button variant="outline" onClick={() => void session.leave()}>
+            العودة إلى الغرف
+          </Button>
+        </div>
       )}
       {!snapshot && (
         <section className="online-entry" aria-labelledby="online-entry-title">
@@ -466,6 +490,15 @@ export function OnlineMatch({ endpoint }: { endpoint: string }) {
                             : null,
                       }}
                       answerPending={view.pendingAnswer !== null}
+                      connectionNotice={
+                        connected
+                          ? ''
+                          : view.error ||
+                            'نستعيد حالة المباراة من الخادم؛ الوقت مستمر والإجابات متوقفة مؤقتًا.'
+                      }
+                      {...(view.status === 'closed' || view.status === 'error'
+                        ? { onRestore: () => void session.connect('restore') }
+                        : {})}
                       onAnswer={(choiceId, questionId) =>
                         session.send('SUBMIT_ANSWER', { choiceId, questionId })
                       }

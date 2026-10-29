@@ -1,6 +1,6 @@
 # ممالك المعرفة · Mamalik Al-Ma'rifa
 
-Original Arabic-first strategy trivia. The M1 foundation and M2 offline match are implemented: deterministic rules, strict protocol schemas, an RTL web shell, a standalone Colyseus health service, and original interactive Phaser terrain. Play a complete local match against two scripted opponents at `/play`, or find two real guests through basic matchmaking or private invitations at `/online`. M3 is in progress; broader network resilience validation remains.
+Original Arabic-first strategy trivia. The M1 foundation and M2 offline match are implemented: deterministic rules, strict protocol schemas, an RTL web shell, a standalone Colyseus health service, and original interactive Phaser terrain. Play a complete local match against two scripted opponents at `/play`, or find two real guests through basic matchmaking or private invitations at `/online`. M3 is complete for the documented local guest-match scope. Identity, reviewed content and persistence are next in M4.
 
 ## Local setup
 
@@ -31,11 +31,11 @@ pnpm --filter @mamalik/game-server start
 
 ## Play a three-player online match
 
-Open `/online` and enter a guest name. Choose **ابحث عن لاعبين** on three tabs/browser profiles using the same game service; the queue fills available rooms with three guests. **إلغاء البحث** frees an incomplete-lobby seat. Once full, all three select **أنا جاهز** within 60 seconds or the queued lobby cancels without a winner. Alternatively, **أنشئ غرفة خاصة**, share its code/link, and join with **انضم إلى الغرفة**. Private rooms never mix with queue searches. The persistent game service decides turns, questions, deadlines, ownership and results. Unexpected drops reserve the same seat for 30 seconds while timers continue; reload recovery uses a per-tab sessionStorage token. Explicit leave forfeits. Results are in memory.
+Open `/online` and enter a guest name. Choose **ابحث عن لاعبين** on three tabs/browser profiles using the same game service; the queue fills available rooms with three guests. **إلغاء البحث** frees an incomplete-lobby seat. Once full, all three select **أنا جاهز** within 60 seconds or the queued lobby cancels without a winner. Alternatively, **أنشئ غرفة خاصة**, share its code/link, and join with **انضم إلى الغرفة**. Private rooms never mix with queue searches. The persistent game service decides turns, questions, deadlines, ownership and results. Unexpected drops reserve the same seat for 30 seconds while timers continue; reload recovery uses a per-tab sessionStorage token. Explicit leave forfeits when it reaches the server; leaving while offline stops local retries and the unreachable seat expires through server grace. Results are in memory. Actions stay disabled until fresh server state arrives after recovery. If automatic recovery stops, **استعادة الاتصال** retries the saved seat from inside the question dialog. Returning to a suspended tab refreshes its view; no deadline pauses or resets.
 
 `GAME_SERVER_URL` defaults to `http://127.0.0.1:2567`. Export it before starting Next/Turbo or put it in `apps/web/.env.local` when changing the browser-reachable service URL. No rebuild is needed for this request-time public endpoint. Root `.env` is read by the game service, not automatically by Next. Loopback URLs work on this computer only; this increment is not a deployment.
 
-See [M3 matchmaking behavior, verification and limits](docs/M3_MATCHMAKING.md) and the [first private-room slice](docs/M3_PRIVATE_ROOMS.md). Protocol v2 adds room mode/readiness deadlines; restart both services and reload tabs together after upgrading. Rules remain v1. Guest seats are transport identities, not accounts. The shared development question fixtures are public through the offline demo/source; reviewed server-only content and persistent results remain M4.
+See [M3 recovery behavior and verification](docs/M3_RESILIENCE.md), [matchmaking behavior and limits](docs/M3_MATCHMAKING.md) and the [first private-room slice](docs/M3_PRIVATE_ROOMS.md). Protocol v2 adds room mode/readiness deadlines; restart both services and reload tabs together after upgrading. Rules remain v1. Guest seats are transport identities, not accounts. The shared development question fixtures are public through the offline demo/source; reviewed server-only content and persistent results remain M4.
 
 ## Play a local match
 
@@ -66,7 +66,7 @@ pnpm test:e2e
 
 The simulation uses explicit seed `2026`, synthetic question fixtures and three scripted players. It completes 36 turns with 177 accepted actions and emits a TURN_LIMIT result with `p_gold` winning. It is deterministic, not live multiplayer or a content demo. Tests replay its action/context log and compare the exact final private state.
 
-Browser checks use a production web build on 3100 and the real authoritative room in a trusted six-turn server fixture on 2571 and Chromium at desktop, mobile and short landscape sizes, with overflow, Arabic direction, keyboard, console-error and axe checks. They do not reuse an existing process. Screenshots are saved under `apps/web/test-results/`. Run `pnpm build` before `pnpm test:e2e`; CI installs Chromium with OS dependencies. Review the [current M3 record](docs/M3_MATCHMAKING.md) for current results/limits and the [historical M1 record](docs/VERIFICATION.md).
+Browser checks use a production web build on 3100 and the real authoritative room in a trusted six-turn server fixture on 2571 and Chromium at desktop, mobile and short landscape sizes, with overflow, Arabic direction, keyboard, console-error and axe checks. They do not reuse an existing process. Screenshots are saved under `apps/web/test-results/`. Run `pnpm build` before `pnpm test:e2e`; CI installs Chromium with OS dependencies. Review the [current M3 record](docs/M3_RESILIENCE.md) for current results/limits and the [historical M1 record](docs/VERIFICATION.md).
 
 ## Project layout
 
@@ -81,7 +81,7 @@ docs/                 Design, exact rules, architecture, protocol, milestones, A
 .github/workflows/    Reproducible quality gates
 ```
 
-Database/auth packages, reviewed content and Howler begin in later milestones. Private guest rooms and basic guest matchmaking are implemented; network resilience and fairness review remain M3 work. Phaser powers public snapshot rendering for the preview and offline match. See [rules and reversible assumptions](docs/GAME_RULES.md), [architecture](docs/ARCHITECTURE.md), [protocol](docs/PROTOCOL.md) and [milestones](docs/MILESTONES.md). Preserve `AGENTS.md` as the engineering charter.
+Database/auth packages, reviewed content and Howler begin in later milestones. Private guest rooms and basic guest matchmaking are implemented; bounded network recovery is verified. Competitive latency fairness and public-release operations remain explicit release gates. Phaser powers public snapshot rendering for the preview and offline match. See [rules and reversible assumptions](docs/GAME_RULES.md), [architecture](docs/ARCHITECTURE.md), [protocol](docs/PROTOCOL.md) and [milestones](docs/MILESTONES.md). Preserve `AGENTS.md` as the engineering charter.
 
 ## Five concepts to learn
 

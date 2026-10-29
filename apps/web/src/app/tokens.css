@@ -1,0 +1,13 @@
+:root {
+  --ink: #07131c;
+  --surface: #0d202b;
+  --surface-raised: #112a36;
+  --text: #f1eee5;
+  --muted: #a9bcc5;
+  --gold: #ddbc78;
+  --gold-bright: #f3d394;
+  --teal: #57c7b1;
+  --sapphire: #83a9ee;
+  --border: #324650;
+  --radius: 0.75rem;
+}

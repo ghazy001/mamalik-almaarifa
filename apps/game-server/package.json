@@ -1,0 +1,26 @@
+{
+  "name": "@mamalik/game-server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch --import tsx src/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json",
+    "lint": "eslint src tests",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@colyseus/core": "0.18.23",
+    "@colyseus/ws-transport": "0.18.4",
+    "@mamalik/game-core": "workspace:*",
+    "@mamalik/shared": "workspace:*",
+    "zod": "^4.1.0",
+    "dotenv": "^17.2.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@mamalik/config": "workspace:*"
+  }
+}

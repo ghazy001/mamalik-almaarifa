@@ -1,0 +1,23 @@
+{
+  "name": "@mamalik/game-core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "dev": "tsc -w",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json",
+    "lint": "eslint src tests",
+    "test": "vitest run",
+    "simulate": "node --import tsx src/simulate.ts"
+  },
+  "devDependencies": {
+    "@mamalik/config": "workspace:*"
+  }
+}

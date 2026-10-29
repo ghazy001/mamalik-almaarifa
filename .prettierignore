@@ -1,0 +1,10 @@
+pnpm-lock.yaml
+node_modules
+dist
+.next
+.turbo
+coverage
+playwright-report
+test-results
+AGENTS.md
+**/next-env.d.ts

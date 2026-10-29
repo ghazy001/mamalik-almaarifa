@@ -7,8 +7,8 @@ import '../play/play.css';
 import './online.css';
 
 export const metadata: Metadata = {
-  title: 'غرفة خاصة | ممالك المعرفة',
-  description: 'مباراة معرفة واستراتيجية لثلاثة لاعبين في غرفة خاصة.',
+  title: 'اللعب الجماعي | ممالك المعرفة',
+  description: 'ابحث عن لاعبين أو ادعُ أصدقاءك إلى مباراة معرفة واستراتيجية.',
 };
 export const dynamic = 'force-dynamic';
 export default function OnlinePage() {
@@ -36,7 +36,7 @@ export default function OnlinePage() {
       <main id="main">
         <div className="map-page-intro">
           <div>
-            <p className="eyebrow">المرحلة الثالثة · غرف خاصة</p>
+            <p className="eyebrow">المرحلة الثالثة · اللعب الجماعي</p>
             <h1>ثلاث ممالك، معرفة تجمعها.</h1>
           </div>
           <p>

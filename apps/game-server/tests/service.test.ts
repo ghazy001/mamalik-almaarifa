@@ -1,3 +1,4 @@
+import { PROTOCOL_VERSION } from '@mamalik/shared';
 import { afterAll, describe, expect, it } from 'vitest';
 import { createMatch } from '@mamalik/game-core';
 import { processIntent, snapshot } from '../src/commands.js';
@@ -25,7 +26,7 @@ describe('server boundary', () => {
   it('derives identity from transport; rejects actor injection without mutation', () => {
     const state = initial();
     const command = {
-      protocolVersion: 1,
+      protocolVersion: PROTOCOL_VERSION,
       type: 'READY',
       matchId: state.id,
       turn: 0,
@@ -49,7 +50,7 @@ describe('server boundary', () => {
       processIntent(
         state,
         {
-          protocolVersion: 1,
+          protocolVersion: PROTOCOL_VERSION,
           type: 'REQUEST_RECONNECT',
           matchId: state.id,
           turn: 0,
@@ -81,7 +82,7 @@ describe('standalone Colyseus health service', () => {
       status: 'ok',
       service: 'mamalik-game-server',
       milestone: 'M3',
-      protocolVersion: 1,
+      protocolVersion: PROTOCOL_VERSION,
       gameplayRoomsEnabled: true,
     });
   });

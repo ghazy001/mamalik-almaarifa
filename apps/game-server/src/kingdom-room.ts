@@ -11,7 +11,7 @@ import {
   roomSnapshotSchema,
   syncRequestSchema,
 } from '@mamalik/shared';
-import type { ErrorCode } from '@mamalik/shared';
+import type { ErrorCode, RoomMode } from '@mamalik/shared';
 import { createServerMatch } from './match-session.js';
 
 interface Seat {
@@ -24,11 +24,15 @@ export interface RoomSettings {
   resolutionMs?: number;
   reconnectSeconds?: number;
   seed?: number;
+  readyTimeoutMs?: number;
 }
 const playerIds = ['p_teal', 'p_blue', 'p_gold'] as const;
 
 /** Settings are injected only by trusted server construction, never join options. */
-export function kingdomRoom(settings: RoomSettings = {}): new () => Room {
+export function kingdomRoom(
+  settings: RoomSettings = {},
+  mode: RoomMode = 'private',
+): new () => Room {
   return class KingdomRoom extends Room {
     override maxClients = 3;
     override maxMessagesPerSecond = 30;
@@ -38,6 +42,7 @@ export function kingdomRoom(settings: RoomSettings = {}): new () => Room {
     private sequence = 0;
     private closed = false;
     private reportedFinish = false;
+    private readyDeadline: number | null = null;
     private logRef = randomBytes(6).toString('hex');
     private epoch = performance.now();
     private now = () => performance.now() - this.epoch;
@@ -47,7 +52,7 @@ export function kingdomRoom(settings: RoomSettings = {}): new () => Room {
       console.info(
         JSON.stringify({ event: 'room_created', roomRef: this.logRef }),
       );
-      await this.setPrivate(true);
+      await this.setPrivate(mode === 'private');
       this.setPatchRate(null);
       this.onMessage('command', (client: Client, input: unknown) =>
         this.command(client, input),
@@ -114,6 +119,8 @@ export function kingdomRoom(settings: RoomSettings = {}): new () => Room {
             : {}),
         });
         void this.lock();
+        if (mode === 'matchmaking')
+          this.readyDeadline = this.now() + (settings.readyTimeoutMs ?? 60_000);
         console.info(
           JSON.stringify({ event: 'match_prepared', roomRef: this.logRef }),
         );
@@ -123,7 +130,12 @@ export function kingdomRoom(settings: RoomSettings = {}): new () => Room {
     override onDrop(client: Client) {
       const seat = this.seats.get(client.sessionId);
       if (seat) seat.connected = false;
-      this.allowReconnection(client, settings.reconnectSeconds ?? 30);
+      // An interrupted handshake cannot reserve a token. Consume that expected
+      // rejection; Colyseus still runs onLeave to release the unfinished seat.
+      void this.allowReconnection(
+        client,
+        settings.reconnectSeconds ?? 30,
+      ).catch(() => {});
       this.publish();
     }
     override onReconnect(client: Client) {
@@ -171,6 +183,7 @@ export function kingdomRoom(settings: RoomSettings = {}): new () => Room {
     }
     private command(client: Client, input: unknown) {
       if (!this.allowed(client)) return;
+      this.advance();
       const parsed = parseCommand(input);
       const rawKey =
         typeof input === 'object' && input !== null && 'idempotencyKey' in input
@@ -206,10 +219,20 @@ export function kingdomRoom(settings: RoomSettings = {}): new () => Room {
     private advance() {
       if (!this.match || this.closed) return;
       const before = this.match.revision;
-      this.match.tick(this.now());
+      const now = this.now();
+      if (
+        this.readyDeadline !== null &&
+        this.match.publicState().phase === 'LOBBY' &&
+        now >= this.readyDeadline
+      )
+        this.match.abort(now);
+      else this.match.tick(now);
+      if (this.match.publicState().phase !== 'LOBBY') this.readyDeadline = null;
       if (before !== this.match.revision) this.publish();
     }
     private publish() {
+      if (this.match && this.match.publicState().phase !== 'LOBBY')
+        this.readyDeadline = null;
       if (this.match?.finished && !this.reportedFinish) {
         this.reportedFinish = true;
         console.info(
@@ -233,6 +256,8 @@ export function kingdomRoom(settings: RoomSettings = {}): new () => Room {
         protocolVersion: PROTOCOL_VERSION,
         sequence: ++this.sequence,
         roomId: this.roomId,
+        mode,
+        readyDeadline: this.readyDeadline,
         playerId: seat.playerId,
         serverNow: this.now(),
         closed: this.closed,

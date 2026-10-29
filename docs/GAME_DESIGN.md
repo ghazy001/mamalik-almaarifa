@@ -6,7 +6,7 @@ The MVP aims for 10–15-minute matches; M1's 36 turns and timers are provisiona
 
 ## Experience foundation
 
-Ink/navy surfaces, teal/sapphire faction accents, restrained gold, locally bundled Noto Sans Arabic, and original geometric heraldry establish the direction. There is no borrowed game branding or artwork. The shell explains the loop and links to `/play` for a local match, `/online` for invited guests and `/map` for a paused exploration preview. It distinguishes scripted opponents from real guest seats and explains that accounts/results persistence are unavailable.
+Ink/navy surfaces, teal/sapphire faction accents, restrained gold, locally bundled Noto Sans Arabic, and original geometric heraldry establish the direction. There is no borrowed game branding or artwork. The shell explains the loop and links to `/play` for a local match, `/online` for guest matchmaking/invitations and `/map` for a paused exploration preview. It distinguishes scripted opponents from real guest seats and explains that accounts/results persistence are unavailable.
 
 The first M2 map is **أرخبيل المنار**: original raised isometric islands, procedural trees/hills, three faction castle silhouettes, depth sorted layers and visible routes matching the canonical graph. This visual archipelago changes no rules or move costs. Arabic territory names and numbered DOM controls provide meaning independent of canvas precision and color. Only the active castle's two legal neighbors are selectable in this initial snapshot. Selection draws a bright route and outline; it never awards territory. No ambient animation or audio is enabled in this slice, including for reduced-motion users. The initial preview has no battles; `/play` and `/online` now add capture/defense effects. Full scenes, zoom/pan and measured mobile performance remain polish work.
 
@@ -20,4 +20,4 @@ M1 tests the rules without a renderer. M2 adds a complete offline match with ori
 
 No power-up economy, pay-to-win mechanics, live generated questions, public chat or deferred social systems are included. Cosmetic polish must never hide uncertain rules or create a misleading multiplayer claim.
 
-The first M3 slice adds `/online`: private invitation rooms for three real guests with readiness, authoritative timers, attack/defense and shared results. Local bots remain confined to `/play`. Basic matchmaking, accounts, durable history and release content are not implied.
+The first M3 slice adds `/online`: private invitation rooms for three real guests with readiness, authoritative timers, attack/defense and shared results. Local bots remain confined to `/play`. The next M3 slice adds explicit guest matchmaking with real seat counts and cancellation. Once three arrive, each confirms readiness within 60 seconds. No bots fill a missing seat; an expired preparation cancels without a winner. Accounts, durable history and release content remain deferred.

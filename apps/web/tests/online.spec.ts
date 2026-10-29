@@ -89,7 +89,7 @@ async function chooseTarget(page: Page, playerId: string) {
   }
 }
 
-test('three separate browsers join a private room, reconnect and finish the same authoritative match', async ({
+test('three browsers matchmake or join an invitation, reconnect and finish the same authoritative match', async ({
   page,
   browser,
 }, testInfo) => {
@@ -115,14 +115,32 @@ test('three separate browsers join a private room, reconnect and finish the same
   for (const client of pages)
     client.on('pageerror', (error) => errors.push(error.message));
   try {
+    // Both admission modes share the same authority. Finish a queued desktop
+    // match and invited portrait/landscape matches without duplicating CI time.
+    const queue = testInfo.project.name === 'desktop';
     await page.goto('/online');
     await page
       .getByLabel('اسمك في المباراة')
       .fill('GhaziPlayerWithoutSpacesForLayoutCoverage'.slice(0, 40));
-    await page.getByRole('button', { name: 'أنشئ غرفة خاصة' }).click();
-    const invite = page.getByLabel('رمز الغرفة', { exact: true });
-    await expect(invite).toHaveValue(/^[a-f0-9]{16}$/);
-    const code = await invite.inputValue();
+    await page
+      .getByRole('button', {
+        name: queue ? 'ابحث عن لاعبين' : 'أنشئ غرفة خاصة',
+        exact: true,
+      })
+      .click();
+    let code = '';
+    if (queue) {
+      await expect(page.locator('.online-queue-status')).toContainText(
+        '١ من ٣',
+      );
+      await expect(page.getByLabel('رمز الغرفة', { exact: true })).toHaveCount(
+        0,
+      );
+    } else {
+      const invite = page.getByLabel('رمز الغرفة', { exact: true });
+      await expect(invite).toHaveValue(/^[a-f0-9]{16}$/);
+      code = await invite.inputValue();
+    }
     expect(
       (
         await new AxeBuilder({ page })
@@ -135,12 +153,18 @@ test('three separate browsers join a private room, reconnect and finish the same
       fullPage: true,
     });
     for (const [index, guest] of pages.slice(1).entries()) {
-      await guest.goto(`/online?room=${code}`);
-      await expect(guest.getByLabel('رمز الدعوة')).toHaveValue(code);
+      await guest.goto(queue ? '/online' : `/online?room=${code}`);
+      if (!queue)
+        await expect(guest.getByLabel('رمز الدعوة')).toHaveValue(code);
       await guest
         .getByLabel('اسمك في المباراة')
         .fill(index ? 'مملكة الأفق' : 'مملكة النور');
-      await guest.getByRole('button', { name: 'انضم إلى الغرفة' }).click();
+      await guest
+        .getByRole('button', {
+          name: queue ? 'ابحث عن لاعبين' : 'انضم إلى الغرفة',
+          exact: true,
+        })
+        .click();
     }
     for (const client of pages)
       await expect(client.locator('.online-match')).toHaveAttribute(
@@ -267,6 +291,126 @@ test('three separate browsers join a private room, reconnect and finish the same
       expect(await (await page.request.get(url)).text()).not.toContain(
         'q_space_1',
       );
+    expect(errors).toEqual([]);
+  } finally {
+    await Promise.all(contexts.map((context) => context.close()));
+  }
+});
+
+test('queue shows real occupancy, cancels and replaces seats, and never displays invite controls', async ({
+  page,
+  browser,
+}, testInfo) => {
+  test.setTimeout(60000);
+  const use = testInfo.project.use;
+  const contexts = await Promise.all(
+    [0, 1].map(() =>
+      browser.newContext({
+        baseURL: 'http://127.0.0.1:3100',
+        viewport: use.viewport ?? { width: 1440, height: 1000 },
+        hasTouch: use.hasTouch ?? false,
+        isMobile: use.isMobile ?? false,
+        reducedMotion: use.reducedMotion ?? 'no-preference',
+      }),
+    ),
+  );
+  const guests = await Promise.all(
+    contexts.map((context) => context.newPage()),
+  );
+  const pages = [page, ...guests];
+  const errors: string[] = [];
+  for (const client of pages)
+    client.on('pageerror', (error) => errors.push(error.message));
+  async function search(client: Page, name: string) {
+    await client.goto('/online');
+    await client.getByLabel('اسمك في المباراة').fill(name);
+    await client
+      .getByRole('button', { name: 'ابحث عن لاعبين', exact: true })
+      .click();
+    await expect(client.locator('.online-match')).toHaveAttribute(
+      'data-room-mode',
+      'matchmaking',
+    );
+  }
+  try {
+    await search(page, 'مملكة المنار');
+    await expect(page.locator('.online-queue-status')).toContainText('١ من ٣');
+    await expect(
+      page.getByRole('button', { name: 'أنا جاهز', exact: true }),
+    ).toBeDisabled();
+    expect(
+      (
+        await new AxeBuilder({ page })
+          .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
+          .analyze()
+      ).violations,
+    ).toEqual([]);
+    await search(guests[0]!, 'المقعد الملغى');
+    await expect(page.locator('.online-queue-status')).toContainText('٢ من ٣');
+    await guests[0]!
+      .getByRole('button', { name: 'إلغاء البحث', exact: true })
+      .click();
+    await expect(guests[0]!.locator('.online-match')).toHaveAttribute(
+      'data-status',
+      'idle',
+    );
+    await expect(page.locator('.online-queue-status')).toContainText('١ من ٣');
+    await guests[0]!.getByLabel('اسمك في المباراة').fill('مملكة البديل');
+    await guests[0]!
+      .getByRole('button', { name: 'ابحث عن لاعبين', exact: true })
+      .click();
+    await expect(page.locator('.online-queue-status')).toContainText('٢ من ٣');
+    await expect(
+      page.locator('.match-faction-name').filter({ hasText: 'المقعد الملغى' }),
+    ).toHaveCount(0);
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+    await page.screenshot({
+      path: testInfo.outputPath('queue-waiting.png'),
+      fullPage: true,
+    });
+    await search(guests[1]!, 'مملكة الأفق');
+    const root = page.locator('.online-match');
+    await expect(root).toHaveAttribute('data-phase', 'LOBBY');
+    const matchId = (await root.getAttribute('data-match-id'))!;
+    for (const client of pages) {
+      await expect(client.locator('.online-match')).toHaveAttribute(
+        'data-match-id',
+        matchId,
+      );
+      await expect(client.locator('.match-faction')).toHaveCount(3);
+      await expect(
+        client.getByLabel('رمز الغرفة', { exact: true }),
+      ).toHaveCount(0);
+      await expect(
+        client.getByRole('button', { name: 'أنا جاهز', exact: true }),
+      ).toBeEnabled();
+      expect(
+        await client.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+      await expect(client.locator('html')).toHaveAttribute('dir', 'rtl');
+    }
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+    await page.screenshot({
+      path: testInfo.outputPath('queue-ready.png'),
+      fullPage: true,
+    });
+    await guests[1]!
+      .getByRole('button', { name: 'مغادرة الغرفة والاستسلام', exact: true })
+      .click();
+    for (const client of [page, guests[0]!]) {
+      await expect(client.locator('.online-match')).toHaveAttribute(
+        'data-phase',
+        'FINISHED',
+      );
+      await expect(
+        client.getByText('أُلغيت المباراة دون فائز.', { exact: true }),
+      ).toBeVisible();
+      await client
+        .getByRole('button', { name: 'العودة إلى الغرف', exact: true })
+        .click();
+    }
     expect(errors).toEqual([]);
   } finally {
     await Promise.all(contexts.map((context) => context.close()));

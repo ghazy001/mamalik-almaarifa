@@ -1,6 +1,6 @@
 # M3 — Private room vertical slice
 
-M3 is in progress. This increment implements a real three-player invited guest match at `/online`, not bots or simulated matchmaking. Public/basic matchmaking remains the next slice. M2's `/play` and `/map` remain available separately.
+M3 is in progress. This increment implements a real three-player invited guest match at `/online`, not bots or simulated matchmaking. This is the historical first-slice verification record (protocol v1). Basic matchmaking and protocol v2 are now documented in M3_MATCHMAKING.md. M2's `/play` and `/map` remain available separately.
 
 ## Run and play
 

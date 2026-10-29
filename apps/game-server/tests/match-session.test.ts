@@ -1,3 +1,4 @@
+import { PROTOCOL_VERSION } from '@mamalik/shared';
 import { describe, expect, it } from 'vitest';
 import { findFixture } from '@mamalik/question-fixtures';
 import { createServerMatch } from '../src/match-session.js';
@@ -22,7 +23,7 @@ function command(
   const state = session.view(player).state;
   return session.command(
     {
-      protocolVersion: 1,
+      protocolVersion: PROTOCOL_VERSION,
       type,
       matchId: state.matchId,
       turn: state.turn,

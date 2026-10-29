@@ -63,7 +63,7 @@ export default function Home() {
               </Button>
               <Button asChild variant="outline">
                 <Link href="/online" prefetch={false}>
-                  غرفة خاصة لثلاثة لاعبين
+                  العب مع لاعبين حقيقيين
                 </Link>
               </Button>
               <Button asChild variant="outline">
@@ -73,7 +73,7 @@ export default function Home() {
               </Button>
             </div>
             <p className="availability">
-              مباراة محلية أو غرفة خاصة · ثلاثة ضيوف دون حسابات
+              مباراة محلية أو لعب جماعي · ثلاثة ضيوف دون حسابات
             </p>
           </div>
           <div className="heraldry" aria-hidden="true">

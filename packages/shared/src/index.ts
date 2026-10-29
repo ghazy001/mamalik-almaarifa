@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const PROTOCOL_VERSION = 1 as const;
+export const PROTOCOL_VERSION = 2 as const;
 export const idSchema = z.string().regex(/^[a-zA-Z0-9_-]{1,64}$/);
 export const errorCodeSchema = z.enum([
   'INVALID_PHASE',
@@ -136,12 +136,12 @@ export const publicStateSchema = z.strictObject({
 export type PublicState = z.infer<typeof publicStateSchema>;
 
 const eventScope = {
-  protocolVersion: z.literal(1),
+  protocolVersion: z.literal(PROTOCOL_VERSION),
   matchId: idSchema,
   turn: z.number().int().min(0).max(120),
   sequence: z.number().int().nonnegative(),
 };
-/** v1 event schemas. Private rooms emit errors/acks; other changes use full snapshots. */
+/** Guest rooms emit errors/acks; other changes use full snapshots. */
 export const eventSchema = z.discriminatedUnion('type', [
   z.strictObject({
     ...eventScope,
@@ -189,7 +189,7 @@ export const eventSchema = z.discriminatedUnion('type', [
 ]);
 export type ServerEvent = z.infer<typeof eventSchema>;
 
-/** Guest room transport v1. Seat identity is never supplied in player commands. */
+/** Guest room transport. Seat identity is never supplied in player commands. */
 export const joinOptionsSchema = z.strictObject({
   name: z
     .string()
@@ -203,10 +203,14 @@ export const joinOptionsSchema = z.strictObject({
     ),
 });
 export const syncRequestSchema = z.strictObject({ nonce: idSchema });
+export const roomModeSchema = z.enum(['private', 'matchmaking']);
+export type RoomMode = z.infer<typeof roomModeSchema>;
 export const roomSnapshotSchema = z.strictObject({
   protocolVersion: z.literal(PROTOCOL_VERSION),
   sequence: z.number().int().nonnegative(),
   roomId: idSchema,
+  mode: roomModeSchema,
+  readyDeadline: z.number().finite().nonnegative().nullable(),
   playerId: idSchema,
   serverNow: z.number().finite().nonnegative(),
   closed: z.boolean(),

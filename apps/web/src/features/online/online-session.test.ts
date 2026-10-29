@@ -1,3 +1,4 @@
+import { PROTOCOL_VERSION } from '@mamalik/shared';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { createMatch, publicView } from '@mamalik/game-core';
 import type { RoomSnapshot } from '@mamalik/shared';
@@ -6,12 +7,14 @@ import { createOnlineSession } from './online-session';
 const sdk = vi.hoisted(() => ({
   create: vi.fn(),
   join: vi.fn(),
+  queue: vi.fn(),
   reconnect: vi.fn(),
 }));
 vi.mock('@colyseus/sdk', () => ({
   Client: class {
     create = sdk.create;
     joinById = sdk.join;
+    joinOrCreate = sdk.queue;
     reconnect = sdk.reconnect;
   },
 }));
@@ -39,8 +42,10 @@ function fakeRoom() {
   };
 }
 const initial = (): RoomSnapshot => ({
-  protocolVersion: 1,
+  protocolVersion: PROTOCOL_VERSION,
   roomId: 'a'.repeat(16),
+  mode: 'private',
+  readyDeadline: null,
   playerId: 'p_teal',
   sequence: 1,
   serverNow: 100,
@@ -107,7 +112,7 @@ it('sends scoped intent without identity/time or locally changing match outcomes
   const before = session.getSnapshot().snapshot;
   session.send('READY');
   expect(room.send).toHaveBeenLastCalledWith('command', {
-    protocolVersion: 1,
+    protocolVersion: PROTOCOL_VERSION,
     type: 'READY',
     matchId: 'm_test',
     turn: 0,
@@ -135,4 +140,59 @@ it('closes an asynchronously joined socket after unmount without attaching stale
   expect(room.connection.close).toHaveBeenCalledWith(4010);
   expect(room.messages.size).toBe(0);
   expect(session.getSnapshot().snapshot).toBeNull();
+});
+
+it('cancels a pending queue reservation with consent and ignores it after another search starts', async () => {
+  const cancelled = fakeRoom();
+  const next = fakeRoom();
+  let resolve!: (value: typeof cancelled) => void;
+  sdk.queue.mockReturnValueOnce(
+    new Promise<typeof cancelled>((done) => {
+      resolve = done;
+    }),
+  );
+  sdk.queue.mockResolvedValueOnce(next);
+  const session = createOnlineSession('http://127.0.0.1:2567');
+  const pending = session.connect('queue', 'أول');
+  expect(sdk.queue).toHaveBeenCalledWith('kingdom_queue', { name: 'أول' });
+  expect(session.getSnapshot().searching).toBe(true);
+  await session.leave();
+  await session.connect('queue', 'ثان');
+  next.messages.get('snapshot')!({
+    ...initial(),
+    mode: 'matchmaking',
+    roomId: 'b'.repeat(16),
+  });
+  resolve(cancelled);
+  await pending;
+  expect(cancelled.leave).toHaveBeenCalledOnce();
+  expect(cancelled.connection.close).not.toHaveBeenCalled();
+  expect(cancelled.messages.size).toBe(0);
+  expect(session.getSnapshot().snapshot?.roomId).toBe('b'.repeat(16));
+  await session.leave();
+  expect(next.leave).toHaveBeenCalledOnce();
+  expect(session.getSnapshot()).toMatchObject({
+    status: 'idle',
+    searching: false,
+    snapshot: null,
+  });
+});
+
+it('reserves only one seat while connecting or awaiting the first snapshot', async () => {
+  const room = fakeRoom();
+  let resolve!: (value: typeof room) => void;
+  sdk.queue.mockReturnValueOnce(
+    new Promise<typeof room>((done) => {
+      resolve = done;
+    }),
+  );
+  const session = createOnlineSession('http://127.0.0.1:2567');
+  const connecting = session.connect('queue', 'معرفة');
+  await session.connect('queue', 'مكرر');
+  expect(sdk.queue).toHaveBeenCalledTimes(1);
+  resolve(room);
+  await connecting;
+  expect(session.getSnapshot().snapshot).toBeNull();
+  await session.connect('queue', 'مكرر');
+  expect(sdk.queue).toHaveBeenCalledTimes(1);
 });

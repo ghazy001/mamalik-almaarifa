@@ -5,7 +5,7 @@ import type { Request, Response } from 'express';
 import { kingdomRoom } from './kingdom-room.js';
 import type { RoomSettings } from './kingdom-room.js';
 
-/** Persistent private-room service. Settings are server-injected, not client options. */
+/** Persistent guest rooms. Settings/modes are server-injected, not client options. */
 export function createGameService(settings: RoomSettings = {}) {
   const service = new Server({
     greet: false,
@@ -29,5 +29,8 @@ export function createGameService(settings: RoomSettings = {}) {
     },
   });
   service.define('kingdom', kingdomRoom(settings));
+  service
+    .define('kingdom_queue', kingdomRoom(settings, 'matchmaking'))
+    .sortBy({ clients: -1 });
   return service;
 }

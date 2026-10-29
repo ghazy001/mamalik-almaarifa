@@ -1,6 +1,6 @@
 # ADR 0004 — Authoritative guest rooms before matchmaking
 
-Status: implemented as the first M3 slice. Domain rules and wire command version remain 1.
+Status: implemented as the first M3 slice with domain rules/wire version 1. ADR 0005 adds matchmaking and supersedes the wire envelope with v2; domain rules remain v1.
 
 ## Decision
 

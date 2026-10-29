@@ -57,6 +57,13 @@
   font-size: 12px;
   min-height: 30px;
 }
+.online-queue-status {
+  flex: 1;
+  color: var(--gold);
+  font-size: 14px;
+  line-height: 2;
+  margin: 0;
+}
 .online-room-bar {
   display: flex;
   flex-wrap: wrap;

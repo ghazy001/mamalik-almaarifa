@@ -101,7 +101,10 @@ export function OnlineMatch({ endpoint }: { endpoint: string }) {
     if (state?.phase === 'FINISHED') resultHeading.current?.focus();
   }, [state?.phase]);
   const connected = view.status === 'connected';
-  const busy = view.status === 'connecting' || view.status === 'reconnecting';
+  const busy =
+    view.status === 'connecting' ||
+    view.status === 'reconnecting' ||
+    (connected && !snapshot);
   return (
     <div
       className="online-match"
@@ -111,13 +114,14 @@ export function OnlineMatch({ endpoint }: { endpoint: string }) {
       data-turn={state?.turn ?? 0}
       data-match-id={state?.matchId ?? ''}
       data-active-player-id={state?.activePlayerId ?? ''}
+      data-room-mode={snapshot?.mode ?? ''}
     >
       <p className="online-connection" role="status">
         {connected
           ? 'متصل بخادم اللعبة'
           : busy
             ? 'جارٍ الاتصال واستعادة الحالة…'
-            : 'غرف خاصة · ثلاثة ضيوف حقيقيين'}
+            : 'بحث عن لاعبين أو دعوة أصدقاء · ثلاثة ضيوف حقيقيين'}
         {connected && view.rttMs !== null
           ? ` · زمن الذهاب والإياب ${numbers.format(view.rttMs)} مللي ثانية`
           : ''}
@@ -131,8 +135,8 @@ export function OnlineMatch({ endpoint }: { endpoint: string }) {
         <section className="online-entry" aria-labelledby="online-entry-title">
           <h2 id="online-entry-title">اجمع مملكتين إلى مملكتك.</h2>
           <p>
-            أنشئ غرفة وشارك رمزها مع صديقين، أو أدخل رمز الدعوة. تحتاجون إلى
-            خدمة اللعبة نفسها؛ ليست هذه مباراة ضد خصوم مبرمجين.
+            ابحث عن لاعبين على خدمة اللعبة نفسها، أو ادعُ صديقين إلى غرفة خاصة.
+            تبدأ المباراة بثلاثة لاعبين حقيقيين بعد استعداد الجميع.
           </p>
           <label htmlFor="guest-name">اسمك في المباراة</label>
           <input
@@ -146,11 +150,23 @@ export function OnlineMatch({ endpoint }: { endpoint: string }) {
           <div className="online-entry-actions">
             <Button
               disabled={busy || !name.trim()}
+              onClick={() => void session.connect('queue', name)}
+            >
+              ابحث عن لاعبين
+            </Button>
+            <Button
+              variant="outline"
+              disabled={busy || !name.trim()}
               onClick={() => void session.connect('create', name)}
             >
               أنشئ غرفة خاصة
             </Button>
           </div>
+          {(view.status === 'connecting' || (connected && !snapshot)) && (
+            <Button variant="outline" onClick={() => void session.leave()}>
+              {view.searching ? 'إلغاء البحث' : 'إلغاء الاتصال'}
+            </Button>
+          )}
           <label htmlFor="invite-code">رمز الدعوة</label>
           <input
             id="invite-code"
@@ -187,32 +203,51 @@ export function OnlineMatch({ endpoint }: { endpoint: string }) {
       )}
       {snapshot && (
         <>
-          <section className="online-room-bar" aria-label="دعوة الغرفة">
-            <label htmlFor="room-code">رمز الغرفة</label>
-            <input
-              id="room-code"
-              dir="ltr"
-              readOnly
-              value={snapshot.roomId}
-              onFocus={(event) => event.target.select()}
-            />
-            <Button
-              variant="outline"
-              onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(
-                    `${location.origin}/online?room=${snapshot.roomId}`,
-                  );
-                  setCopied(true);
-                } catch {
-                  setCopied(false);
-                }
-              }}
-            >
-              {copied ? 'نُسخ رابط الدعوة' : 'انسخ رابط الدعوة'}
-            </Button>
+          <section
+            className="online-room-bar"
+            aria-label={
+              snapshot.mode === 'private' ? 'دعوة الغرفة' : 'البحث عن لاعبين'
+            }
+          >
+            {snapshot.mode === 'private' ? (
+              <>
+                <label htmlFor="room-code">رمز الغرفة</label>
+                <input
+                  id="room-code"
+                  dir="ltr"
+                  readOnly
+                  value={snapshot.roomId}
+                  onFocus={(event) => event.target.select()}
+                />
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(
+                        `${location.origin}/online?room=${snapshot.roomId}`,
+                      );
+                      setCopied(true);
+                    } catch {
+                      setCopied(false);
+                    }
+                  }}
+                >
+                  {copied ? 'نُسخ رابط الدعوة' : 'انسخ رابط الدعوة'}
+                </Button>
+              </>
+            ) : (
+              <p className="online-queue-status" role="status">
+                {!state
+                  ? `جارٍ البحث · ${numbers.format(snapshot.seats.length)} من ٣ ممالك`
+                  : state.phase === 'LOBBY'
+                    ? 'اكتملت المقاعد · أعلن استعدادك'
+                    : 'مباراة جمعتك بلاعبين من قائمة الانتظار'}
+              </p>
+            )}
             <Button variant="outline" onClick={() => void session.leave()}>
-              مغادرة الغرفة والاستسلام
+              {!state && snapshot.mode === 'matchmaking'
+                ? 'إلغاء البحث'
+                : 'مغادرة الغرفة والاستسلام'}
             </Button>
           </section>
           <div className="match-standings">
@@ -259,6 +294,19 @@ export function OnlineMatch({ endpoint }: { endpoint: string }) {
                 بعد اكتمال المقاعد، يعلن كل لاعب استعداده. تبدأ المباراة
                 تلقائيًا عندما يستعد الجميع. الخادم يحدد ترتيب الأدوار والأسئلة.
               </p>
+              {snapshot.readyDeadline !== null && (
+                <p>
+                  تنتهي مهلة الاستعداد خلال{' '}
+                  {numbers.format(
+                    Math.ceil(
+                      Math.max(0, snapshot.readyDeadline - view.estimatedNow) /
+                        1000,
+                    ),
+                  )}{' '}
+                  ثانية. تُلغى هذه المباراة إن لم يستعد الجميع؛ يمكنك البحث
+                  مجددًا.
+                </p>
+              )}
               <Button
                 disabled={
                   !state ||
@@ -320,7 +368,7 @@ export function OnlineMatch({ endpoint }: { endpoint: string }) {
                 model={model}
                 selection={selection}
                 onIntent={onIntent}
-                caption="غرفة خاصة · ثلاثة لاعبين حقيقيين"
+                caption={`${snapshot.mode === 'private' ? 'غرفة خاصة' : 'بحث عن لاعبين'} · ثلاثة لاعبين حقيقيين`}
                 milestone="M3"
                 effect={
                   state.outcome
@@ -439,7 +487,7 @@ export function OnlineMatch({ endpoint }: { endpoint: string }) {
         </>
       )}
       <p className="map-help">
-        تجربة تطوير خاصة بمحتوى أسئلة تجريبي.{' '}
+        تجربة تطوير بمحتوى أسئلة تجريبي.{' '}
         <Link href="/play" prefetch={false}>
           اللعب المحلي ضد خصمين مبرمجين
         </Link>

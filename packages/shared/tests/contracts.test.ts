@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  PROTOCOL_VERSION,
   clockReplySchema,
   commandSchema,
   eventSchema,
@@ -8,7 +9,7 @@ import {
   roomSnapshotSchema,
 } from '../src/index.js';
 const base = {
-  protocolVersion: 1,
+  protocolVersion: PROTOCOL_VERSION,
   matchId: 'm_1',
   turn: 1,
   idempotencyKey: 'key_1',
@@ -30,9 +31,11 @@ describe('guest room boundaries', () => {
   });
   it('uses a strict recipient snapshot envelope and rejects private fields or unknown versions', () => {
     const envelope = {
-      protocolVersion: 1,
+      protocolVersion: PROTOCOL_VERSION,
       sequence: 0,
       roomId: 'a'.repeat(16),
+      mode: 'private',
+      readyDeadline: null,
       playerId: 'p_teal',
       serverNow: 10,
       closed: false,
@@ -46,10 +49,14 @@ describe('guest room boundaries', () => {
     };
     expect(roomSnapshotSchema.safeParse(envelope).success).toBe(true);
     for (const invalid of [
-      { ...envelope, protocolVersion: 2 },
+      { ...envelope, protocolVersion: PROTOCOL_VERSION + 1 },
+      { ...envelope, protocolVersion: 1 },
       { ...envelope, answers: {} },
       { ...envelope, seed: 1 },
       { ...envelope, sequence: -1 },
+      { ...envelope, mode: 'ranked' },
+      { ...envelope, readyDeadline: -1 },
+      { ...envelope, mode: undefined },
       {
         ...envelope,
         seats: [
@@ -61,6 +68,13 @@ describe('guest room boundaries', () => {
       },
     ])
       expect(roomSnapshotSchema.safeParse(invalid).success).toBe(false);
+    expect(
+      roomSnapshotSchema.safeParse({
+        ...envelope,
+        mode: 'matchmaking',
+        readyDeadline: 60_000,
+      }).success,
+    ).toBe(true);
   });
   it('validates correlated advisory clock replies without accepting a client deadline', () => {
     expect(
@@ -111,9 +125,14 @@ describe('strict versioned protocol', () => {
     });
   });
   it('rejects unsupported versions separately', () => {
-    expect(
-      parseCommand({ ...base, type: 'READY', protocolVersion: 2 }),
-    ).toEqual({ ok: false, error: 'UNSUPPORTED_VERSION' });
+    for (const protocolVersion of [1, PROTOCOL_VERSION + 1])
+      expect(
+        parseCommand({
+          ...base,
+          type: 'READY',
+          protocolVersion,
+        }),
+      ).toEqual({ ok: false, error: 'UNSUPPORTED_VERSION' });
   });
   it('cannot accept privileged server lifecycle actions', () => {
     for (const type of ['RESOLVE', 'ADVANCE', 'FORFEIT', 'ABORT', 'BEGIN'])
@@ -130,7 +149,7 @@ describe('strict versioned protocol', () => {
       defenderId: null,
     };
     const event = {
-      protocolVersion: 1,
+      protocolVersion: PROTOCOL_VERSION,
       matchId: 'm',
       turn: 1,
       sequence: 1,

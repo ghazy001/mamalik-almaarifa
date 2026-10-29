@@ -1,6 +1,7 @@
 import { Client } from '@colyseus/sdk';
 import type { Room } from '@colyseus/sdk';
 import {
+  PROTOCOL_VERSION,
   clockReplySchema,
   commandSchema,
   eventSchema,
@@ -17,8 +18,9 @@ export interface OnlineView {
   estimatedNow: number;
   rttMs: number | null;
   pendingAnswer: string | null;
+  searching: boolean;
 }
-const storageKey = 'mamalik.private-room.v1';
+const storageKey = 'mamalik.room.v2';
 
 /** Network presentation adapter: no answers, bot policy, scoring or lifecycle decisions. */
 export function createOnlineSession(endpoint: string) {
@@ -29,6 +31,7 @@ export function createOnlineSession(endpoint: string) {
     estimatedNow: 0,
     rttMs: null,
     pendingAnswer: null,
+    searching: false,
   };
   let room: Room | null = null;
   let alive = true;
@@ -36,6 +39,7 @@ export function createOnlineSession(endpoint: string) {
   let bestRtt = Infinity;
   let lastSync = -Infinity;
   let generation = 0;
+  let cancelledThrough = 0;
   const pings = new Map<string, number>();
   const listeners = new Set<() => void>();
   const publish = (patch: Partial<OnlineView>) => {
@@ -161,13 +165,23 @@ export function createOnlineSession(endpoint: string) {
     sync();
   }
   async function connect(
-    kind: 'create' | 'join' | 'restore',
+    kind: 'create' | 'join' | 'restore' | 'queue',
     name = '',
     code = '',
   ) {
-    if (view.status === 'connecting' || view.status === 'reconnecting') return;
+    if (
+      view.status === 'connecting' ||
+      view.status === 'reconnecting' ||
+      view.status === 'connected'
+    )
+      return;
     const current = ++generation;
-    publish({ status: 'connecting', error: '', snapshot: null });
+    publish({
+      status: 'connecting',
+      error: '',
+      snapshot: null,
+      searching: kind === 'queue',
+    });
     offset = null;
     bestRtt = Infinity;
     pings.clear();
@@ -195,11 +209,14 @@ export function createOnlineSession(endpoint: string) {
         next =
           kind === 'create'
             ? await client.create('kingdom', options)
-            : await client.joinById(code.trim(), options);
+            : kind === 'queue'
+              ? await client.joinOrCreate('kingdom_queue', options)
+              : await client.joinById(code.trim(), options);
       }
       if (!alive || generation !== current) {
         next.reconnection.enabled = false;
-        next.connection.close(4010);
+        if (current <= cancelledThrough) await next.leave();
+        else next.connection.close(4010);
         return;
       }
       attach(next);
@@ -261,7 +278,7 @@ export function createOnlineSession(endpoint: string) {
       if (!state || view.status !== 'connected' || !room?.connection.isOpen)
         return;
       const command = {
-        protocolVersion: 1,
+        protocolVersion: PROTOCOL_VERSION,
         matchId: state.matchId,
         turn: state.turn,
         idempotencyKey: `${type}_${state.turn}`,
@@ -279,6 +296,7 @@ export function createOnlineSession(endpoint: string) {
     },
     async leave() {
       forget();
+      cancelledThrough = generation;
       generation++;
       const previous = room;
       room = null;
@@ -287,6 +305,7 @@ export function createOnlineSession(endpoint: string) {
         snapshot: null,
         error: '',
         pendingAnswer: null,
+        searching: false,
       });
       await previous?.leave();
     },

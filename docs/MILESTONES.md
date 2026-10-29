@@ -14,7 +14,7 @@ The explicit-time local controller delegates all domain outcomes to game-core. T
 
 ## M3 — Real-time multiplayer
 
-In progress. Implemented first slice: authoritative three-seat private Colyseus rooms, guest session-to-seat binding, invitation codes, validated intents/public snapshots, server timers/questions/results, a separate Arabic `/online` client, same-seat reload/drop recovery and grace-expiry/explicit forfeits. Real WebSocket and three-browser journeys verify the slice. See M3_PRIVATE_ROOMS.md for measured results and limits. Next: basic matchmaking and broader reconnect/latency/packet-loss testing; M3 is not marked complete.
+In progress. Implemented first slice: authoritative three-seat private Colyseus rooms, guest session-to-seat binding, invitation codes, validated intents/public snapshots, server timers/questions/results, a separate Arabic `/online` client, same-seat reload/drop recovery and grace-expiry/explicit forfeits. Real WebSocket and three-browser journeys verify the slice. See M3_PRIVATE_ROOMS.md for measured results and limits. The second slice implements real basic guest matchmaking, fullest-room filling, cancellation/replacement and a bounded readiness lobby using the same authority (protocol v2, Rules v1). See M3_MATCHMAKING.md. Next: broader in-duel reconnect, backgrounding and adverse-network testing; M3 is not marked complete.
 
 Authoritative three-client Colyseus rooms, private invites/basic matchmaking, verified seat identities, serial commands, monotonic timers, public snapshots/events, recipient-scoped acknowledgments, reconnect/forfeit and safe room drain. Validate full matches under reasonable latency, duplicate/reordered packets, backgrounding and disconnections. Review fairness policy before competition.
 

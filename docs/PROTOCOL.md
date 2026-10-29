@@ -1,10 +1,12 @@
-# Protocol v1 — private Colyseus room transport
+# Protocol v2 — guest rooms and basic matchmaking
 
 `packages/shared` is the canonical wire contract. Every object is strict: unknown fields are rejected rather than silently trusted. Domain IDs use 1–64 ASCII letters, digits, underscores or hyphens; they do not authenticate a player. A private invitation is the server-generated 16-hex-character room ID and admits a guest to an available seat. A separate SDK reconnection token is a bearer credential and must never be broadcast. Display names remain Arabic-capable strings rendered as text, never HTML.
 
+Version 2 requires `mode` and `readyDeadline` in snapshots, so v1 is deliberately unsupported. Commands/events also carry the new version; rebuild/restart both services and reload clients together. The per-tab recovery storage key is `mamalik.room.v2`. There is no migration of live v1 rooms or tokens. Domain `rulesVersion` remains **1**.
+
 ## Player commands
 
-All commands carry `protocolVersion: 1`, `matchId`, `turn` (0 in the lobby, 1–120 in play), `idempotencyKey`, and `type`.
+All commands carry `protocolVersion: 2`, `matchId`, `turn` (0 in the lobby, 1–120 in play), `idempotencyKey`, and `type`.
 
 | Type              | Additional fields    | Rule permission                                                           |
 | ----------------- | -------------------- | ------------------------------------------------------------------------- |
@@ -17,7 +19,7 @@ The actor, guest session and receipt time are derived from the trusted Colyseus 
 
 ```json
 {
-  "protocolVersion": 1,
+  "protocolVersion": 2,
   "type": "SELECT_TARGET",
   "matchId": "m_demo",
   "turn": 1,
@@ -30,7 +32,7 @@ The server supplies the next private question fixture and a monotonic time throu
 
 ## Public state and server events
 
-The `kingdom` Colyseus room uses explicit message channels rather than synchronizing a private state tree:
+The `kingdom` and `kingdom_queue` Colyseus room types use explicit message channels rather than synchronizing a private state tree:
 
 | Channel    | Direction          | Validated payload                                             |
 | ---------- | ------------------ | ------------------------------------------------------------- |
@@ -40,13 +42,13 @@ The `kingdom` Colyseus room uses explicit message channels rather than synchroni
 | `clock`    | server → recipient | `{nonce, serverNow}` for a known outstanding probe            |
 | `event`    | server → recipient | `ANSWER_ACKNOWLEDGED` or `COMMAND_REJECTED`                   |
 
-SDK create/join options are exactly `{name}`. Names are trimmed, nonempty, at most 40 characters, and reject angle brackets/control characters. Join options cannot contain seat IDs, seed, rules or timing overrides. Room creation uses `client.create('kingdom', options)`; invitation join uses `joinById(code, options)`. Discovery/public matchmaking is not exposed by this application.
+SDK create/join options are exactly `{name}`. Names are trimmed, nonempty, at most 40 characters, and reject angle brackets/control characters. Join options cannot contain seat IDs, seed, rules or timing overrides. Room creation uses `client.create('kingdom', options)`; invitation join uses `joinById(code, options)`. Basic matchmaking uses `joinOrCreate('kingdom_queue', options)` and the fullest available public queue room first. Private `kingdom` rooms are excluded from that lookup. A full/prepared room locks further joins. The room type selects a trusted server mode; join options cannot override it. No MMR, global waiting count, bots or custom queue endpoint is implemented.
 
-A recipient snapshot carries protocol version 1, increasing `sequence`, room ID, recipient player ID, room-relative `serverNow`, `closed`, occupied seats/connection status, nullable public match state, server-computed legal target IDs and standings, public rule windows/turn limit, recipient `ownChoiceId`, and nullable resolved question/explanation/source. State is null while fewer than three seats have joined. No placeholder opponents act. After the third seat joins, the core match exists and each player may READY. Other players never receive that recipient's choice. Live questions exclude correctness; only resolved state has an outcome/reveal. The reused development bank remains public through the offline route/source and is not confidential production content.
+A recipient snapshot carries protocol version 2, increasing `sequence`, room ID, `mode` (`private` or `matchmaking`), nullable `readyDeadline`, recipient player ID, room-relative `serverNow`, `closed`, occupied seats/connection status, nullable public match state, server-computed legal target IDs and standings, public rule windows/turn limit, recipient `ownChoiceId`, and nullable resolved question/explanation/source. State is null while fewer than three seats have joined. No placeholder opponents act. After the third seat joins, the core match exists and each player may READY. Other players never receive that recipient's choice. Live questions exclude correctness; only resolved state has an outcome/reveal. The reused development bank remains public through the offline route/source and is not confidential production content.
 
 Complete snapshots replace prior state. Clients reject lower/equal sequence snapshots for the same room; sequence gaps are normal because messages are recipient-specific and complete. Reconnect and five-second sync probes send a full fresh snapshot rather than replaying deltas. Event sequences identify the current view; they are not a gap-free event log.
 
-The table below lists the original v1 event schemas. In this slice only answer acknowledgements and errors are sent on `event`; phase/territory/result changes arrive inside `snapshot`. Granular broadcast events remain reserved, not additionally emitted.
+The table below lists the event shapes, unchanged apart from the v2 envelope. In this slice only answer acknowledgements and errors are sent on `event`; phase/territory/result changes arrive inside `snapshot`. Granular broadcast events remain reserved, not additionally emitted.
 
 | Event               | Payload                                                                           |
 | ------------------- | --------------------------------------------------------------------------------- |
@@ -67,6 +69,6 @@ Deadlines are in server match-relative monotonic milliseconds. Nonce-correlated 
 
 Error codes: INVALID_PHASE, INVALID_ACTOR, WRONG_MATCH, STALE_TURN, ILLEGAL_TARGET, DEADLINE_EXPIRED, TOO_EARLY, ALREADY_ANSWERED, INVALID_ANSWER, INVALID_QUESTION, DUPLICATE_ACTION, INVALID_TIME, INVALID_INPUT, MALFORMED_COMMAND, UNSUPPORTED_VERSION, NOT_IMPLEMENTED, RATE_LIMITED, ROOM_CLOSED.
 
-Do not send internal exception stacks or secret question content in errors. Log lifecycle/error codes and safe match identifiers only. The private slice bounds incoming frames to 4096 bytes, allows 12 application messages/second/client and uses a Colyseus ceiling of 30 messages/second/client. Unprepared lobbies expire after five minutes; each room has a 25-minute maximum lifetime. Server-injected test settings never come from join messages. Guest seats, invites, recipient acknowledgements, full-snapshot recovery, graceful abort and reconnect tests are implemented. Public deployment still needs explicit origin/connection/HTTP-create budgets and broader abuse/load review.
+Do not send internal exception stacks or secret question content in errors. Log lifecycle/error codes and safe match identifiers only. Both room modes bound incoming frames to 4096 bytes, allow 12 application messages/second/client and use a Colyseus ceiling of 30 messages/second/client. Unprepared lobbies expire five minutes after room creation; a prepared queue lobby has a 60-second readiness deadline and aborts without a winner if not everyone is ready; each room has a 25-minute maximum lifetime. Server-injected test settings never come from join messages. Guest seats, invites, recipient acknowledgements, full-snapshot recovery, graceful abort and reconnect tests are implemented. Public deployment still needs explicit origin/connection/HTTP-create budgets and broader abuse/load review.
 
-Unexpected disconnect calls SDK `allowReconnection` for 30 seconds. Timers continue and unanswered challenges still expire. Manual reload recovery uses the per-tab token; explicit leave or failed grace forfeits. A prepared lobby aborts on permanent departure. No durable result or crash recovery is provided. Server receipt ordering still favors lower latency; no compensation is claimed. Basic matchmaking, accounts and content persistence remain later work. See ADR 0004 and M3_PRIVATE_ROOMS.md.
+Unexpected disconnect calls SDK `allowReconnection` for 30 seconds. Timers continue and unanswered challenges still expire. Manual reload recovery uses the per-tab token; explicit leave or failed grace forfeits. A prepared lobby aborts on permanent departure. No durable result or crash recovery is provided. Server receipt ordering still favors lower latency; no compensation is claimed. Accounts and content persistence remain later work. A queue search can be cancelled before a match is prepared: consented SDK leave releases that seat. A late asynchronous join after cancellation is also explicitly left; it cannot replace a newer search. Navigation/unmount remains a recoverable drop. Prepared lobbies abort on permanent departure rather than replacing a participant in an existing core state. See ADR 0005 and M3_MATCHMAKING.md.

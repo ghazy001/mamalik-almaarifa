@@ -2,10 +2,26 @@ import { createHash } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import type { ContentConnection } from './client.js';
-import { matchResults, resultQuestions } from './schema.js';
+import { matchResults, resultQuestions, resultParticipants } from './schema.js';
+import { contentIdentitySchema } from './permissions.js';
 
 const id = z.string().regex(/^[a-zA-Z0-9_-]{1,64}$/);
 const seat = z.enum(['p_teal', 'p_blue', 'p_gold']);
+export const matchParticipantsSchema = z
+  .array(contentIdentitySchema.extend({ playerId: seat }))
+  .max(3)
+  .superRefine((rows, context) => {
+    if (
+      new Set(rows.map((row) => row.playerId)).size !== rows.length ||
+      new Set(rows.map((row) => `${row.issuer}\0${row.subject}`)).size !==
+        rows.length
+    )
+      context.addIssue({
+        code: 'custom',
+        message: 'Duplicate match participant',
+      });
+  });
+export type MatchParticipant = z.infer<typeof matchParticipantsSchema>[number];
 const territory = z.string().regex(/^t_(?:0[0-9]|1[0-4])$/);
 const placement = z.strictObject({
   playerId: seat,
@@ -98,10 +114,17 @@ export class MatchArchiveConflict extends Error {
 }
 export function createMatchResultRepository(db: ContentConnection) {
   return {
-    async write(input: unknown) {
+    async write(input: unknown, identities: unknown = []) {
       const archive = matchArchiveSchema.parse(input);
+      const participants = matchParticipantsSchema
+        .parse(identities)
+        .sort((a, b) =>
+          a.playerId < b.playerId ? -1 : a.playerId > b.playerId ? 1 : 0,
+        );
       const hash = createHash('sha256')
-        .update(canonical(archive))
+        .update(
+          canonical(participants.length ? { archive, participants } : archive),
+        )
         .digest('hex');
       return db.transaction(async (tx) => {
         const inserted = await tx
@@ -133,6 +156,12 @@ export function createMatchResultRepository(db: ContentConnection) {
               };
             }),
           );
+        if (participants.length)
+          await tx
+            .insert(resultParticipants)
+            .values(
+              participants.map((row) => ({ ...row, matchId: archive.matchId })),
+            );
         return { created: true };
       });
     },

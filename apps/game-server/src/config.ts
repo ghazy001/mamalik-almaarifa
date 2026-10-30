@@ -27,6 +27,10 @@ const configSchema = z
       .enum(['true', 'false'])
       .default('false')
       .transform((value) => value === 'true'),
+    PLAYER_AUTH_ENABLED: z
+      .enum(['true', 'false'])
+      .default('false')
+      .transform((value) => value === 'true'),
     SUPABASE_URL: optionalValue(
       z
         .url()
@@ -52,6 +56,12 @@ const configSchema = z
     DATABASE_URL: optionalValue(databaseUrlSchema),
   })
   .superRefine((value, context) => {
+    if (value.PLAYER_AUTH_ENABLED && !value.MATCH_RESULTS_ENABLED)
+      context.addIssue({
+        code: 'custom',
+        path: ['MATCH_RESULTS_ENABLED'],
+        message: 'Required for account-bound results',
+      });
     if (value.MATCH_RESULTS_ENABLED && !value.DATABASE_URL)
       context.addIssue({
         code: 'custom',
@@ -64,7 +74,7 @@ const configSchema = z
         path: ['DATABASE_URL'],
         message: 'Required for published room questions',
       });
-    if (!value.CONTENT_ADMIN_ENABLED) return;
+    if (!value.CONTENT_ADMIN_ENABLED && !value.PLAYER_AUTH_ENABLED) return;
     for (const key of [
       'SUPABASE_URL',
       'SUPABASE_PUBLISHABLE_KEY',
@@ -74,7 +84,7 @@ const configSchema = z
         context.addIssue({
           code: 'custom',
           path: [key],
-          message: 'Required when content administration is enabled',
+          message: 'Required when account verification is enabled',
         });
     if (
       value.NODE_ENV === 'production' &&

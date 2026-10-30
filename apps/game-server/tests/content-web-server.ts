@@ -4,11 +4,14 @@ import {
   createQuestionRepository,
   migrateDatabase,
   openDatabase,
+  createMatchResultRepository,
 } from '@mamalik/database';
 import { createGameService } from '../src/server.js';
 import { createContentAuthenticator } from '../src/content-auth.js';
 import { startAuthFixture } from './support/auth-server.js';
 import { CONTENT_ACCOUNTS } from './support/content-accounts.js';
+import { createPlayerAccess } from '../src/player-access.js';
+import { createResultWriter } from '../src/result-writer.js';
 const url = process.env.DATABASE_URL;
 if (!url || !/^\/mamalik_test_[0-9a-f]{32}$/.test(new URL(url).pathname))
   throw new Error('Use pnpm test:content-web');
@@ -79,8 +82,17 @@ const controls = createServer(async (request, response) => {
 await new Promise<void>((resolve) =>
   controls.listen(49002, '127.0.0.1', resolve),
 );
+const writer = createResultWriter(
+  createMatchResultRepository(database.db).write,
+);
 const service = createGameService(
-  {},
+  {
+    playerAccess: createPlayerAccess(
+      createContentAuthenticator(auth.url, auth.key),
+    ),
+    resultWriter: writer,
+    rules: { maxTurns: 1 },
+  },
   {
     db: database.db,
     authenticate: createContentAuthenticator(auth.url, auth.key),
@@ -93,6 +105,7 @@ async function shutdown() {
   if (closing) return;
   closing = true;
   await service.gracefullyShutdown(false);
+  await writer.drain();
   await auth.close();
   await new Promise<void>((resolve) => {
     controls.close(() => resolve());

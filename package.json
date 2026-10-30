@@ -21,7 +21,8 @@
     "test:results": "pnpm --filter @mamalik/game-server... build && pnpm --filter @mamalik/game-server test:results",
     "test:content-web": "pnpm --filter @mamalik/database... build && node --import tsx packages/database/scripts/test-database.ts web",
     "db:migrate": "pnpm --filter @mamalik/database db:migrate",
-    "content": "pnpm --filter @mamalik/question-fixtures... build && pnpm --filter @mamalik/database content"
+    "content": "pnpm --filter @mamalik/question-fixtures... build && pnpm --filter @mamalik/database content",
+    "test:players": "pnpm --filter @mamalik/game-server... build && pnpm --filter @mamalik/game-server test:players"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

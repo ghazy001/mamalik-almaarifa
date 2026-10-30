@@ -2,8 +2,30 @@ import { expect, it } from 'vitest';
 import {
   matchArchiveSchema,
   publishedReference,
+  matchParticipantsSchema,
 } from '../src/match-archive.js';
 import { sampleArchive } from './match-sample.js';
+const participant = {
+  playerId: 'p_teal',
+  issuer: 'https://fixture.example/auth/v1',
+  subject: '00000000-0000-4000-8000-000000000001',
+};
+it.each(
+  [
+    [{ ...participant, playerId: 'p_unknown' }],
+    [{ ...participant, access_token: 'private' }],
+    [participant, { ...participant, playerId: 'p_blue' }],
+    [
+      participant,
+      { ...participant, subject: '00000000-0000-4000-8000-000000000002' },
+    ],
+  ].map((rows) => ({ rows })),
+)(
+  'rejects invalid or duplicated private participant mappings %#',
+  ({ rows }) => {
+    expect(matchParticipantsSchema.safeParse(rows).success).toBe(false);
+  },
+);
 
 it('accepts an answer-free completed shared victory and aborted results', () => {
   expect(matchArchiveSchema.parse(sampleArchive)).toEqual(sampleArchive);

@@ -22,5 +22,6 @@ export {
   createMatchResultRepository,
   matchArchiveSchema,
   MatchArchiveConflict,
+  matchParticipantsSchema,
 } from './match-archive.js';
-export type { MatchArchive } from './match-archive.js';
+export type { MatchArchive, MatchParticipant } from './match-archive.js';

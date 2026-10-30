@@ -40,6 +40,8 @@ export default defineConfig({
       timeout: 60000,
       env: {
         WEB_AUTH_ENABLED: 'true',
+        WEB_PLAYER_AUTH_ENABLED: 'true',
+        GAME_SERVER_URL: 'http://127.0.0.1:2574',
         WEB_AUTH_ORIGIN: 'http://127.0.0.1:3101',
         SUPABASE_URL: 'http://127.0.0.1:49001',
         SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_local_fixture_only_123456789',

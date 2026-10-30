@@ -40,8 +40,10 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     '/signin',
+    '/account',
     '/admin/:path*',
     '/api/auth/:path*',
     '/api/content/:path*',
+    '/api/play-ticket',
   ],
 };

@@ -16,6 +16,9 @@ import { createServerMatch } from './match-session.js';
 import { developmentQuestionBank } from './question-bank.js';
 import type { QuestionBank } from './question-bank.js';
 import type { ResultWriter } from './result-writer.js';
+import type { PlayerAccess } from './player-access.js';
+import { contentIdentitySchema } from '@mamalik/database';
+import type { ContentIdentity } from '@mamalik/database';
 
 interface Seat {
   playerId: string;
@@ -30,6 +33,7 @@ export interface RoomSettings {
   readyTimeoutMs?: number;
   loadQuestions?: (minimum: number) => Promise<QuestionBank>;
   resultWriter?: ResultWriter;
+  playerAccess?: PlayerAccess;
 }
 const playerIds = ['p_teal', 'p_blue', 'p_gold'] as const;
 
@@ -42,6 +46,7 @@ export function kingdomRoom(
     override maxClients = 3;
     override maxMessagesPerSecond = 30;
     private seats = new Map<string, Seat>();
+    private identities = new Map<string, ContentIdentity>();
     private rates = new Map<string, { start: number; count: number }>();
     private match: ReturnType<typeof createServerMatch> | null = null;
     private bank!: QuestionBank;
@@ -102,14 +107,27 @@ export function kingdomRoom(
       this.clock.setTimeout(() => this.onBeforeShutdown(), 25 * 60_000);
     }
     override onAuth(_client: Client, options: unknown) {
-      return (
-        !this.closed &&
-        !this.match &&
-        joinOptionsSchema.safeParse(options).success
-      );
+      const parsed = joinOptionsSchema.safeParse(options);
+      if (this.closed || this.match || !parsed.success) return false;
+      if (!parsed.data.ticket) return true;
+      if (!settings.playerAccess)
+        throw new ServerError(401, 'PLAYER_AUTH_DISABLED');
+      return settings.playerAccess.consume(parsed.data.ticket);
     }
-    override onJoin(client: Client, input: unknown) {
+    override onJoin(client: Client, input: unknown, auth: unknown) {
       const options = joinOptionsSchema.parse(input);
+      const identity = contentIdentitySchema.safeParse(auth);
+      if (options.ticket && !identity.success)
+        throw new ServerError(401, 'PLAYER_TICKET_INVALID');
+      if (
+        identity.success &&
+        [...this.identities.values()].some(
+          (existing) =>
+            existing.issuer === identity.data.issuer &&
+            existing.subject === identity.data.subject,
+        )
+      )
+        throw new ServerError(409, 'PLAYER_ALREADY_SEATED');
       const playerId = playerIds.find(
         (id) => ![...this.seats.values()].some((seat) => seat.playerId === id),
       );
@@ -120,6 +138,7 @@ export function kingdomRoom(
         name: options.name,
         connected: true,
       });
+      if (identity.success) this.identities.set(playerId, identity.data);
       if (this.seats.size === 3) {
         this.match = createServerMatch({
           id: `m_${this.roomId}`,
@@ -168,7 +187,10 @@ export function kingdomRoom(
       seat.connected = false;
       this.rates.delete(client.sessionId);
       if (this.match) this.match.forfeit(seat.playerId, this.now());
-      else this.seats.delete(client.sessionId);
+      else {
+        this.seats.delete(client.sessionId);
+        this.identities.delete(seat.playerId);
+      }
       this.publish();
     }
     override onBeforeShutdown() {
@@ -272,16 +294,21 @@ export function kingdomRoom(
               ? 'published'
               : 'development',
           };
-          void settings.resultWriter.submit(archive).then((outcome) => {
-            this.resultStorage = outcome;
-            console.info(
-              JSON.stringify({
-                event: `match_result_${outcome}`,
-                roomRef: this.logRef,
-              }),
-            );
-            if (!this.disposed) this.publish();
-          });
+          const participants = [...this.identities].map(
+            ([playerId, identity]) => ({ playerId, ...identity }),
+          );
+          void settings.resultWriter
+            .submit(archive, participants)
+            .then((outcome) => {
+              this.resultStorage = outcome;
+              console.info(
+                JSON.stringify({
+                  event: `match_result_${outcome}`,
+                  roomRef: this.logRef,
+                }),
+              );
+              if (!this.disposed) this.publish();
+            });
         }
       }
       this.sequence++;

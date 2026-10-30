@@ -32,7 +32,9 @@ The fourth slice connects optional published revisions to private/queued rooms. 
 
 The fifth slice adds optional immutable result archives, transactional revision references, idempotent retries and honest Protocol v3 storage status. See M4_RESULT_ARCHIVES.md and ADR 0011 for delivery limits and verification.
 
-M4 is not complete. Hosted verification, player account integration, a reviewed release bank, authorized personal history and basic ranking remain. Existing fixtures import only as drafts; publishing public fixtures does not make them confidential. Trusted operator CLI labels remain outside the account-authorization boundary.
+The sixth slice adds existing-account admission through server-verified one-use tickets, mixed guest/account rooms, private seat identity and transactional result bindings. See M4_PLAYER_ADMISSION.md and ADR 0012.
+
+M4 is not complete. Hosted verification, a reviewed release bank, authorized personal history and basic ranking remain. Existing fixtures import only as drafts; publishing public fixtures does not make them confidential. Trusted operator CLI labels remain outside the account-authorization boundary.
 
 ## M5 — Polish and onboarding
 

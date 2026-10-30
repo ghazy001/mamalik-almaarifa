@@ -1,16 +1,24 @@
-import { MatchArchiveConflict, matchArchiveSchema } from '@mamalik/database';
-import type { MatchArchive } from '@mamalik/database';
+import {
+  MatchArchiveConflict,
+  matchArchiveSchema,
+  matchParticipantsSchema,
+} from '@mamalik/database';
+import type { MatchArchive, MatchParticipant } from '@mamalik/database';
 import { z } from 'zod';
 
 type Outcome = 'saved' | 'failed';
 interface Job {
   archive: MatchArchive;
+  participants: MatchParticipant[];
   done: boolean;
   resolve: (value: Outcome) => void;
 }
 /** Bounded best-effort delivery; only a database acknowledgement means saved. */
 export function createResultWriter(
-  write: (archive: MatchArchive) => Promise<unknown>,
+  write: (
+    archive: MatchArchive,
+    participants: MatchParticipant[],
+  ) => Promise<unknown>,
   wait: (ms: number) => Promise<void> = (ms) =>
     new Promise((resolve) => setTimeout(resolve, ms)),
 ) {
@@ -29,7 +37,10 @@ export function createResultWriter(
   async function run(job: Job) {
     for (let attempt = 0; attempt < 3 && !job.done; attempt++) {
       try {
-        await write(structuredClone(job.archive));
+        await write(
+          structuredClone(job.archive),
+          structuredClone(job.participants),
+        );
         settle(job, 'saved');
         return;
       } catch (error) {
@@ -57,12 +68,23 @@ export function createResultWriter(
     }
   }
   return {
-    submit(input: unknown): Promise<Outcome> {
+    submit(input: unknown, identities: unknown = []): Promise<Outcome> {
       const parsed = matchArchiveSchema.safeParse(input);
-      if (!parsed.success || closing || pending.size >= 64)
+      const participants = matchParticipantsSchema.safeParse(identities);
+      if (
+        !parsed.success ||
+        !participants.success ||
+        closing ||
+        pending.size >= 64
+      )
         return Promise.resolve('failed');
       return new Promise((resolve) => {
-        const job = { archive: parsed.data, resolve, done: false };
+        const job = {
+          archive: parsed.data,
+          participants: participants.data,
+          resolve,
+          done: false,
+        };
         pending.add(job);
         queue.push(job);
         pump();

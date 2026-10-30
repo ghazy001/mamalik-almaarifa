@@ -196,11 +196,11 @@ Original isometric map scene, territory hover/touch selection, accessible Arabic
 
 Three-client Colyseus rooms, invites/basic matchmaking, sync, phase timers, answer validation, reconnect/forfeit. **Done:** three real browser sessions reliably finish a match under reasonable latency and reconnect scenarios.
 
-### M4 — Identity, content, persistence **(CURRENT — DURABLE MATCH RESULT ARCHIVES)**
+### M4 — Identity, content, persistence **(CURRENT — VERIFIED PLAYER ACCOUNT ADMISSION)**
 
 Supabase Auth, question CMS/review with sources, PostgreSQL migrations, history/basic ranking, admin authorization. **Done:** audited question workflow and durable accurate results.
 
-Local content, authenticated editorial operations, published room banks and opt-in transactional result archives are implemented. Finished games save answer-free rule/outcome snapshots and exact consumed revision references idempotently. Protocol v3 reports pending/saved/failed/disabled honestly; default guest preview remains database-free. Normal shutdown drains bounded writes, but process crashes before commit can lose results. M4 remains incomplete: hosted verification, player account integration, authorized personal history, basic ranking and a reviewed release bank remain. See `docs/M4_RESULT_ARCHIVES.md`, historical records and ADRs 0007–0011.
+Local content, authenticated editorial operations, published room banks and opt-in transactional result archives are implemented. Finished games save answer-free rule/outcome snapshots and exact consumed revision references idempotently. Protocol v3 reports pending/saved/failed/disabled honestly; default guest preview remains database-free. Normal shutdown drains bounded writes, but process crashes before commit can lose results. Opt-in existing-account admission now uses server-verified one-use tickets, private per-seat identities and transactional result participant bindings. Guest play stays available; bearer reconnect retains existing grace semantics. M4 remains incomplete: authorized personal history, basic ranking, a reviewed release bank and hosted verification remain. See `docs/M4_PLAYER_ADMISSION.md`, historical records and ADRs 0007–0012.
 
 ### M5 — Premium polish and onboarding
 

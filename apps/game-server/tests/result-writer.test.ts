@@ -66,3 +66,22 @@ it('drains successful queued work and closes submission after shutdown', async (
   expect(await Promise.all(jobs)).toEqual(Array(8).fill('saved'));
   expect(await writer.submit(sampleArchive)).toBe('failed');
 });
+it('detaches account bindings and keeps the same identities across retries', async () => {
+  const bindings = [
+    {
+      playerId: 'p_teal',
+      issuer: 'https://fixture.example/auth/v1',
+      subject: '00000000-0000-4000-8000-000000000001',
+    },
+  ];
+  const expected = structuredClone(bindings);
+  const write = vi
+    .fn()
+    .mockRejectedValueOnce(new Error('Response lost'))
+    .mockResolvedValue({ created: false });
+  const writer = createResultWriter(write, async () => {});
+  const job = writer.submit(sampleArchive, bindings);
+  bindings[0]!.subject = '00000000-0000-4000-8000-000000000002';
+  expect(await job).toBe('saved');
+  expect(write.mock.calls.map((call) => call[1])).toEqual([expected, expected]);
+});

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const PROTOCOL_VERSION = 3 as const;
+export const roomTicketSchema = z.string().regex(/^[a-f0-9]{64}$/);
 export const resultStorageSchema = z.enum([
   'disabled',
   'idle',
@@ -204,6 +205,7 @@ export type ServerEvent = z.infer<typeof eventSchema>;
 
 /** Guest room transport. Seat identity is never supplied in player commands. */
 export const joinOptionsSchema = z.strictObject({
+  ticket: roomTicketSchema.optional(),
   name: z
     .string()
     .trim()

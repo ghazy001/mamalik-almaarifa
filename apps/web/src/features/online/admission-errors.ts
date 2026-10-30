@@ -1,6 +1,21 @@
 import { ROOM_ADMISSION_ERRORS } from '@mamalik/shared';
 
 export function admissionErrorMessage(error: unknown) {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    'message' in error
+  ) {
+    if (error.code === 401 && error.message === 'PLAYER_SIGN_IN_REQUIRED')
+      return 'سجّل الدخول إلى حساب اللاعب ثم حاول مجددًا.';
+    if (error.code === 401 && error.message === 'PLAYER_TICKET_INVALID')
+      return 'انتهت صلاحية إذن الدخول. حاول مجددًا.';
+    if (error.code === 409 && error.message === 'PLAYER_ALREADY_SEATED')
+      return 'لهذا الحساب مقعد في الغرفة بالفعل. استعد مقعدك السابق أو اختر غرفة أخرى.';
+    if (error.message === 'PLAYER_AUTH_UNAVAILABLE')
+      return 'تعذّر التحقق من حساب اللاعب. حاول لاحقًا أو اختر اللعب بصفة ضيف.';
+  }
   const code =
     typeof error === 'object' &&
     error !== null &&

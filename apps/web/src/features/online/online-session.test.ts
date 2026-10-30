@@ -60,6 +60,7 @@ const initial = (): RoomSnapshot => ({
   reveal: null,
 });
 beforeEach(() => {
+  vi.unstubAllGlobals();
   vi.restoreAllMocks();
   vi.clearAllMocks();
   const values = new Map<string, string>();
@@ -68,6 +69,52 @@ beforeEach(() => {
     setItem: (key: string, value: string) => values.set(key, value),
     removeItem: (key: string) => values.delete(key),
   });
+});
+
+it('requests a transient ticket for account admission without storing it or a provider token', async () => {
+  const ticket = 'b'.repeat(64);
+  const request = vi
+    .fn()
+    .mockResolvedValue(
+      new Response(JSON.stringify({ ticket }), { status: 200 }),
+    );
+  vi.stubGlobal('fetch', request);
+  sdk.create.mockResolvedValueOnce(fakeRoom());
+  const session = createOnlineSession('http://127.0.0.1:2567');
+  await session.connect('create', 'معرفة', '', true);
+  expect(request).toHaveBeenCalledWith(
+    '/api/play-ticket',
+    expect.objectContaining({ method: 'POST', body: '{}' }),
+  );
+  expect(sdk.create).toHaveBeenCalledWith('kingdom', { name: 'معرفة', ticket });
+  expect(sessionStorage.getItem('mamalik.room.v3')).not.toContain(ticket);
+  await session.leave();
+});
+it('never downgrades failed account verification to guest admission and cancels late ticket responses', async () => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue(new Response('{}', { status: 401 })),
+  );
+  const failed = createOnlineSession('http://127.0.0.1:2567');
+  await failed.connect('create', 'معرفة', '', true);
+  expect(failed.getSnapshot().error).toContain('سجّل الدخول');
+  expect(sdk.create).not.toHaveBeenCalled();
+  let release!: (response: Response) => void;
+  vi.stubGlobal(
+    'fetch',
+    () =>
+      new Promise<Response>((resolve) => {
+        release = resolve;
+      }),
+  );
+  const cancelled = createOnlineSession('http://127.0.0.1:2567');
+  const connecting = cancelled.connect('queue', 'معرفة', '', true);
+  await cancelled.leave();
+  release(
+    new Response(JSON.stringify({ ticket: 'b'.repeat(64) }), { status: 200 }),
+  );
+  await connecting;
+  expect(sdk.queue).not.toHaveBeenCalled();
 });
 
 function duel(): RoomSnapshot {

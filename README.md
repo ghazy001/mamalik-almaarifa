@@ -1,6 +1,6 @@
 # ممالك المعرفة · Mamalik Al-Ma'rifa
 
-Original Arabic-first strategy trivia. The M1 foundation and M2 offline match are implemented: deterministic rules, strict protocol schemas, an RTL web shell, a standalone Colyseus health service, and original interactive Phaser terrain. Play a complete local match against two scripted opponents at `/play`, or find two real guests through basic matchmaking or private invitations at `/online`. M3 is complete for the documented local guest-match scope. M4 includes PostgreSQL question storage, a Supabase-authenticated content API, and an Arabic sign-in/editorial workspace. Opt-in published room banks and durable result archives are implemented; a reviewed release question set, player accounts, personal history and basic ranking remain.
+Original Arabic-first strategy trivia. The M1 foundation and M2 offline match are implemented: deterministic rules, strict protocol schemas, an RTL web shell, a standalone Colyseus health service, and original interactive Phaser terrain. Play a complete local match against two scripted opponents at `/play`, or find two real guests through basic matchmaking or private invitations at `/online`. M3 is complete for the documented local guest-match scope. M4 includes PostgreSQL question storage, a Supabase-authenticated content API, and an Arabic sign-in/editorial workspace. Opt-in published banks, durable result archives and existing-account player admission are implemented. A reviewed release question set, personal history and basic ranking remain.
 
 ## Local setup
 
@@ -84,6 +84,12 @@ After configuring DATABASE_URL and running `pnpm db:migrate`, enable `MATCH_RESU
 
 Run `pnpm test:results` with the local PostgreSQL bootstrap URL for nine isolated database/socket/standalone cases. No public history UI or account mapping is included. Queued writes are in memory: crashes before commit can lose results, and failed acknowledgement can remain uncertain after commit. See [setup, limits, verification and learning exercise](docs/M4_RESULT_ARCHIVES.md) and [ADR 0011](docs/ADR/0011-private-match-result-archives.md).
 
+## Player accounts (M4 sixth slice)
+
+Existing Supabase accounts can opt into verified room admission through `/account`. On the game server enable PLAYER_AUTH_ENABLED and MATCH_RESULTS_ENABLED with DATABASE_URL/Supabase URL/key, after `pnpm db:migrate`. On Next enable WEB_AUTH_ENABLED and WEB_PLAYER_AUTH_ENABLED with the existing origin/Supabase/upstream settings above. CONTENT_ADMIN_URL must point to the same service as GAME_SERVER_URL; it also supplies the server-side player ticket endpoint. Editorial API access may remain disabled. Restart both services.
+
+Sign in, select **اللعب بحسابي**, then create/join/search. Guests can share the room, but one account can hold only one seat per room, including during reconnect grace. Provider tokens remain HttpOnly/server-side; room tickets are single-use and short-lived. Private participant rows commit with results. Sign-out does not forfeit an active seat. No signup, recovery, personal history or ranking ships yet. Run `pnpm test:players` or the expanded `pnpm test:content-web`; see [setup, rules, limits and verification](docs/M4_PLAYER_ADMISSION.md) and [ADR 0012](docs/ADR/0012-verified-player-seat-binding.md).
+
 ## Play a local match
 
 Open `/play`, or choose **العب مباراة محلية** from the home page. You control فيروز against two explicitly scripted opponents. Start, select an adjacent target through the canvas or Arabic territory controls, then **ابدأ التحدّي**. Answer within 15 seconds and review the resolution/source before continuing. The map and scores update through the shared rules. Defend your lands when attacked; capture all castles or lead on score at the 36-turn limit. Results include placements and **مباراة جديدة**.
@@ -109,6 +115,7 @@ pnpm test:database # requires the local PostgreSQL bootstrap URL above
 pnpm test:admin    # signed local Auth fixture + real HTTP/PostgreSQL permissions
 pnpm test:room-bank # published revisions + two real three-client matches
 pnpm test:results   # transactional result archives + real three-client save status
+pnpm test:players   # verified account admission + private durable bindings
 pnpm build
 pnpm simulate
 pnpm --filter @mamalik/web exec playwright install chromium
@@ -134,7 +141,7 @@ docs/                 Design, exact rules, architecture, protocol, milestones, A
 .github/workflows/    Reproducible quality gates
 ```
 
-Database-backed content tooling, identity/permissions and the protected editorial workspace are implemented. Published banks and optional durable result archives are also implemented. Room account identity, personal history, a reviewed release question set and Howler remain future slices. Private guest rooms and basic guest matchmaking are implemented; bounded network recovery is verified. Competitive latency fairness and public-release operations remain explicit release gates. Phaser powers public snapshot rendering for the preview and offline match. See [rules and reversible assumptions](docs/GAME_RULES.md), [architecture](docs/ARCHITECTURE.md), [protocol](docs/PROTOCOL.md) and [milestones](docs/MILESTONES.md). Preserve `AGENTS.md` as the engineering charter.
+Database-backed content tooling, identity/permissions and the protected editorial workspace are implemented. Published banks and optional durable result archives are also implemented. Verified account admission is implemented. Personal history, a reviewed release question set and Howler remain future slices. Private guest rooms and basic guest matchmaking are implemented; bounded network recovery is verified. Competitive latency fairness and public-release operations remain explicit release gates. Phaser powers public snapshot rendering for the preview and offline match. See [rules and reversible assumptions](docs/GAME_RULES.md), [architecture](docs/ARCHITECTURE.md), [protocol](docs/PROTOCOL.md) and [milestones](docs/MILESTONES.md). Preserve `AGENTS.md` as the engineering charter.
 
 ## Five concepts to learn
 

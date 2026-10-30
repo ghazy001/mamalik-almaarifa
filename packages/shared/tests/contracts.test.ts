@@ -26,8 +26,14 @@ describe('guest room boundaries', () => {
       { name: 'اسم', playerId: 'p_gold' },
       { name: 'اسم', rules: { maxTurns: 1 } },
       { name: 'اسم', seed: 1 },
+      { name: 'اسم', ticket: 'forged' },
+      { name: 'اسم', accountId: '00000000-0000-4000-8000-000000000001' },
     ])
       expect(joinOptionsSchema.safeParse(invalid).success).toBe(false);
+    expect(
+      joinOptionsSchema.safeParse({ name: 'اسم', ticket: 'a'.repeat(64) })
+        .success,
+    ).toBe(true);
   });
   it('uses a strict recipient snapshot envelope and rejects private fields or unknown versions', () => {
     const envelope = {

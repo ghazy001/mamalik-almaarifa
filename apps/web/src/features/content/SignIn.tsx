@@ -2,7 +2,13 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import Link from 'next/link';
-export function SignIn({ enabled }: { enabled: boolean }) {
+export function SignIn({
+  enabled,
+  player = false,
+}: {
+  enabled: boolean;
+  player?: boolean;
+}) {
   const [busy, setBusy] = useState(false),
     [error, setError] = useState('');
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -23,7 +29,7 @@ export function SignIn({ enabled }: { enabled: boolean }) {
       });
       if (response.ok) {
         form.reset();
-        window.location.replace('/admin');
+        window.location.replace(player ? '/online?account=1' : '/admin');
         return;
       }
       setError(
@@ -44,38 +50,45 @@ export function SignIn({ enabled }: { enabled: boolean }) {
   return (
     <section className="signin-grid">
       <div className="content-intro">
-        <p className="eyebrow">أمناء المعرفة</p>
+        <p className="eyebrow">{player ? 'حساب اللاعب' : 'أمناء المعرفة'}</p>
         <h1>
-          سؤالٌ موثوق.
+          {player ? 'معرفتك تصنع مملكتك.' : 'سؤالٌ موثوق.'}
           <br />
-          <span>منافسة تستحقها.</span>
+          <span>{player ? 'ومقعدك يرتبط بحسابك.' : 'منافسة تستحقها.'}</span>
         </h1>
         <p>
-          مساحة فريق المحتوى لصياغة أسئلة عربية واضحة، وتوثيق مصادرها، ومراجعتها
-          قبل النشر.
+          {player
+            ? 'ادخل بحساب موجود لتربط مشاركتك بنتيجة المباراة. يمكنك دائمًا اللعب بصفة ضيف؛ سجل المباريات الشخصي سيأتي لاحقًا.'
+            : 'مساحة فريق المحتوى لصياغة أسئلة عربية واضحة، وتوثيق مصادرها، ومراجعتها قبل النشر.'}
         </p>
-        <ol className="content-principles">
-          <li>
-            <b>صياغة دقيقة</b>
-            <span>أربع إجابات واضحة، وإجابة صحيحة واحدة.</span>
-          </li>
-          <li>
-            <b>مراجعة مستقلة</b>
-            <span>عين أخرى تراجع السؤال ومصدره.</span>
-          </li>
-          <li>
-            <b>نشر مسؤول</b>
-            <span>كل تعديل مراجعة جديدة محفوظة.</span>
-          </li>
-        </ol>
+        {!player && (
+          <ol className="content-principles">
+            <li>
+              <b>صياغة دقيقة</b>
+              <span>أربع إجابات واضحة، وإجابة صحيحة واحدة.</span>
+            </li>
+            <li>
+              <b>مراجعة مستقلة</b>
+              <span>عين أخرى تراجع السؤال ومصدره.</span>
+            </li>
+            <li>
+              <b>نشر مسؤول</b>
+              <span>كل تعديل مراجعة جديدة محفوظة.</span>
+            </li>
+          </ol>
+        )}
       </div>
       <div className="content-card signin-card">
-        <p className="content-kicker">بوابة فريق المحتوى</p>
+        <p className="content-kicker">
+          {player ? 'بوابة اللاعب' : 'بوابة فريق المحتوى'}
+        </p>
         <h2>تسجيل الدخول</h2>
         {enabled ? (
           <>
             <p className="content-muted">
-              استخدم حساب الفريق المخصّص لك. الصلاحيات يمنحها مسؤول المحتوى.
+              {player
+                ? 'استخدم حسابًا موجودًا. إنشاء الحسابات واستعادة كلمة المرور غير متاحين هنا بعد.'
+                : 'استخدم حساب الفريق المخصّص لك. الصلاحيات يمنحها مسؤول المحتوى.'}
             </p>
             <form onSubmit={submit} className="content-form">
               <label htmlFor="email">
@@ -108,17 +121,50 @@ export function SignIn({ enabled }: { enabled: boolean }) {
                 {error}
               </p>
               <button className="content-primary" disabled={busy}>
-                {busy ? 'جارٍ تسجيل الدخول…' : 'دخول إلى دار المعرفة'}
+                {busy
+                  ? 'جارٍ تسجيل الدخول…'
+                  : player
+                    ? 'دخول إلى المملكة'
+                    : 'دخول إلى دار المعرفة'}
               </button>
             </form>
             <p className="content-footnote">
-              تحتاج إلى حساب أو مساعدة؟ تواصل مع مسؤول فريقك.
+              {player
+                ? 'تسجيل الخروج لا يغيّر مقعد مباراة جارية؛ الاستسلام يتم من الغرفة.'
+                : 'تحتاج إلى حساب أو مساعدة؟ تواصل مع مسؤول فريقك.'}
             </p>
+            {player && (
+              <button
+                className="content-secondary"
+                disabled={busy}
+                onClick={async () => {
+                  setBusy(true);
+                  try {
+                    const response = await fetch('/api/auth/signout', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: '{}',
+                    });
+                    if (!response.ok) throw new Error('Signout failed');
+                    window.location.replace('/account');
+                  } catch {
+                    setError('تعذّر تسجيل الخروج. حاول مجددًا.');
+                    setBusy(false);
+                  }
+                }}
+              >
+                تسجيل الخروج من هذا المتصفح
+              </button>
+            )}
           </>
         ) : (
           <div className="content-empty">
             <h3>الدخول غير متاح حاليًا</h3>
-            <p>بوابة الفريق لم تُفعّل بعد. يمكنك متابعة اللعب بصفة ضيف.</p>
+            <p>
+              {player
+                ? 'دخول حسابات اللاعبين لم يُفعّل بعد. يمكنك متابعة اللعب بصفة ضيف.'
+                : 'بوابة الفريق لم تُفعّل بعد. يمكنك متابعة اللعب بصفة ضيف.'}
+            </p>
             <Link href="/online" className="content-primary">
               العب بصفة ضيف
             </Link>

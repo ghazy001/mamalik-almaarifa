@@ -8,6 +8,7 @@ import {
   eventSchema,
   joinOptionsSchema,
   roomSnapshotSchema,
+  roomTicketSchema,
 } from '@mamalik/shared';
 import type { RoomSnapshot } from '@mamalik/shared';
 
@@ -239,6 +240,7 @@ export function createOnlineSession(endpoint: string) {
     kind: 'create' | 'join' | 'restore' | 'queue',
     name = '',
     code = '',
+    account = false,
   ) {
     if (
       view.status === 'connecting' ||
@@ -281,9 +283,37 @@ export function createOnlineSession(endpoint: string) {
           throw new Error('No saved seat');
         next = await client.reconnect(stored.token);
       } else {
-        const options = joinOptionsSchema.parse({ name });
+        joinOptionsSchema.parse({ name });
         if (kind === 'join' && !/^[a-f0-9]{16}$/.test(code.trim()))
           throw new Error('Invalid invite');
+        let ticket: string | undefined;
+        if (account) {
+          const response = await fetch('/api/play-ticket', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}',
+          });
+          if (!response.ok)
+            throw Object.assign(
+              new Error(
+                response.status === 401
+                  ? 'PLAYER_SIGN_IN_REQUIRED'
+                  : 'PLAYER_AUTH_UNAVAILABLE',
+              ),
+              { code: response.status },
+            );
+          const data: unknown = await response.json();
+          ticket = roomTicketSchema.parse(
+            typeof data === 'object' && data !== null && 'ticket' in data
+              ? data.ticket
+              : undefined,
+          );
+        }
+        if (!alive || generation !== current) return;
+        const options = joinOptionsSchema.parse({
+          name,
+          ...(ticket ? { ticket } : {}),
+        });
         next =
           kind === 'create'
             ? await client.create('kingdom', options)

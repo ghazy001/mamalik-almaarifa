@@ -156,6 +156,31 @@ export const requests = contentSchema
   .enableRLS();
 
 export const gameSchema = pgSchema('game');
+export const resultParticipants = gameSchema
+  .table(
+    'result_participants',
+    {
+      matchId: text('match_id')
+        .notNull()
+        .references(() => matchResults.matchId),
+      playerId: text('player_id').notNull(),
+      issuer: text('issuer').notNull(),
+      subject: uuid('subject').notNull(),
+    },
+    (table) => [
+      primaryKey({ columns: [table.matchId, table.playerId] }),
+      uniqueIndex('one_account_per_match').on(
+        table.matchId,
+        table.issuer,
+        table.subject,
+      ),
+      check(
+        'participant_seat',
+        sql`${table.playerId} IN ('p_teal', 'p_blue', 'p_gold')`,
+      ),
+    ],
+  )
+  .enableRLS();
 export const matchResults = gameSchema
   .table(
     'match_results',

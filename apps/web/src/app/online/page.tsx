@@ -40,12 +40,15 @@ export default function OnlinePage() {
             <h1>ثلاث ممالك، معرفة تجمعها.</h1>
           </div>
           <p>
-            ثلاثة ضيوف حقيقيين.
+            ثلاثة لاعبين حقيقيين.
             <br />
             أسئلة ونتائج يحسمها الخادم.
           </p>
         </div>
-        <OnlineMatch endpoint={endpoint} />
+        <OnlineMatch
+          endpoint={endpoint}
+          accountsEnabled={process.env.WEB_PLAYER_AUTH_ENABLED === 'true'}
+        />
       </main>
       <footer>
         <span className="footer-brand">ممالك المعرفة</span>

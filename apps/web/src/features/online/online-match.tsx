@@ -17,7 +17,13 @@ import { BattleDialog, Countdown } from '../match/battle-dialog';
 import { createOnlineSession } from './online-session';
 
 const numbers = new Intl.NumberFormat('ar', { numberingSystem: 'arab' });
-export function OnlineMatch({ endpoint }: { endpoint: string }) {
+export function OnlineMatch({
+  endpoint,
+  accountsEnabled = false,
+}: {
+  endpoint: string;
+  accountsEnabled?: boolean;
+}) {
   const [session] = useState(() => createOnlineSession(endpoint));
   const view = useSyncExternalStore(
     session.subscribe,
@@ -25,6 +31,7 @@ export function OnlineMatch({ endpoint }: { endpoint: string }) {
     session.getSnapshot,
   );
   const [name, setName] = useState('');
+  const [account, setAccount] = useState(false);
   const [code, setCode] = useState('');
   const [copied, setCopied] = useState(false);
   const [pending, setPending] = useState<{
@@ -35,6 +42,10 @@ export function OnlineMatch({ endpoint }: { endpoint: string }) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   useEffect(() => {
     session.activate();
+    setAccount(
+      accountsEnabled &&
+        new URLSearchParams(window.location.search).get('account') === '1',
+    );
     setCode(new URLSearchParams(window.location.search).get('room') ?? '');
     const restore = window.setTimeout(() => session.restoreIfSaved(), 0);
     const timer = window.setInterval(() => session.tick(), 100);
@@ -58,7 +69,7 @@ export function OnlineMatch({ endpoint }: { endpoint: string }) {
       window.removeEventListener('online', wake);
       session.suspend();
     };
-  }, [session]);
+  }, [session, accountsEnabled]);
   const onIntent = useCallback(
     (intent: MapIntent) => {
       const snapshot = session.getSnapshot().snapshot;
@@ -171,17 +182,37 @@ export function OnlineMatch({ endpoint }: { endpoint: string }) {
             autoComplete="nickname"
             disabled={busy}
           />
+          {accountsEnabled && (
+            <div className="online-account-entry">
+              <label htmlFor="player-account">طريقة الدخول</label>
+              <select
+                id="player-account"
+                value={account ? 'account' : 'guest'}
+                onChange={(event) =>
+                  setAccount(event.target.value === 'account')
+                }
+                disabled={busy}
+              >
+                <option value="guest">اللعب بصفة ضيف</option>
+                <option value="account">اللعب بحسابي</option>
+              </select>
+              <p>
+                يتحقق الخادم من الحساب عند دخول الغرفة.{' '}
+                <Link href="/account">دخول حساب اللاعب</Link>
+              </p>
+            </div>
+          )}
           <div className="online-entry-actions">
             <Button
               disabled={busy || !name.trim()}
-              onClick={() => void session.connect('queue', name)}
+              onClick={() => void session.connect('queue', name, '', account)}
             >
               ابحث عن لاعبين
             </Button>
             <Button
               variant="outline"
               disabled={busy || !name.trim()}
-              onClick={() => void session.connect('create', name)}
+              onClick={() => void session.connect('create', name, '', account)}
             >
               أنشئ غرفة خاصة
             </Button>
@@ -207,7 +238,7 @@ export function OnlineMatch({ endpoint }: { endpoint: string }) {
             <Button
               variant="outline"
               disabled={busy || !name.trim() || !/^[a-f0-9]{16}$/.test(code)}
-              onClick={() => void session.connect('join', name, code)}
+              onClick={() => void session.connect('join', name, code, account)}
             >
               انضم إلى الغرفة
             </Button>
@@ -220,8 +251,11 @@ export function OnlineMatch({ endpoint }: { endpoint: string }) {
             </Button>
           </div>
           <p className="map-help">
-            مقاعد ضيوف دون حسابات. يحتفظ هذا التبويب برمز استعادة مؤقت؛ لا
-            تشاركه. لا يتوفر سجل مباريات في هذه الواجهة بعد.
+            {accountsEnabled && account
+              ? 'يرتبط الحساب بالمقعد بعد تحقق الخادم. '
+              : 'مقاعد ضيوف دون حسابات. '}
+            يحتفظ هذا التبويب برمز استعادة مؤقت؛ لا تشاركه. لا يتوفر سجل مباريات
+            في هذه الواجهة بعد.
           </p>
         </section>
       )}

@@ -109,3 +109,16 @@
     width: 100%;
   }
 }
+.online-account-entry select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: #0a1c28;
+  color: var(--text);
+}
+.online-account-entry a {
+  color: var(--gold);
+  text-decoration: underline;
+}

@@ -6,6 +6,7 @@ import { openDatabase, createMatchResultRepository } from '@mamalik/database';
 import { createContentAuthenticator } from './content-auth.js';
 import { databaseQuestionLoader } from './question-bank.js';
 import { createResultWriter } from './result-writer.js';
+import { createPlayerAccess } from './player-access.js';
 
 loadEnv({
   path: fileURLToPath(new URL('../../../.env', import.meta.url)),
@@ -31,6 +32,10 @@ async function start() {
         await database.db.execute(
           'SELECT match_id, payload_hash, archive FROM game.match_results LIMIT 0',
         );
+      if (config.PLAYER_AUTH_ENABLED)
+        await database.db.execute(
+          'SELECT issuer, subject, player_id FROM game.result_participants LIMIT 0',
+        );
     } catch {
       await database.close();
       throw new Error('CONTENT_START_FAILED');
@@ -42,6 +47,16 @@ async function start() {
       : undefined;
   const service = createGameService(
     {
+      ...(config.PLAYER_AUTH_ENABLED
+        ? {
+            playerAccess: createPlayerAccess(
+              createContentAuthenticator(
+                config.SUPABASE_URL!,
+                config.SUPABASE_PUBLISHABLE_KEY!,
+              ),
+            ),
+          }
+        : {}),
       ...(config.GAME_QUESTION_SOURCE === 'published' && database
         ? { loadQuestions: databaseQuestionLoader(database.db) }
         : {}),

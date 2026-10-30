@@ -55,3 +55,7 @@ Changing any of these product rules requires a reviewed rule version update and 
 ## M4 result archiving (rules unchanged)
 
 Optional server-side archives persist the core-calculated outcome and final owners after FINISHED, including prepared-match aborts. Storage failure never changes score, winner or turn progression. Protocol v3 resultStorage reports persistence separately; rules version remains 1. Guest seat IDs are positions, not accounts. Archive provenance is not a full replay/action log. See M4_RESULT_ARCHIVES.md for exact contents and delivery limits.
+
+## Account admission (rules unchanged)
+
+Optional verified accounts and guests can share private/queued rooms. One verified issuer/subject may hold one seat per room, including during reconnect grace. Pre-match leave releases that seat; prepared-game identity remains bound for its result. Account status gives no tactical or scoring advantage. Sign-out does not forfeit a running seat, and bearer recovery keeps the existing 30-second grace without fresh provider verification. No anti-multiple-account or ranked matchmaking claim is made. See M4_PLAYER_ADMISSION.md.

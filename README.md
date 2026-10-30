@@ -1,6 +1,6 @@
 # ممالك المعرفة · Mamalik Al-Ma'rifa
 
-Original Arabic-first strategy trivia. The M1 foundation and M2 offline match are implemented: deterministic rules, strict protocol schemas, an RTL web shell, a standalone Colyseus health service, and original interactive Phaser terrain. Play a complete local match against two scripted opponents at `/play`, or find two real guests through basic matchmaking or private invitations at `/online`. M3 is complete for the documented local guest-match scope. M4 includes PostgreSQL question storage and an opt-in Supabase-authenticated content API with editor/reviewer/publisher roles. Sign-in/admin UI and durable match results remain.
+Original Arabic-first strategy trivia. The M1 foundation and M2 offline match are implemented: deterministic rules, strict protocol schemas, an RTL web shell, a standalone Colyseus health service, and original interactive Phaser terrain. Play a complete local match against two scripted opponents at `/play`, or find two real guests through basic matchmaking or private invitations at `/online`. M3 is complete for the documented local guest-match scope. M4 includes PostgreSQL question storage, a Supabase-authenticated content API, and an Arabic sign-in/editorial workspace. Reviewed live-room banks, player accounts and durable match results remain.
 
 ## Local setup
 
@@ -62,7 +62,15 @@ The persistent game service now has an opt-in Supabase-authenticated content API
 
 With the local PostgreSQL bootstrap URL configured, run `pnpm test:admin` to exercise real signed local test identities, HTTP requests and database operations without cloud credentials. This starts a test fixture, not a hosted Supabase instance or a production identity bypass. Run `pnpm test:database` for storage, role locking and RLS checks. CI runs both commands uncached.
 
-For an existing Supabase project, set `CONTENT_ADMIN_ENABLED=true`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` and `DATABASE_URL` as documented in `.env.example`, run `pnpm db:migrate`, then restart the game service. Grant each account explicit roles with `pnpm content grant-role <project-url>/auth/v1 <account-uuid> editor <operator-label>`; use `reviewer` or `publisher` for the other permissions. No service-role key is needed. `/admin/me` and protected question reads/commands require an access-token bearer header. The API rejects browser Origin requests until a deliberate Next.js admin proxy/session UI is implemented. See [configuration, HTTP contract, examples and limits](docs/M4_IDENTITY_AUTH.md).
+For an existing Supabase project, set `CONTENT_ADMIN_ENABLED=true`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` and `DATABASE_URL` as documented in `.env.example`, run `pnpm db:migrate`, then restart the game service. Grant each account explicit roles with `pnpm content grant-role <project-url>/auth/v1 <account-uuid> editor <operator-label>`; use `reviewer` or `publisher` for the other permissions. No service-role key is needed. `/admin/me` and protected question reads/commands require an access-token bearer header. Direct browser Origin requests remain rejected; the Next.js server proxy supplies verified-session credentials. See the [HTTP contract and historical API verification](docs/M4_IDENTITY_AUTH.md).
+
+## Arabic editorial workspace (M4 third slice)
+
+`/signin` and `/admin` support existing email/password content-team accounts. There is no signup, account provisioning, recovery email or player-account integration. With the API configured above, export `WEB_AUTH_ENABLED=true`, `WEB_AUTH_ORIGIN=http://127.0.0.1:3000`, `CONTENT_ADMIN_URL=http://127.0.0.1:2567` and the same Supabase URL/publishable key before `pnpm dev`. Alternatively put web-only settings in `apps/web/.env.local`; the root `.env` is not loaded by Next.js. The configured origin must exactly match the browser origin and actual port. Use HTTPS outside loopback development.
+
+Open `/signin`, sign in, and use the role-appropriate draft, revision, review, publication and retirement controls. A different account must review a question. The server verifies permissions on every request, including retries; profile metadata cannot grant access. Session tokens remain in HttpOnly cookies and server requests. Uncertain writes keep the same idempotency key in memory until retried; reloading loses unsaved/pending form state, so inspect the revision list before starting a replacement operation.
+
+To verify without cloud credentials, first `pnpm build`, then `pnpm test:content-web` with the local PostgreSQL bootstrap URL. This provisions only an isolated random test database and starts signed local Auth/HTTP fixtures for six desktop/mobile/landscape journeys. It does not validate hosted Supabase. Without configuration the portal clearly shows an unavailable state and guest play still works. See [setup, manual workflow, verification and limits](docs/M4_EDITORIAL_UI.md) and [ADR 0009](docs/ADR/0009-server-cookie-editorial-session.md).
 
 ## Play a local match
 
@@ -91,6 +99,7 @@ pnpm build
 pnpm simulate
 pnpm --filter @mamalik/web exec playwright install chromium
 pnpm test:e2e
+pnpm test:content-web # local signed Auth + real PostgreSQL + protected browser UI
 ```
 
 The simulation uses explicit seed `2026`, synthetic question fixtures and three scripted players. It completes 36 turns with 177 accepted actions and emits a TURN_LIMIT result with `p_gold` winning. It is deterministic, not live multiplayer or a content demo. Tests replay its action/context log and compare the exact final private state.
@@ -111,7 +120,7 @@ docs/                 Design, exact rules, architecture, protocol, milestones, A
 .github/workflows/    Reproducible quality gates
 ```
 
-Database-backed content tooling and server-side content identity/permissions are implemented. Sign-in/admin UI, room account identity, reviewed-bank integration, durable results and Howler remain future slices. Private guest rooms and basic guest matchmaking are implemented; bounded network recovery is verified. Competitive latency fairness and public-release operations remain explicit release gates. Phaser powers public snapshot rendering for the preview and offline match. See [rules and reversible assumptions](docs/GAME_RULES.md), [architecture](docs/ARCHITECTURE.md), [protocol](docs/PROTOCOL.md) and [milestones](docs/MILESTONES.md). Preserve `AGENTS.md` as the engineering charter.
+Database-backed content tooling, identity/permissions and the protected editorial workspace are implemented. Room account identity, reviewed-bank integration, durable results and Howler remain future slices. Private guest rooms and basic guest matchmaking are implemented; bounded network recovery is verified. Competitive latency fairness and public-release operations remain explicit release gates. Phaser powers public snapshot rendering for the preview and offline match. See [rules and reversible assumptions](docs/GAME_RULES.md), [architecture](docs/ARCHITECTURE.md), [protocol](docs/PROTOCOL.md) and [milestones](docs/MILESTONES.md). Preserve `AGENTS.md` as the engineering charter.
 
 ## Five concepts to learn
 

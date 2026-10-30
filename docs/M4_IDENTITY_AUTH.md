@@ -1,5 +1,7 @@
 # M4 second slice — Content identity and authorization
 
+Historical record of the second M4 increment. The subsequent Arabic sign-in/session proxy and editorial workspace are documented in [M4_EDITORIAL_UI.md](M4_EDITORIAL_UI.md); statements below about absent UI describe this slice at completion.
+
 The optional content API authenticates Supabase accounts and enforces PostgreSQL editor/reviewer/publisher roles. It connects the existing revision/review repository to protected HTTP reads and writes. Rules v1 and gameplay Protocol v2 are unchanged; guest rooms and the offline route retain public development fixtures. M4 is still in progress: sign-in/admin UI, hosted Supabase verification, reviewed room decks and durable results/history remain.
 
 ## Implementation

@@ -15,6 +15,18 @@
       "cache": false,
       "persistent": true
     },
+    "@mamalik/web#dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true,
+      "passThroughEnv": [
+        "WEB_AUTH_ENABLED",
+        "WEB_AUTH_ORIGIN",
+        "SUPABASE_URL",
+        "SUPABASE_PUBLISHABLE_KEY",
+        "CONTENT_ADMIN_URL"
+      ]
+    },
     "@mamalik/game-server#dev": {
       "dependsOn": ["^build"],
       "cache": false,

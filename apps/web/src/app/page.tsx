@@ -33,8 +33,8 @@ export default function Home() {
         <nav aria-label="التنقل الرئيسي">
           <a href="#rules">اكتشف قواعد المملكة</a>
           <span className="version-label">
-            <bdi dir="ltr">M3</bdi>
-            <span>غرف خاصة</span>
+            <bdi dir="ltr">M4</bdi>
+            <span>بناء مكتبة المعرفة</span>
           </span>
         </nav>
       </header>
@@ -157,12 +157,13 @@ export default function Home() {
             <p>
               تضم هذه النسخة قواعد حتمية قابلة للاختبار، ومحاكاة تقنية كاملة،
               ومباراة محلية كاملة ضد خصمين مبرمجين، وغرف خاصة لثلاثة لاعبين
-              حقيقيين. الحسابات وحفظ النتائج غير متاحين بعد.
+              حقيقيين. تتوفر بوابة محمية لفريق تحرير الأسئلة؛ حسابات اللاعبين
+              وحفظ النتائج غير متاحين بعد.
             </p>
           </div>
           <span className="foundation-tag">
             <span className="status-dot" />
-            تطوير محلي · <bdi dir="ltr">M3</bdi>
+            تطوير محلي · <bdi dir="ltr">M4</bdi>
           </span>
         </section>
       </main>
@@ -171,7 +172,9 @@ export default function Home() {
           ممالك المعرفة
         </a>
         <p>عالم أصلي. منافسة عادلة. معرفة تجمعنا.</p>
-        <span>صُنع ليُقرأ من اليمين</span>
+        <Link href="/signin" prefetch={false}>
+          بوابة فريق المحتوى
+        </Link>
       </footer>
     </div>
   );

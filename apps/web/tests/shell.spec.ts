@@ -13,7 +13,7 @@ test('Arabic shell is responsive, keyboard accessible, and honest about developm
     'المعرفة',
   );
   await expect(
-    page.getByText('الحسابات وحفظ النتائج غير متاحين بعد.', {
+    page.getByText('حسابات اللاعبين وحفظ النتائج غير متاحين بعد.', {
       exact: false,
     }),
   ).toBeVisible();
@@ -48,4 +48,16 @@ test('Arabic shell is responsive, keyboard accessible, and honest about developm
     path: testInfo.outputPath('shell.png'),
     fullPage: true,
   });
+  await page.getByRole('link', { name: 'بوابة فريق المحتوى' }).click();
+  await expect(page).toHaveURL(/\/signin$/);
+  await expect(
+    page.getByRole('heading', { name: 'الدخول غير متاح حاليًا' }),
+  ).toBeVisible();
+  await expect(page.getByLabel('كلمة المرور', { exact: true })).toHaveCount(0);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await page.goto('/admin');
+  await expect(
+    page.getByRole('heading', { name: 'بوابة الفريق غير متاحة حاليًا' }),
+  ).toBeVisible();
+  expect(errors).toEqual([]);
 });

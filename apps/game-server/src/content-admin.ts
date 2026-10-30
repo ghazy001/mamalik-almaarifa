@@ -55,6 +55,7 @@ const querySchema = z.strictObject({
 export interface ContentAdmin {
   db: ContentDatabase;
   authenticate: (authorization: string | undefined) => Promise<ContentIdentity>;
+  requestsPerMinute?: number;
 }
 
 export function installContentAdmin(
@@ -89,7 +90,7 @@ export function installContentAdmin(
       const key = request.socket.remoteAddress ?? 'unknown';
       const bucket = buckets.get(key) ?? { started: now, count: 0 };
       if (
-        ++bucket.count > 60 ||
+        ++bucket.count > (settings.requestsPerMinute ?? 60) ||
         (!buckets.has(key) && buckets.size >= 2048) ||
         inFlight >= 8
       ) {

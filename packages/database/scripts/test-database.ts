@@ -12,7 +12,7 @@ config({
 
 async function main() {
   const target = process.argv[2] ?? 'database';
-  if (!['database', 'server'].includes(target))
+  if (!['database', 'server', 'web'].includes(target))
     throw new Error('INVALID_TEST_TARGET');
   const adminUrl = process.env.DATABASE_TEST_ADMIN_URL;
   if (!adminUrl) throw new Error('DATABASE_TEST_ADMIN_URL_REQUIRED');
@@ -50,17 +50,28 @@ async function main() {
       process.execPath,
       [
         fileURLToPath(
-          new URL('../../../node_modules/vitest/vitest.mjs', import.meta.url),
+          new URL(
+            target === 'web'
+              ? '../../../apps/web/node_modules/@playwright/test/cli.js'
+              : '../../../node_modules/vitest/vitest.mjs',
+            import.meta.url,
+          ),
         ),
-        'run',
+        target === 'web' ? 'test' : 'run',
         target === 'database'
           ? 'tests/postgres.integration.test.ts'
-          : 'tests/content-admin.postgres.test.ts',
+          : target === 'server'
+            ? 'tests/content-admin.postgres.test.ts'
+            : '--config=playwright.content.config.ts',
       ],
       {
         cwd: fileURLToPath(
           new URL(
-            target === 'database' ? '../' : '../../../apps/game-server/',
+            target === 'database'
+              ? '../'
+              : target === 'server'
+                ? '../../../apps/game-server/'
+                : '../../../apps/web/',
             import.meta.url,
           ),
         ),

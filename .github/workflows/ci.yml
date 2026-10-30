@@ -42,3 +42,6 @@ jobs:
       - run: pnpm simulate
       - run: pnpm --filter @mamalik/web exec playwright install --with-deps chromium
       - run: pnpm test:e2e
+      - run: pnpm test:content-web
+        env:
+          DATABASE_TEST_ADMIN_URL: postgresql://postgres:local-ci-only@127.0.0.1:5432/postgres

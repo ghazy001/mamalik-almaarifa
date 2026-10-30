@@ -17,6 +17,7 @@
     "test:e2e": "pnpm --filter @mamalik/web test:e2e",
     "test:database": "pnpm --filter @mamalik/database test:integration",
     "test:admin": "pnpm --filter @mamalik/database... build && pnpm --filter @mamalik/game-server test:admin",
+    "test:content-web": "pnpm --filter @mamalik/database... build && node --import tsx packages/database/scripts/test-database.ts web",
     "db:migrate": "pnpm --filter @mamalik/database db:migrate",
     "content": "pnpm --filter @mamalik/question-fixtures... build && pnpm --filter @mamalik/database content"
   },

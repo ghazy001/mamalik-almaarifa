@@ -10,6 +10,21 @@
     "lint": { "dependsOn": ["^lint"] },
     "typecheck": { "dependsOn": ["^build"], "outputs": [] },
     "test": { "dependsOn": ["^build"], "outputs": [] },
-    "dev": { "dependsOn": ["^build"], "cache": false, "persistent": true }
+    "dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    },
+    "@mamalik/game-server#dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true,
+      "passThroughEnv": [
+        "CONTENT_ADMIN_ENABLED",
+        "SUPABASE_URL",
+        "SUPABASE_PUBLISHABLE_KEY",
+        "DATABASE_URL"
+      ]
+    }
   }
 }

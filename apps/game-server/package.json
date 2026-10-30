@@ -9,13 +9,17 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json",
     "lint": "eslint src tests",
-    "test": "vitest run"
+    "test": "vitest run --exclude tests/content-admin.postgres.test.ts",
+    "test:admin": "node --import tsx ../../packages/database/scripts/test-database.ts server"
   },
   "dependencies": {
     "@colyseus/core": "0.18.23",
     "@colyseus/ws-transport": "0.18.4",
     "@mamalik/game-core": "workspace:*",
     "@mamalik/shared": "workspace:*",
+    "@mamalik/database": "workspace:*",
+    "@supabase/supabase-js": "2.118.0",
+    "express": "5.3.0",
     "zod": "^4.1.0",
     "dotenv": "^17.2.0",
     "@mamalik/question-fixtures": "workspace:*"
@@ -23,6 +27,7 @@
   "devDependencies": {
     "@types/express": "^5.0.0",
     "@mamalik/config": "workspace:*",
-    "@colyseus/sdk": "0.18.8"
+    "@colyseus/sdk": "0.18.8",
+    "jose": "6.2.14"
   }
 }

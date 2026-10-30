@@ -1,6 +1,6 @@
 # ممالك المعرفة · Mamalik Al-Ma'rifa
 
-Original Arabic-first strategy trivia. The M1 foundation and M2 offline match are implemented: deterministic rules, strict protocol schemas, an RTL web shell, a standalone Colyseus health service, and original interactive Phaser terrain. Play a complete local match against two scripted opponents at `/play`, or find two real guests through basic matchmaking or private invitations at `/online`. M3 is complete for the documented local guest-match scope. M4 has begun with local PostgreSQL question storage and a review/publication CLI; accounts, authenticated administration and durable match results remain.
+Original Arabic-first strategy trivia. The M1 foundation and M2 offline match are implemented: deterministic rules, strict protocol schemas, an RTL web shell, a standalone Colyseus health service, and original interactive Phaser terrain. Play a complete local match against two scripted opponents at `/play`, or find two real guests through basic matchmaking or private invitations at `/online`. M3 is complete for the documented local guest-match scope. M4 includes PostgreSQL question storage and an opt-in Supabase-authenticated content API with editor/reviewer/publisher roles. Sign-in/admin UI and durable match results remain.
 
 ## Local setup
 
@@ -56,6 +56,14 @@ Import creates 18 sourced **drafts**, skips 18 arithmetic fixtures lacking refer
 
 `pnpm test:database` requires an explicitly configured bootstrap URL with CREATE DATABASE/ROLE privileges. It creates and removes its own random database and non-superuser role; it never truncates your content database. Database tasks run directly, outside Turbo caching. `docker compose stop` preserves local data. Compose setup is optional; an existing PostgreSQL 16 instance can use the same non-superuser owner/database arrangement in `packages/database/scripts/local-init.sql`. Keep bootstrap credentials out of app/client configuration.
 
+## Content identity and permissions (M4 second slice)
+
+The persistent game service now has an opt-in Supabase-authenticated content API. Editor, reviewer and publisher roles come from private PostgreSQL memberships; client metadata cannot grant them. New question authors/reviewers come from verified account identity, and HTTP write retries use a transactional idempotency ledger. Guest play remains available without configuring this feature.
+
+With the local PostgreSQL bootstrap URL configured, run `pnpm test:admin` to exercise real signed local test identities, HTTP requests and database operations without cloud credentials. This starts a test fixture, not a hosted Supabase instance or a production identity bypass. Run `pnpm test:database` for storage, role locking and RLS checks. CI runs both commands uncached.
+
+For an existing Supabase project, set `CONTENT_ADMIN_ENABLED=true`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` and `DATABASE_URL` as documented in `.env.example`, run `pnpm db:migrate`, then restart the game service. Grant each account explicit roles with `pnpm content grant-role <project-url>/auth/v1 <account-uuid> editor <operator-label>`; use `reviewer` or `publisher` for the other permissions. No service-role key is needed. `/admin/me` and protected question reads/commands require an access-token bearer header. The API rejects browser Origin requests until a deliberate Next.js admin proxy/session UI is implemented. See [configuration, HTTP contract, examples and limits](docs/M4_IDENTITY_AUTH.md).
+
 ## Play a local match
 
 Open `/play`, or choose **العب مباراة محلية** from the home page. You control فيروز against two explicitly scripted opponents. Start, select an adjacent target through the canvas or Arabic territory controls, then **ابدأ التحدّي**. Answer within 15 seconds and review the resolution/source before continuing. The map and scores update through the shared rules. Defend your lands when attacked; capture all castles or lead on score at the 36-turn limit. Results include placements and **مباراة جديدة**.
@@ -78,6 +86,7 @@ pnpm lint
 pnpm typecheck
 pnpm test
 pnpm test:database # requires the local PostgreSQL bootstrap URL above
+pnpm test:admin    # signed local Auth fixture + real HTTP/PostgreSQL permissions
 pnpm build
 pnpm simulate
 pnpm --filter @mamalik/web exec playwright install chromium
@@ -102,7 +111,7 @@ docs/                 Design, exact rules, architecture, protocol, milestones, A
 .github/workflows/    Reproducible quality gates
 ```
 
-Database-backed content tooling has begun; Supabase identity, authenticated administration, live-room reviewed-bank integration, durable results and Howler remain future slices. Private guest rooms and basic guest matchmaking are implemented; bounded network recovery is verified. Competitive latency fairness and public-release operations remain explicit release gates. Phaser powers public snapshot rendering for the preview and offline match. See [rules and reversible assumptions](docs/GAME_RULES.md), [architecture](docs/ARCHITECTURE.md), [protocol](docs/PROTOCOL.md) and [milestones](docs/MILESTONES.md). Preserve `AGENTS.md` as the engineering charter.
+Database-backed content tooling and server-side content identity/permissions are implemented. Sign-in/admin UI, room account identity, reviewed-bank integration, durable results and Howler remain future slices. Private guest rooms and basic guest matchmaking are implemented; bounded network recovery is verified. Competitive latency fairness and public-release operations remain explicit release gates. Phaser powers public snapshot rendering for the preview and offline match. See [rules and reversible assumptions](docs/GAME_RULES.md), [architecture](docs/ARCHITECTURE.md), [protocol](docs/PROTOCOL.md) and [milestones](docs/MILESTONES.md). Preserve `AGENTS.md` as the engineering charter.
 
 ## Five concepts to learn
 

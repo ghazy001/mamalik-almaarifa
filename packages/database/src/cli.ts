@@ -6,6 +6,7 @@ import { openDatabase } from './client.js';
 import { ContentError } from './content.js';
 import { migrateDatabase } from './migrate.js';
 import { createQuestionRepository } from './repository.js';
+import { createAccessRepository } from './access.js';
 
 config({
   path: fileURLToPath(new URL('../../../.env', import.meta.url)),
@@ -25,6 +26,8 @@ async function main() {
     retire: 4,
     history: 1,
     'bank-check': 0,
+    'grant-role': 4,
+    'revoke-role': 4,
   };
   if (!command || sizes[command] !== args.length) throw new Error('USAGE');
   const url = process.env.DATABASE_URL;
@@ -32,7 +35,19 @@ async function main() {
   const { db, close } = openDatabase(url);
   const repository = createQuestionRepository(db);
   try {
-    if (command === 'migrate') {
+    if (command === 'grant-role' || command === 'revoke-role') {
+      const access = createAccessRepository(db);
+      const operation = command === 'grant-role' ? access.grant : access.revoke;
+      console.log(
+        JSON.stringify({
+          changed: await operation(
+            { issuer: args[0]!, subject: args[1]! },
+            args[2]!,
+            args[3]!,
+          ),
+        }),
+      );
+    } else if (command === 'migrate') {
       await migrateDatabase(db);
       console.log('Migrations applied');
     } else if (command === 'import-fixtures') {
@@ -127,7 +142,7 @@ main().catch((error: unknown) => {
   console.error(code);
   if (code === 'USAGE')
     console.error(
-      'Commands: migrate | import-fixtures | list | draft <json-file> <author> | revise <id> <expected-revision> <json-file> <author> | approve <id> <revision> <reviewer> <note> | publish <id> <revision> <actor> | retire <id> <revision> <actor> <note> | history <id> | bank-check',
+      'Commands: migrate | import-fixtures | list | draft <json-file> <author> | revise <id> <expected-revision> <json-file> <author> | approve <id> <revision> <reviewer> <note> | publish <id> <revision> <actor> | retire <id> <revision> <actor> <note> | history <id> | bank-check | grant-role <issuer> <subject-uuid> <role> <operator> | revoke-role <issuer> <subject-uuid> <role> <operator>',
     );
   process.exitCode = 1;
 });

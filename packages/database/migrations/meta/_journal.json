@@ -15,6 +15,27 @@
       "when": 1793324922657,
       "tag": "0001_content_guards",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793326979122,
+      "tag": "0002_content_access",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793327185285,
+      "tag": "0003_content_requests",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793327185286,
+      "tag": "0004_access_guards",
+      "breakpoints": true
     }
   ]
 }

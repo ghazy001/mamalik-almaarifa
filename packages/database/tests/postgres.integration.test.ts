@@ -6,6 +6,8 @@ import { migrateDatabase } from '../src/migrate.js';
 import { createQuestionRepository } from '../src/repository.js';
 import { audit, revisions } from '../src/schema.js';
 import { sampleContent } from './sample.js';
+import { createAccessRepository } from '../src/access.js';
+import { contentActor } from '../src/permissions.js';
 
 const url = process.env.DATABASE_URL;
 // Never run this file directly against a developer's content database.
@@ -13,6 +15,7 @@ if (!url || !/^\/mamalik_test_[0-9a-f]{32}$/.test(new URL(url).pathname))
   throw new Error('Use pnpm test:database to create an isolated database');
 const { db, close } = openDatabase(url);
 const repository = createQuestionRepository(db);
+const access = createAccessRepository(db);
 
 beforeAll(async () => {
   await migrateDatabase(db);
@@ -258,5 +261,111 @@ describe('real PostgreSQL content workflow', () => {
       repository.createDraft({ ...sampleContent, sources: [] }, 'author'),
     ).rejects.toThrow();
     expect(await repository.list()).toEqual(before);
+  });
+});
+
+describe('database content authorization', () => {
+  const identity = {
+    issuer: 'https://project.example/auth/v1',
+    subject: randomUUID(),
+  };
+  it('defaults to no roles, scopes roles by project, and audits retry-safe operator changes', async () => {
+    expect(await access.roles(identity)).toEqual([]);
+    await expect(
+      access.authorize(identity, 'read', (questions) => questions.list()),
+    ).rejects.toThrow('FORBIDDEN');
+    expect(await access.grant(identity, 'editor', 'operator')).toBe(true);
+    expect(await access.grant(identity, 'editor', 'operator')).toBe(false);
+    expect(
+      await access.roles({
+        ...identity,
+        issuer: 'https://other.example/auth/v1',
+      }),
+    ).toEqual([]);
+    await expect(
+      access.authorize(identity, 'publish', async () => true),
+    ).rejects.toThrow('FORBIDDEN');
+    const events = await db.execute<{ action: string }>(
+      sql`SELECT action FROM content.access_audit WHERE subject = ${identity.subject} ORDER BY id`,
+    );
+    expect(events.rows.map((row) => row.action)).toEqual(['GRANT']);
+    await expect(
+      db.execute(
+        sql`UPDATE content.access_audit SET actor = 'changed' WHERE subject = ${identity.subject}`,
+      ),
+    ).rejects.toThrow();
+  });
+  it('holds a membership lock through the content transaction and makes revocation effective afterward', async () => {
+    await access.authorize(identity, 'edit', async () => {
+      await expect(
+        db.transaction(async (tx) => {
+          await tx.execute(sql`SET LOCAL lock_timeout = '50ms'`);
+          await createAccessRepository(tx).revoke(
+            identity,
+            'editor',
+            'operator',
+          );
+        }),
+      ).rejects.toMatchObject({ cause: { code: '55P03' } });
+      return true;
+    });
+    expect(await access.revoke(identity, 'editor', 'operator')).toBe(true);
+    expect(await access.revoke(identity, 'editor', 'operator')).toBe(false);
+    expect(await access.roles(identity)).toEqual([]);
+  });
+  it('rolls back a failed command, ledger row and draft together, then permits a clean retry', async () => {
+    await access.grant(identity, 'editor', 'operator');
+    const key = randomUUID(),
+      input = { type: 'CREATE_DRAFT', content: sampleContent };
+    const before = await repository.list();
+    await expect(
+      access.command(identity, 'edit', key, input, async (questions, actor) => {
+        await questions.createDraft(sampleContent, actor);
+        throw new Error('test failure');
+      }),
+    ).rejects.toThrow('test failure');
+    expect(await repository.list()).toEqual(before);
+    const count = await db.execute<{ count: number }>(
+      sql`SELECT count(*)::int AS count FROM content.requests WHERE key = ${key}`,
+    );
+    expect(count.rows[0]?.count).toBe(0);
+    const result = await access.command(
+      identity,
+      'edit',
+      key,
+      input,
+      (questions, actor) => questions.createDraft(sampleContent, actor),
+    );
+    expect(result).toHaveProperty('questionId');
+    expect(
+      contentActor({ ...identity, subject: identity.subject.toUpperCase() }),
+    ).toBe(contentActor(identity));
+  });
+  it('denies an unprivileged role even if SELECT is accidentally granted on private tables', async () => {
+    const reader = process.env.DATABASE_TEST_READER_ROLE;
+    if (!reader || !/^mamalik_reader_[0-9a-f]{32}$/.test(reader))
+      throw new Error('Missing isolated reader role');
+    await db.execute(
+      sql`GRANT USAGE ON SCHEMA content TO ${sql.identifier(reader)}`,
+    );
+    await db.execute(
+      sql`GRANT SELECT ON ALL TABLES IN SCHEMA content TO ${sql.identifier(reader)}`,
+    );
+    await db.transaction(async (tx) => {
+      await tx.execute(sql`SET LOCAL ROLE ${sql.identifier(reader)}`);
+      for (const table of [
+        'question_revisions',
+        'questions',
+        'question_audit',
+        'memberships',
+        'access_audit',
+        'requests',
+      ]) {
+        const result = await tx.execute(
+          sql`SELECT * FROM content.${sql.identifier(table)}`,
+        );
+        expect(result.rows).toEqual([]);
+      }
+    });
   });
 });

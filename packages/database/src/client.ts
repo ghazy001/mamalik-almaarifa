@@ -23,3 +23,7 @@ export function openDatabase(url: string) {
   return { db: drizzle(pool), close: () => pool.end() };
 }
 export type ContentDatabase = ReturnType<typeof openDatabase>['db'];
+export type ContentConnection = Pick<
+  ContentDatabase,
+  'select' | 'insert' | 'update' | 'delete' | 'transaction'
+>;

@@ -24,7 +24,9 @@ This is not a production-release or network-fairness certification. Rules v1 sti
 
 In progress. The first slice adds the server-only database package, versioned SQL migrations, validated sourced Arabic questions, immutable content revisions, transactional draft/approval/publication/retirement, append-only audit entries and a trusted local CLI. Real PostgreSQL integration tests exercise workflow failures, races, rollback and database guards under a non-superuser role. See M4_CONTENT_STORAGE.md and ADR 0007.
 
-M4 is not complete. Supabase Auth, authenticated admin roles/UI, live-room reviewed-bank integration, durable idempotent results/history and basic ranking remain. Existing fixtures import only as drafts, and live matches still use the public development pack. CLI labels are not identity or authorization.
+The second slice adds opt-in Supabase `getUser` verification and project-scoped editor/reviewer/publisher memberships for protected content HTTP operations. Author/reviewer identity is server-derived; transactional membership locks, role audit, write idempotency and deny-by-default private-table RLS are covered by real PostgreSQL and signed local Auth fixture tests. See M4_IDENTITY_AUTH.md and ADR 0008 for current configuration/evidence; the first storage record is historical.
+
+M4 is not complete. Sign-in/admin UI, hosted Supabase verification, live-room reviewed-bank integration, durable idempotent match results/history and basic ranking remain. Existing fixtures import only as drafts, and live matches still use the public development pack. Trusted operator CLI labels remain outside the account-authorization boundary.
 
 ## M5 — Polish and onboarding
 

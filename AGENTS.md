@@ -196,11 +196,11 @@ Original isometric map scene, territory hover/touch selection, accessible Arabic
 
 Three-client Colyseus rooms, invites/basic matchmaking, sync, phase timers, answer validation, reconnect/forfeit. **Done:** three real browser sessions reliably finish a match under reasonable latency and reconnect scenarios.
 
-### M4 — Identity, content, persistence **(CURRENT — CONTENT STORAGE SLICE)**
+### M4 — Identity, content, persistence **(CURRENT — CONTENT IDENTITY AND AUTHORIZATION)**
 
 Supabase Auth, question CMS/review with sources, PostgreSQL migrations, history/basic ranking, admin authorization. **Done:** audited question workflow and durable accurate results.
 
-The first local slice implements PostgreSQL/Drizzle question revisions and a trusted CLI for draft/review/publication, with real database tests. It does not complete M4: authenticated identities/admin authorization, live-room content integration and durable match history remain. See `docs/M4_CONTENT_STORAGE.md` and ADR 0007.
+Local storage and the opt-in authenticated content API are implemented: Supabase `getUser` verification, project-scoped editor/reviewer/publisher roles, server-derived audit identity, transactional permissions/idempotency and private-schema RLS. Local signed-token fixtures and real PostgreSQL tests verify the boundary without cloud credentials. M4 remains incomplete: sign-in/admin UI, hosted Supabase verification, live-room reviewed-bank integration and durable match history remain. See `docs/M4_IDENTITY_AUTH.md`, the historical storage record and ADRs 0007–0008.
 
 ### M5 — Premium polish and onboarding
 

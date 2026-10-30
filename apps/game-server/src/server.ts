@@ -4,9 +4,14 @@ import { PROTOCOL_VERSION } from '@mamalik/shared';
 import type { Request, Response } from 'express';
 import { kingdomRoom } from './kingdom-room.js';
 import type { RoomSettings } from './kingdom-room.js';
+import { installContentAdmin } from './content-admin.js';
+import type { ContentAdmin } from './content-admin.js';
 
 /** Persistent guest rooms. Settings/modes are server-injected, not client options. */
-export function createGameService(settings: RoomSettings = {}) {
+export function createGameService(
+  settings: RoomSettings = {},
+  contentAdmin?: ContentAdmin,
+) {
   const service = new Server({
     greet: false,
     gracefullyShutdown: false,
@@ -16,14 +21,16 @@ export function createGameService(settings: RoomSettings = {}) {
     }),
     express: (app) => {
       app.disable('x-powered-by');
+      installContentAdmin(app, contentAdmin);
       app.get('/health', (_request: Request, response: Response) => {
         response.setHeader('Cache-Control', 'no-store');
         response.json({
           status: 'ok',
           service: 'mamalik-game-server',
-          milestone: 'M3',
+          milestone: 'M4',
           protocolVersion: PROTOCOL_VERSION,
           gameplayRoomsEnabled: true,
+          contentAdminEnabled: Boolean(contentAdmin),
         });
       });
     },

@@ -1,5 +1,7 @@
 # M4 first slice — Local sourced-question storage
 
+Historical first-slice record. The subsequent opt-in authenticated content API, server-enforced account roles and private-table RLS are documented in M4_IDENTITY_AUTH.md and ADR 0008. The CLI described here remains a privileged local operator tool; the measured results below belong to that first slice.
+
 Implemented: a Node-only PostgreSQL/Drizzle package, committed SQL migrations, strict Arabic content validation, immutable revisions, local draft/review/publish/retire workflow, transactional audit history, idempotent fixture import, published-bank loading and an uncached real-database CI gate. No gameplay rule, protocol or browser behavior changes in this slice. M4 is in progress; accounts, authenticated administration, a reviewed release bank, live-room bank integration and durable results are not implemented.
 
 ## Files and responsibilities

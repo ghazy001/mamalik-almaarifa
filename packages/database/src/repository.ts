@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { and, asc, eq, sql } from 'drizzle-orm';
-import type { ContentDatabase } from './client.js';
+import type { ContentConnection } from './client.js';
 import {
   actorSchema,
   ContentError,
@@ -11,7 +11,9 @@ import {
 } from './content.js';
 import { audit, questions, revisions } from './schema.js';
 
-type Transaction = Parameters<Parameters<ContentDatabase['transaction']>[0]>[0];
+type Transaction = Parameters<
+  Parameters<ContentConnection['transaction']>[0]
+>[0];
 
 async function lockQuestion(tx: Transaction, id: string) {
   const [question] = await tx
@@ -53,7 +55,7 @@ async function record(
 }
 
 // This API is for a trusted server/CLI. Actor labels are audit metadata, not auth.
-export function createQuestionRepository(db: ContentDatabase) {
+export function createQuestionRepository(db: ContentConnection) {
   return {
     async createDraft(
       input: unknown,
@@ -224,7 +226,7 @@ export function createQuestionRepository(db: ContentDatabase) {
       }));
     },
 
-    async list() {
+    async list(limit = 100, offset = 0) {
       return db
         .select({
           questionId: revisions.questionId,
@@ -235,7 +237,20 @@ export function createQuestionRepository(db: ContentDatabase) {
           reviewer: revisions.reviewer,
         })
         .from(revisions)
-        .orderBy(asc(revisions.questionId), asc(revisions.revision));
+        .orderBy(asc(revisions.questionId), asc(revisions.revision))
+        .limit(limit)
+        .offset(offset);
+    },
+
+    async getRevision(id: string, revision: number) {
+      return db.transaction(async (tx) => {
+        const row = await findRevision(
+          tx,
+          questionIdSchema.parse(id),
+          revision,
+        );
+        return { ...row, content: questionContentSchema.parse(row.content) };
+      });
     },
 
     async history(id: string) {

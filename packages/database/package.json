@@ -11,6 +11,7 @@
     }
   },
   "scripts": {
+    "dev": "tsc -w",
     "build": "tsc",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json",
     "lint": "eslint src tests scripts drizzle.config.ts",

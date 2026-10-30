@@ -1,0 +1,417 @@
+{
+  "id": "1b749ff6-faa9-43f5-b299-5a0dd23f890b",
+  "prevId": "88325d36-77f1-48d7-945e-8086d0aeb3de",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "content.access_audit": {
+      "name": "access_audit",
+      "schema": "content",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigserial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "issuer": {
+          "name": "issuer",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subject": {
+          "name": "subject",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "content_role",
+          "typeSchema": "content",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "action": {
+          "name": "action",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "actor": {
+          "name": "actor",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "valid_access_action": {
+          "name": "valid_access_action",
+          "value": "\"content\".\"access_audit\".\"action\" IN ('GRANT', 'REVOKE')"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "content.question_audit": {
+      "name": "question_audit",
+      "schema": "content",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigserial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "question_id": {
+          "name": "question_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "revision": {
+          "name": "revision",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "action": {
+          "name": "action",
+          "type": "audit_action",
+          "typeSchema": "content",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "actor": {
+          "name": "actor",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "question_audit_question_id_revision_question_revisions_question_id_revision_fk": {
+          "name": "question_audit_question_id_revision_question_revisions_question_id_revision_fk",
+          "tableFrom": "question_audit",
+          "tableTo": "question_revisions",
+          "schemaTo": "content",
+          "columnsFrom": ["question_id", "revision"],
+          "columnsTo": ["question_id", "revision"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "content.memberships": {
+      "name": "memberships",
+      "schema": "content",
+      "columns": {
+        "issuer": {
+          "name": "issuer",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subject": {
+          "name": "subject",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "content_role",
+          "typeSchema": "content",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "memberships_issuer_subject_role_pk": {
+          "name": "memberships_issuer_subject_role_pk",
+          "columns": ["issuer", "subject", "role"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "content.questions": {
+      "name": "questions",
+      "schema": "content",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "latest_revision": {
+          "name": "latest_revision",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "import_key": {
+          "name": "import_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "questions_import_key_unique": {
+          "name": "questions_import_key_unique",
+          "nullsNotDistinct": false,
+          "columns": ["import_key"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "positive_revision": {
+          "name": "positive_revision",
+          "value": "\"content\".\"questions\".\"latest_revision\" > 0"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "content.requests": {
+      "name": "requests",
+      "schema": "content",
+      "columns": {
+        "issuer": {
+          "name": "issuer",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subject": {
+          "name": "subject",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payload_hash": {
+          "name": "payload_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "response": {
+          "name": "response",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "requests_issuer_subject_key_pk": {
+          "name": "requests_issuer_subject_key_pk",
+          "columns": ["issuer", "subject", "key"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "content.question_revisions": {
+      "name": "question_revisions",
+      "schema": "content",
+      "columns": {
+        "question_id": {
+          "name": "question_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "revision": {
+          "name": "revision",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content": {
+          "name": "content",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "author": {
+          "name": "author",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "revision_status",
+          "typeSchema": "content",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'DRAFT'"
+        },
+        "reviewer": {
+          "name": "reviewer",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "review_note": {
+          "name": "review_note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "reviewed_at": {
+          "name": "reviewed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "one_published_revision": {
+          "name": "one_published_revision",
+          "columns": [
+            {
+              "expression": "question_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"content\".\"question_revisions\".\"status\" = 'PUBLISHED'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "question_revisions_question_id_questions_id_fk": {
+          "name": "question_revisions_question_id_questions_id_fk",
+          "tableFrom": "question_revisions",
+          "tableTo": "questions",
+          "schemaTo": "content",
+          "columnsFrom": ["question_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "question_revisions_question_id_revision_pk": {
+          "name": "question_revisions_question_id_revision_pk",
+          "columns": ["question_id", "revision"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "positive_revision": {
+          "name": "positive_revision",
+          "value": "\"content\".\"question_revisions\".\"revision\" > 0"
+        },
+        "review_required": {
+          "name": "review_required",
+          "value": "(\"content\".\"question_revisions\".\"status\" = 'DRAFT' AND \"content\".\"question_revisions\".\"reviewer\" IS NULL AND \"content\".\"question_revisions\".\"review_note\" IS NULL AND \"content\".\"question_revisions\".\"reviewed_at\" IS NULL) OR (\"content\".\"question_revisions\".\"status\" <> 'DRAFT' AND \"content\".\"question_revisions\".\"reviewer\" IS NOT NULL AND \"content\".\"question_revisions\".\"reviewer\" <> \"content\".\"question_revisions\".\"author\" AND \"content\".\"question_revisions\".\"review_note\" IS NOT NULL AND length(trim(\"content\".\"question_revisions\".\"review_note\")) > 0 AND \"content\".\"question_revisions\".\"reviewed_at\" IS NOT NULL)"
+        },
+        "content_shape": {
+          "name": "content_shape",
+          "value": "(jsonb_typeof(\"content\".\"question_revisions\".\"content\") = 'object' AND \"content\".\"question_revisions\".\"content\"->>'locale' = 'ar' AND jsonb_array_length(\"content\".\"question_revisions\".\"content\"->'choices') = 4 AND jsonb_array_length(\"content\".\"question_revisions\".\"content\"->'sources') >= 1) IS TRUE"
+        }
+      },
+      "isRLSEnabled": true
+    }
+  },
+  "enums": {
+    "content.audit_action": {
+      "name": "audit_action",
+      "schema": "content",
+      "values": ["DRAFT_CREATED", "APPROVED", "PUBLISHED", "RETIRED"]
+    },
+    "content.content_role": {
+      "name": "content_role",
+      "schema": "content",
+      "values": ["editor", "reviewer", "publisher"]
+    },
+    "content.revision_status": {
+      "name": "revision_status",
+      "schema": "content",
+      "values": ["DRAFT", "APPROVED", "PUBLISHED", "RETIRED"]
+    }
+  },
+  "schemas": {
+    "content": "content"
+  },
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

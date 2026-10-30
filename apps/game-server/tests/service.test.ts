@@ -81,9 +81,15 @@ describe('standalone Colyseus health service', () => {
     expect(await response.json()).toEqual({
       status: 'ok',
       service: 'mamalik-game-server',
-      milestone: 'M3',
+      milestone: 'M4',
       protocolVersion: PROTOCOL_VERSION,
       gameplayRoomsEnabled: true,
+      contentAdminEnabled: false,
     });
+    const disabled = await fetch(
+      `http://127.0.0.1:${address.port}/admin/questions`,
+    );
+    expect(disabled.status).toBe(404);
+    expect(await disabled.json()).toEqual({ error: 'CONTENT_ADMIN_DISABLED' });
   });
 });

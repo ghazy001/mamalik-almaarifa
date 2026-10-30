@@ -49,7 +49,7 @@ export default function OnlinePage() {
       </main>
       <footer>
         <span className="footer-brand">ممالك المعرفة</span>
-        <p>تجربة تطوير · لا تُحفظ نتائج المباريات.</p>
+        <p>تجربة تطوير · سجل المباريات غير متاح في هذه الواجهة.</p>
       </footer>
     </div>
   );

@@ -9,26 +9,28 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json",
     "lint": "eslint src tests",
-    "test": "vitest run --exclude tests/content-admin.postgres.test.ts --exclude tests/published-bank.postgres.test.ts",
+    "test": "vitest run --exclude tests/content-admin.postgres.test.ts --exclude tests/published-bank.postgres.test.ts --exclude tests/match-results.postgres.test.ts",
     "test:admin": "node --import tsx ../../packages/database/scripts/test-database.ts server",
-    "test:room-bank": "node --import tsx ../../packages/database/scripts/test-database.ts rooms"
+    "test:room-bank": "node --import tsx ../../packages/database/scripts/test-database.ts rooms",
+    "test:results": "node --import tsx ../../packages/database/scripts/test-database.ts results"
   },
   "dependencies": {
     "@colyseus/core": "0.18.23",
     "@colyseus/ws-transport": "0.18.4",
-    "@mamalik/game-core": "workspace:*",
-    "@mamalik/shared": "workspace:*",
     "@mamalik/database": "workspace:*",
+    "@mamalik/game-core": "workspace:*",
+    "@mamalik/question-fixtures": "workspace:*",
+    "@mamalik/shared": "workspace:*",
     "@supabase/supabase-js": "2.118.0",
-    "express": "5.3.0",
-    "zod": "^4.1.0",
     "dotenv": "^17.2.0",
-    "@mamalik/question-fixtures": "workspace:*"
+    "express": "5.3.0",
+    "zod": "^4.1.0"
   },
   "devDependencies": {
-    "@types/express": "^5.0.0",
-    "@mamalik/config": "workspace:*",
     "@colyseus/sdk": "0.18.8",
+    "@mamalik/config": "workspace:*",
+    "@types/express": "^5.0.0",
+    "drizzle-orm": "0.45.4",
     "jose": "6.2.14"
   }
 }

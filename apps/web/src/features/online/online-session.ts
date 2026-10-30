@@ -21,7 +21,7 @@ export interface OnlineView {
   pendingAnswer: string | null;
   searching: boolean;
 }
-const storageKey = 'mamalik.room.v2';
+const storageKey = 'mamalik.room.v3';
 
 /** Network presentation adapter: no answers, bot policy, scoring or lifecycle decisions. */
 export function createOnlineSession(endpoint: string) {

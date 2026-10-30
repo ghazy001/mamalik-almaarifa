@@ -196,11 +196,11 @@ Original isometric map scene, territory hover/touch selection, accessible Arabic
 
 Three-client Colyseus rooms, invites/basic matchmaking, sync, phase timers, answer validation, reconnect/forfeit. **Done:** three real browser sessions reliably finish a match under reasonable latency and reconnect scenarios.
 
-### M4 — Identity, content, persistence **(CURRENT — PUBLISHED ROOM QUESTION BANKS)**
+### M4 — Identity, content, persistence **(CURRENT — DURABLE MATCH RESULT ARCHIVES)**
 
 Supabase Auth, question CMS/review with sources, PostgreSQL migrations, history/basic ranking, admin authorization. **Done:** audited question workflow and durable accurate results.
 
-Local storage, authenticated content operations, Arabic editorial workspace and opt-in published room banks are implemented. In published mode each room admits players only after loading a validated private revision snapshot, without development fallback; active rooms perform no content reads during play. Identity/roles, transaction idempotency, RLS and HttpOnly editorial sessions remain enforced. Local signed Auth, real PostgreSQL/socket and browser tests verify these boundaries without cloud credentials. M4 remains incomplete: hosted verification, player account integration, a reviewed release question set and durable match history remain. See `docs/M4_PUBLISHED_ROOM_BANK.md`, historical records and ADRs 0007–0010.
+Local content, authenticated editorial operations, published room banks and opt-in transactional result archives are implemented. Finished games save answer-free rule/outcome snapshots and exact consumed revision references idempotently. Protocol v3 reports pending/saved/failed/disabled honestly; default guest preview remains database-free. Normal shutdown drains bounded writes, but process crashes before commit can lose results. M4 remains incomplete: hosted verification, player account integration, authorized personal history, basic ranking and a reviewed release bank remain. See `docs/M4_RESULT_ARCHIVES.md`, historical records and ADRs 0007–0011.
 
 ### M5 — Premium polish and onboarding
 

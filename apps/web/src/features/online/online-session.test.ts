@@ -50,6 +50,7 @@ const initial = (): RoomSnapshot => ({
   sequence: 1,
   serverNow: 100,
   closed: false,
+  resultStorage: 'disabled',
   seats: [{ playerId: 'p_teal', name: 'معرفة', connected: true }],
   state: null,
   legalTargetIds: [],
@@ -122,7 +123,7 @@ it('waits for correlated post-reconnect state, rotates the saved token and resto
   room.messages.get('snapshot')!({ ...duel(), sequence: 11, serverNow: 200 });
   expect(session.getSnapshot().status).toBe('reconnecting');
   await Promise.resolve();
-  expect(JSON.parse(sessionStorage.getItem('mamalik.room.v2')!).token).toBe(
+  expect(JSON.parse(sessionStorage.getItem('mamalik.room.v3')!).token).toBe(
     'rotated_token',
   );
   const nonce = room.send.mock.calls.at(-1)![1].nonce;
@@ -253,7 +254,7 @@ it('does not save a late reconnect token after an explicit departure', async () 
   await session.connect('create', 'معرفة');
   room.events.get('reconnect')!();
   await session.leave();
-  expect(sessionStorage.getItem('mamalik.room.v2')).toBeNull();
+  expect(sessionStorage.getItem('mamalik.room.v3')).toBeNull();
 });
 it('rejects malformed/out-of-order snapshots and ignores late messages from a departed room', async () => {
   const old = fakeRoom();

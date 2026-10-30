@@ -15,6 +15,7 @@ import type { ErrorCode, RoomMode } from '@mamalik/shared';
 import { createServerMatch } from './match-session.js';
 import { developmentQuestionBank } from './question-bank.js';
 import type { QuestionBank } from './question-bank.js';
+import type { ResultWriter } from './result-writer.js';
 
 interface Seat {
   playerId: string;
@@ -28,6 +29,7 @@ export interface RoomSettings {
   seed?: number;
   readyTimeoutMs?: number;
   loadQuestions?: (minimum: number) => Promise<QuestionBank>;
+  resultWriter?: ResultWriter;
 }
 const playerIds = ['p_teal', 'p_blue', 'p_gold'] as const;
 
@@ -46,6 +48,10 @@ export function kingdomRoom(
     private sequence = 0;
     private closed = false;
     private reportedFinish = false;
+    private disposed = false;
+    private resultStorage:
+      'disabled' | 'idle' | 'pending' | 'saved' | 'failed' =
+      settings.resultWriter ? 'idle' : 'disabled';
     private readyDeadline: number | null = null;
     private logRef = randomBytes(6).toString('hex');
     private epoch = performance.now();
@@ -171,6 +177,9 @@ export function kingdomRoom(
       this.publish();
       void this.disconnect();
     }
+    override onDispose() {
+      this.disposed = true;
+    }
     private allowed(client: Client) {
       const now = this.now();
       const bucket = this.rates.get(client.sessionId);
@@ -254,6 +263,26 @@ export function kingdomRoom(
             reason: this.match.publicState().result?.reason,
           }),
         );
+        if (settings.resultWriter) {
+          this.resultStorage = 'pending';
+          const archive = {
+            ...this.match.archive()!,
+            mode,
+            questionSource: settings.loadQuestions
+              ? 'published'
+              : 'development',
+          };
+          void settings.resultWriter.submit(archive).then((outcome) => {
+            this.resultStorage = outcome;
+            console.info(
+              JSON.stringify({
+                event: `match_result_${outcome}`,
+                roomRef: this.logRef,
+              }),
+            );
+            if (!this.disposed) this.publish();
+          });
+        }
       }
       this.sequence++;
       for (const client of this.clients)
@@ -265,6 +294,7 @@ export function kingdomRoom(
       if (!seat) return;
       const match = this.match?.view(seat.playerId);
       const message = roomSnapshotSchema.parse({
+        resultStorage: this.resultStorage,
         protocolVersion: PROTOCOL_VERSION,
         sequence: ++this.sequence,
         roomId: this.roomId,

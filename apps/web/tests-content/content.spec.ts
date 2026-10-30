@@ -217,7 +217,22 @@ test('session refresh, denied access, CSRF and role revocation keep editorial da
     page.getByRole('heading', { name: 'لا توجد صلاحيات محتوى لهذا الحساب' }),
   ).toBeVisible();
   await logout(page);
+  // URL changes before the workspace's initial authenticated reads finish.
+  // Wait for those reads before replacing cookies, so a deliberately empty
+  // cookie interval cannot race an old request into a sign-in redirect.
+  const reviewerLoaded = page.waitForResponse((response) => {
+    const url = new URL(response.url());
+    return (
+      url.pathname === '/api/content' &&
+      url.searchParams.get('view') === 'list' &&
+      response.status() === 200
+    );
+  });
   await login(page, 'reviewer');
+  await reviewerLoaded;
+  await expect(
+    page.getByRole('button', { name: 'تحديث', exact: true }),
+  ).toBeEnabled();
   const before = (await (
     await page.request.get('http://127.0.0.1:49002/stats')
   ).json()) as { refreshes: number };

@@ -39,6 +39,7 @@ describe('guest room boundaries', () => {
       playerId: 'p_teal',
       serverNow: 10,
       closed: false,
+      resultStorage: 'disabled',
       seats: [{ playerId: 'p_teal', name: 'معرفة', connected: true }],
       state: null,
       legalTargetIds: [],
@@ -51,6 +52,9 @@ describe('guest room boundaries', () => {
     for (const invalid of [
       { ...envelope, protocolVersion: PROTOCOL_VERSION + 1 },
       { ...envelope, protocolVersion: 1 },
+      { ...envelope, protocolVersion: 2 },
+      { ...envelope, resultStorage: undefined },
+      { ...envelope, resultStorage: 'confirmed_by_client' },
       { ...envelope, answers: {} },
       { ...envelope, seed: 1 },
       { ...envelope, sequence: -1 },
@@ -125,7 +129,7 @@ describe('strict versioned protocol', () => {
     });
   });
   it('rejects unsupported versions separately', () => {
-    for (const protocolVersion of [1, PROTOCOL_VERSION + 1])
+    for (const protocolVersion of [1, 2, PROTOCOL_VERSION + 1])
       expect(
         parseCommand({
           ...base,

@@ -15,7 +15,7 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json",
     "lint": "eslint src tests scripts drizzle.config.ts",
-    "test": "vitest run tests/content.test.ts",
+    "test": "vitest run tests/content.test.ts tests/match-archive.test.ts",
     "test:integration": "node --import tsx scripts/test-database.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node --import tsx src/cli.ts migrate",

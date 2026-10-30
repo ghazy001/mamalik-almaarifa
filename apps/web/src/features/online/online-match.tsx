@@ -221,7 +221,7 @@ export function OnlineMatch({ endpoint }: { endpoint: string }) {
           </div>
           <p className="map-help">
             مقاعد ضيوف دون حسابات. يحتفظ هذا التبويب برمز استعادة مؤقت؛ لا
-            تشاركه. لا تُحفظ النتائج بعد إغلاق الخادم.
+            تشاركه. لا يتوفر سجل مباريات في هذه الواجهة بعد.
           </p>
         </section>
       )}
@@ -380,7 +380,19 @@ export function OnlineMatch({ endpoint }: { endpoint: string }) {
                   </li>
                 ))}
               </ol>
-              <p>نتيجة حُسمت على الخادم؛ غير محفوظة في سجل دائم.</p>
+              <p
+                role="status"
+                aria-live="polite"
+                data-result-storage={snapshot.resultStorage}
+              >
+                {snapshot.resultStorage === 'saved'
+                  ? 'حُفظت نتيجة المباراة على الخادم.'
+                  : snapshot.resultStorage === 'pending'
+                    ? 'جارٍ حفظ نتيجة المباراة…'
+                    : snapshot.resultStorage === 'failed'
+                      ? 'تعذّر تأكيد حفظ النتيجة على الخادم.'
+                      : 'الحفظ الدائم غير مفعّل لهذه المباراة.'}
+              </p>
               <Button onClick={() => void session.leave()}>
                 العودة إلى الغرف
               </Button>

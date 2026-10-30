@@ -151,5 +151,24 @@ export function createServerMatch(options: SessionOptions) {
     },
     // Explicit allowlist for tests, never expose private reducer state.
     publicState: () => publicView(state),
+    // Server-only, answer-free archive projection. Never synchronize this object.
+    archive() {
+      if (state.phase !== 'FINISHED' || !state.result) return null;
+      return {
+        archiveVersion: 1 as const,
+        matchId: state.id,
+        seed: options.seed,
+        bankHash: bank.fingerprint,
+        rules: structuredClone(state.rules),
+        finalTurn: state.turn,
+        turnOrder: [...state.order],
+        territories: Object.entries(state.owners).map(([id, ownerId]) => ({
+          id,
+          ownerId,
+        })),
+        usedQuestionIds: [...state.usedQuestionIds],
+        result: structuredClone(state.result),
+      };
+    },
   };
 }

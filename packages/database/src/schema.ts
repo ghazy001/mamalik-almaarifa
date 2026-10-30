@@ -13,6 +13,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import type { QuestionContent } from './content.js';
+import type { MatchArchive } from './match-archive.js';
 import { CONTENT_ROLES } from './permissions.js';
 
 // Not public: no PostgREST/browser exposure or grants to anonymous roles.
@@ -150,6 +151,61 @@ export const requests = contentSchema
     },
     (table) => [
       primaryKey({ columns: [table.issuer, table.subject, table.key] }),
+    ],
+  )
+  .enableRLS();
+
+export const gameSchema = pgSchema('game');
+export const matchResults = gameSchema
+  .table(
+    'match_results',
+    {
+      matchId: text('match_id').primaryKey(),
+      payloadHash: text('payload_hash').notNull(),
+      archive: jsonb('archive').$type<MatchArchive>().notNull(),
+      recordedAt: timestamp('recorded_at', { withTimezone: true })
+        .defaultNow()
+        .notNull(),
+    },
+    (table) => [
+      check('result_hash_shape', sql`${table.payloadHash} ~ '^[a-f0-9]{64}$'`),
+      check(
+        'result_archive_shape',
+        sql`(jsonb_typeof(${table.archive}) = 'object' AND ${table.archive}->>'archiveVersion' = '1' AND ${table.archive}->>'matchId' = ${table.matchId} AND jsonb_array_length(${table.archive}->'result'->'placements') = 3) IS TRUE`,
+      ),
+    ],
+  )
+  .enableRLS();
+export const resultQuestions = gameSchema
+  .table(
+    'result_questions',
+    {
+      matchId: text('match_id')
+        .notNull()
+        .references(() => matchResults.matchId),
+      position: integer('position').notNull(),
+      questionId: text('question_id').notNull(),
+      contentQuestionId: uuid('content_question_id'),
+      contentRevision: integer('content_revision'),
+    },
+    (table) => [
+      primaryKey({ columns: [table.matchId, table.position] }),
+      uniqueIndex('one_question_per_result').on(
+        table.matchId,
+        table.questionId,
+      ),
+      foreignKey({
+        columns: [table.contentQuestionId, table.contentRevision],
+        foreignColumns: [revisions.questionId, revisions.revision],
+      }),
+      check(
+        'result_question_position',
+        sql`${table.position} >= 0 AND ${table.position} < 120`,
+      ),
+      check(
+        'result_question_reference',
+        sql`(${table.contentQuestionId} IS NULL AND ${table.contentRevision} IS NULL) OR (${table.contentQuestionId} IS NOT NULL AND ${table.contentRevision} IS NOT NULL AND ${table.contentRevision} > 0 AND ${table.questionId} = ${table.contentQuestionId}::text || '_v' || ${table.contentRevision}::text)`,
+      ),
     ],
   )
   .enableRLS();

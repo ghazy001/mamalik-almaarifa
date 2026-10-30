@@ -78,6 +78,9 @@ importers:
       '@types/express':
         specifier: ^5.0.0
         version: 5.0.6
+      drizzle-orm:
+        specifier: 0.45.4
+        version: 0.45.4(@types/pg@8.23.1)(pg@8.23.1)
       jose:
         specifier: 6.2.14
         version: 6.2.14

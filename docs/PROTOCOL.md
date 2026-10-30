@@ -1,12 +1,12 @@
-# Protocol v2 — guest rooms and basic matchmaking
+# Protocol v3 — guest rooms and result-storage status
 
 `packages/shared` is the canonical wire contract. Every object is strict: unknown fields are rejected rather than silently trusted. Domain IDs use 1–64 ASCII letters, digits, underscores or hyphens; they do not authenticate a player. A private invitation is the server-generated 16-hex-character room ID and admits a guest to an available seat. A separate SDK reconnection token is a bearer credential and must never be broadcast. Display names remain Arabic-capable strings rendered as text, never HTML.
 
-Version 2 requires `mode` and `readyDeadline` in snapshots, so v1 is deliberately unsupported. Commands/events also carry the new version; rebuild/restart both services and reload clients together. The per-tab recovery storage key is `mamalik.room.v2`. There is no migration of live v1 rooms or tokens. Domain `rulesVersion` remains **1**.
+Version 3 requires `resultStorage` in every snapshot, in addition to mode/readiness fields introduced in v2. Versions 1 and 2 are deliberately unsupported. Commands/events carry version 3; rebuild/restart both services and reload clients together. Recovery storage key is `mamalik.room.v3`; live rooms/tokens are not migrated. Domain rulesVersion remains **1**.
 
 ## Player commands
 
-All commands carry `protocolVersion: 2`, `matchId`, `turn` (0 in the lobby, 1–120 in play), `idempotencyKey`, and `type`.
+All commands carry `protocolVersion: 3`, `matchId`, `turn` (0 in the lobby, 1–120 in play), `idempotencyKey`, and `type`.
 
 | Type              | Additional fields    | Rule permission                                                           |
 | ----------------- | -------------------- | ------------------------------------------------------------------------- |
@@ -19,7 +19,7 @@ The actor, guest session and receipt time are derived from the trusted Colyseus 
 
 ```json
 {
-  "protocolVersion": 2,
+  "protocolVersion": 3,
   "type": "SELECT_TARGET",
   "matchId": "m_demo",
   "turn": 1,
@@ -44,11 +44,11 @@ The `kingdom` and `kingdom_queue` Colyseus room types use explicit message chann
 
 SDK create/join options are exactly `{name}`. Names are trimmed, nonempty, at most 40 characters, and reject angle brackets/control characters. Join options cannot contain seat IDs, seed, rules or timing overrides. Room creation uses `client.create('kingdom', options)`; invitation join uses `joinById(code, options)`. Basic matchmaking uses `joinOrCreate('kingdom_queue', options)` and the fullest available public queue room first. Private `kingdom` rooms are excluded from that lookup. A full/prepared room locks further joins. The room type selects a trusted server mode; join options cannot override it. No MMR, global waiting count, bots or custom queue endpoint is implemented.
 
-A recipient snapshot carries protocol version 2, increasing `sequence`, room ID, `mode` (`private` or `matchmaking`), nullable `readyDeadline`, recipient player ID, room-relative `serverNow`, `closed`, occupied seats/connection status, nullable public match state, server-computed legal target IDs and standings, public rule windows/turn limit, recipient `ownChoiceId`, and nullable resolved question/explanation/source. State is null while fewer than three seats have joined. No placeholder opponents act. After the third seat joins, the core match exists and each player may READY. Other players never receive that recipient's choice. Live questions exclude correctness; only resolved state has an outcome/reveal. The reused development bank remains public through the offline route/source and is not confidential production content.
+A recipient snapshot carries protocol version 3, increasing `sequence`, room ID, `mode` (`private` or `matchmaking`), nullable `readyDeadline`, recipient player ID, room-relative `serverNow`, `closed`, mandatory `resultStorage` (below), occupied seats/connection status, nullable public match state, server-computed legal target IDs and standings, public rule windows/turn limit, recipient `ownChoiceId`, and nullable resolved question/explanation/source. State is null while fewer than three seats have joined. No placeholder opponents act. After the third seat joins, the core match exists and each player may READY. Other players never receive that recipient's choice. Live questions exclude correctness; only resolved state has an outcome/reveal. The reused development bank remains public through the offline route/source and is not confidential production content.
 
 Complete snapshots replace prior state. Clients reject lower/equal sequence snapshots for the same room; sequence gaps are normal because messages are recipient-specific and complete. Reconnect and five-second sync probes send a full fresh snapshot rather than replaying deltas. Event sequences identify the current view; they are not a gap-free event log.
 
-The table below lists the event shapes, unchanged apart from the v2 envelope. In this slice only answer acknowledgements and errors are sent on `event`; phase/territory/result changes arrive inside `snapshot`. Granular broadcast events remain reserved, not additionally emitted.
+The table below lists the event shapes, unchanged apart from the v3 envelope. In this slice only answer acknowledgements and errors are sent on `event`; phase/territory/result changes arrive inside `snapshot`. Granular broadcast events remain reserved, not additionally emitted.
 
 | Event               | Payload                                                                           |
 | ------------------- | --------------------------------------------------------------------------------- |
@@ -71,9 +71,9 @@ Error codes: INVALID_PHASE, INVALID_ACTOR, WRONG_MATCH, STALE_TURN, ILLEGAL_TARG
 
 Do not send internal exception stacks or secret question content in errors. Log lifecycle/error codes and safe match identifiers only. Both room modes bound incoming frames to 4096 bytes, allow 12 application messages/second/client and use a Colyseus ceiling of 30 messages/second/client. Unprepared lobbies expire five minutes after room creation; a prepared queue lobby has a 60-second readiness deadline and aborts without a winner if not everyone is ready; each room has a 25-minute maximum lifetime. Server-injected test settings never come from join messages. Guest seats, invites, recipient acknowledgements, full-snapshot recovery, graceful abort and reconnect tests are implemented. Public deployment still needs explicit origin/connection/HTTP-create budgets and broader abuse/load review.
 
-Unexpected disconnect calls SDK `allowReconnection` for 30 seconds. Timers continue and unanswered challenges still expire. Manual reload recovery uses the per-tab token; explicit leave or failed grace forfeits. A prepared lobby aborts on permanent departure. No durable result or crash recovery is provided. Server receipt ordering still favors lower latency; no compensation is claimed. Account-bound room identity and durable results remain later work; optional published decks are described below. A queue search can be cancelled before a match is prepared: consented SDK leave releases that seat. A late asynchronous join after cancellation is also explicitly left; it cannot replace a newer search. Navigation/unmount remains a recoverable drop. Prepared lobbies abort on permanent departure rather than replacing a participant in an existing core state. See ADR 0005 and M3_MATCHMAKING.md.
+Unexpected disconnect calls SDK `allowReconnection` for 30 seconds. Timers continue and unanswered challenges still expire. Manual reload recovery uses the per-tab token; explicit leave or failed grace forfeits. A prepared lobby aborts on permanent departure. Optional acknowledged result archives are described below; active room crash recovery is not provided. Server receipt ordering still favors lower latency; no compensation is claimed. Account-bound room identity remains later work; optional published decks are described below. A queue search can be cancelled before a match is prepared: consented SDK leave releases that seat. A late asynchronous join after cancellation is also explicitly left; it cannot replace a newer search. Navigation/unmount remains a recoverable drop. Prepared lobbies abort on permanent departure rather than replacing a participant in an existing core state. See ADR 0005 and M3_MATCHMAKING.md.
 
-## Recovered client state (v2 unchanged)
+## Recovered client state (recovery behavior unchanged)
 
 Automatic recovery does not immediately enable intents when the socket reopens. Outstanding pre-drop clock probes are discarded. The client acknowledges the SDK handshake, saves its rotated per-tab token, sends a fresh nonce probe and requires a newer full snapshot whose server time is at least the correlated clock sample. The sync channel already sends clock before its requested snapshot, so no new wire field or command is needed. An earlier buffered snapshot cannot resume controls. Reload/manual retry begins a new adapter generation and waits for its first validated snapshot.
 
@@ -81,9 +81,9 @@ Rejections only affect the current match/turn at a sequence not older than the d
 
 ## M4 content API boundary
 
-The opt-in bearer-authenticated `/admin` HTTP API is separate from gameplay Protocol v2. Supabase verification and private PostgreSQL content roles protect admin reads/writes; editor/reviewer/publisher metadata is never accepted from game commands, profiles or room join options. Authorized revision reads include answers for editorial review, while guest room snapshots retain their existing sanitized projection. No account ID, role, token, content ledger or database credential enters the gameplay wire format. Published rooms use revision-qualified question IDs in the existing ID fields; no bank/deck data is added. See M4_IDENTITY_AUTH.md for HTTP commands, idempotency headers, errors and configuration. Room account identity and durable match results are still future work.
+The opt-in bearer-authenticated `/admin` HTTP API is separate from gameplay Protocol v3. Supabase verification and private PostgreSQL content roles protect admin reads/writes; editor/reviewer/publisher metadata is never accepted from game commands, profiles or room join options. Authorized revision reads include answers for editorial review, while guest room snapshots retain their existing sanitized projection. No account ID, role, token, content ledger or database credential enters the gameplay wire format. Published rooms use revision-qualified question IDs in the existing ID fields; no bank/deck data is added. See M4_IDENTITY_AUTH.md for HTTP commands, idempotency headers, errors and configuration. Room account identity and personal history are still future work.
 
-### Published room admission (gameplay v2 unchanged)
+### Published room admission (admission behavior unchanged)
 
 When GAME_QUESTION_SOURCE=published, a room loads its private bank before admitting a seat. Failed matchmaking HTTP requests return status 503 and `{code:503,error:"CONTENT_BANK_INSUFFICIENT"|"CONTENT_BANK_INVALID"|"CONTENT_BANK_UNAVAILABLE"}`. The SDK presents the string as its error message; the browser translates only recognized status/string pairs. These errors are not new COMMAND_REJECTED codes. Existing waiting rooms retain their initial snapshot and admit later players without another database read. Health adds `questionSource: "development"|"published"` without private content. Correct choices remain absent before resolution; resolved explanation/first-reference fields retain their existing schema. See M4_PUBLISHED_ROOM_BANK.md and ADR 0010.
 
@@ -91,4 +91,10 @@ When GAME_QUESTION_SOURCE=published, a room loads its private bank before admitt
 
 The Next.js origin exposes POST `/api/auth/signin` with strict `{email,password}` and POST `/api/auth/signout` with local-session scope. Success responses contain only `signedIn`/`signedOut`; tokens are HttpOnly cookies. GET `/api/content?view=me`, `?view=list&offset=0`, and `?view=detail&id=<uuid>&revision=<positive-int>` map to fixed protected game-service routes. POST `/api/content` accepts the existing strict content commands and requires `Idempotency-Key` (1–64 ASCII letters/digits/underscore/hyphen). No actor or arbitrary upstream URL is accepted. Listing uses 25 revisions per page. Authorized editorial detail responses include correct answers by design; gameplay snapshots do not.
 
-All cookie-authenticated POSTs require JSON and an Origin exactly equal to `WEB_AUTH_ORIGIN`; cross-site Fetch Metadata is denied. Bodies are bounded to 2 KiB for sign-in and 16 KiB for commands. Sign-in allows 30 attempts/minute and four concurrent requests per process; the game service retains its default 60 content requests/IP/minute and eight concurrent requests. These are local bounds, not a distributed abuse-control claim. Missing configuration disables the portal. Errors are generic stable codes; neither provider details nor tokens appear in response bodies. The complete contract, session and retry limits are documented in M4_EDITORIAL_UI.md. Gameplay Protocol v2 / Rules v1 are unchanged.
+All cookie-authenticated POSTs require JSON and an Origin exactly equal to `WEB_AUTH_ORIGIN`; cross-site Fetch Metadata is denied. Bodies are bounded to 2 KiB for sign-in and 16 KiB for commands. Sign-in allows 30 attempts/minute and four concurrent requests per process; the game service retains its default 60 content requests/IP/minute and eight concurrent requests. These are local bounds, not a distributed abuse-control claim. Missing configuration disables the portal. Errors are generic stable codes; neither provider details nor tokens appear in response bodies. The complete contract, session and retry limits are documented in M4_EDITORIAL_UI.md. Gameplay uses Protocol v3; Rules remain v1.
+
+## Result storage (v3)
+
+Every recipient snapshot includes resultStorage: `disabled` when storage is not configured, `idle` before finish when configured, `pending` once a finished archive is submitted, `saved` only after a database acknowledgement, or `failed` when saving cannot be confirmed. Status changes arrive as newer complete snapshots; no client save command or archive payload exists. Gameplay outcome and storage success are separate. A disposed room may close before an accepted write completes. Failed can mean an uncertain acknowledgement after commit; it does not prove absence of a record.
+
+The private archive includes no names, tokens or answers and never enters shared DTOs. Health adds matchResultsEnabled as a configuration boolean. Rebuild/restart server and web together; v2 snapshots without status are rejected. See M4_RESULT_ARCHIVES.md and ADR 0011 for transactional identity, queue/drain limits and crash-loss boundaries.

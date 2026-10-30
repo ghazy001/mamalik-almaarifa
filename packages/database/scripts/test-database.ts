@@ -12,7 +12,7 @@ config({
 
 async function main() {
   const target = process.argv[2] ?? 'database';
-  if (!['database', 'server', 'web', 'rooms'].includes(target))
+  if (!['database', 'server', 'web', 'rooms', 'results'].includes(target))
     throw new Error('INVALID_TEST_TARGET');
   const adminUrl = process.env.DATABASE_TEST_ADMIN_URL;
   if (!adminUrl) throw new Error('DATABASE_TEST_ADMIN_URL_REQUIRED');
@@ -64,14 +64,16 @@ async function main() {
             ? 'tests/content-admin.postgres.test.ts'
             : target === 'rooms'
               ? 'tests/published-bank.postgres.test.ts'
-              : '--config=playwright.content.config.ts',
+              : target === 'results'
+                ? 'tests/match-results.postgres.test.ts'
+                : '--config=playwright.content.config.ts',
       ],
       {
         cwd: fileURLToPath(
           new URL(
             target === 'database'
               ? '../'
-              : target === 'server' || target === 'rooms'
+              : target !== 'web'
                 ? '../../../apps/game-server/'
                 : '../../../apps/web/',
             import.meta.url,

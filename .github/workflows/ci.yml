@@ -41,6 +41,9 @@ jobs:
       - run: pnpm test:room-bank
         env:
           DATABASE_TEST_ADMIN_URL: postgresql://postgres:local-ci-only@127.0.0.1:5432/postgres
+      - run: pnpm test:results
+        env:
+          DATABASE_TEST_ADMIN_URL: postgresql://postgres:local-ci-only@127.0.0.1:5432/postgres
       - run: pnpm build
       - run: pnpm simulate
       - run: pnpm --filter @mamalik/web exec playwright install --with-deps chromium

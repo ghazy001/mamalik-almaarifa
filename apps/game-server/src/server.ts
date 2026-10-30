@@ -32,6 +32,7 @@ export function createGameService(
           gameplayRoomsEnabled: true,
           contentAdminEnabled: Boolean(contentAdmin),
           questionSource: settings.loadQuestions ? 'published' : 'development',
+          matchResultsEnabled: Boolean(settings.resultWriter),
         });
       });
     },

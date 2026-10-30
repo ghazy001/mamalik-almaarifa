@@ -1,6 +1,13 @@
 import { z } from 'zod';
 
-export const PROTOCOL_VERSION = 2 as const;
+export const PROTOCOL_VERSION = 3 as const;
+export const resultStorageSchema = z.enum([
+  'disabled',
+  'idle',
+  'pending',
+  'saved',
+  'failed',
+]);
 /** HTTP matchmaking failures, separate from in-room gameplay command errors. */
 export const ROOM_ADMISSION_ERRORS = {
   CONTENT_BANK_INSUFFICIENT: 'CONTENT_BANK_INSUFFICIENT',
@@ -212,6 +219,7 @@ export const syncRequestSchema = z.strictObject({ nonce: idSchema });
 export const roomModeSchema = z.enum(['private', 'matchmaking']);
 export type RoomMode = z.infer<typeof roomModeSchema>;
 export const roomSnapshotSchema = z.strictObject({
+  resultStorage: resultStorageSchema,
   protocolVersion: z.literal(PROTOCOL_VERSION),
   sequence: z.number().int().nonnegative(),
   roomId: idSchema,

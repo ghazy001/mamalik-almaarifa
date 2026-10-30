@@ -30,7 +30,9 @@ The third slice adds Arabic `/signin` and `/admin`, server-only HttpOnly cookie 
 
 The fourth slice connects optional published revisions to private/queued rooms. Each room pins a validated private snapshot before admitting players; insufficient/invalid/unavailable banks reject new rooms without fallback. Running rooms finish without database reads and retain their initial revisions across content changes. Development remains the default. See M4_PUBLISHED_ROOM_BANK.md and ADR 0010 for configuration, operational bounds and current evidence.
 
-M4 is not complete. Hosted verification, player account integration, a reviewed release bank, durable idempotent match results/history and basic ranking remain. Existing fixtures import only as drafts; publishing public fixtures does not make them confidential. Trusted operator CLI labels remain outside the account-authorization boundary.
+The fifth slice adds optional immutable result archives, transactional revision references, idempotent retries and honest Protocol v3 storage status. See M4_RESULT_ARCHIVES.md and ADR 0011 for delivery limits and verification.
+
+M4 is not complete. Hosted verification, player account integration, a reviewed release bank, authorized personal history and basic ranking remain. Existing fixtures import only as drafts; publishing public fixtures does not make them confidential. Trusted operator CLI labels remain outside the account-authorization boundary.
 
 ## M5 — Polish and onboarding
 

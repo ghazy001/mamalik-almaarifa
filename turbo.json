@@ -34,6 +34,7 @@
       "passThroughEnv": [
         "CONTENT_ADMIN_ENABLED",
         "GAME_QUESTION_SOURCE",
+        "MATCH_RESULTS_ENABLED",
         "SUPABASE_URL",
         "SUPABASE_PUBLISHABLE_KEY",
         "DATABASE_URL"

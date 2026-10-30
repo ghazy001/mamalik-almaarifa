@@ -2,9 +2,10 @@ import { config as loadEnv } from 'dotenv';
 import { fileURLToPath } from 'node:url';
 import { readConfig } from './config.js';
 import { createGameService } from './server.js';
-import { openDatabase } from '@mamalik/database';
+import { openDatabase, createMatchResultRepository } from '@mamalik/database';
 import { createContentAuthenticator } from './content-auth.js';
 import { databaseQuestionLoader } from './question-bank.js';
+import { createResultWriter } from './result-writer.js';
 
 loadEnv({
   path: fileURLToPath(new URL('../../../.env', import.meta.url)),
@@ -13,7 +14,9 @@ loadEnv({
 async function start() {
   const config = readConfig(process.env);
   const database =
-    config.CONTENT_ADMIN_ENABLED || config.GAME_QUESTION_SOURCE === 'published'
+    config.CONTENT_ADMIN_ENABLED ||
+    config.GAME_QUESTION_SOURCE === 'published' ||
+    config.MATCH_RESULTS_ENABLED
       ? openDatabase(config.DATABASE_URL!)
       : null;
   // Fail on unavailable/unmigrated content storage; do not serve an unprotected fallback.
@@ -24,15 +27,26 @@ async function start() {
           ? 'SELECT m.issuer, m.subject, m.role FROM content.memberships m CROSS JOIN content.requests r CROSS JOIN content.access_audit a LIMIT 0'
           : 'SELECT content, status FROM content.question_revisions LIMIT 0',
       );
+      if (config.MATCH_RESULTS_ENABLED)
+        await database.db.execute(
+          'SELECT match_id, payload_hash, archive FROM game.match_results LIMIT 0',
+        );
     } catch {
       await database.close();
       throw new Error('CONTENT_START_FAILED');
     }
   }
+  const resultWriter =
+    config.MATCH_RESULTS_ENABLED && database
+      ? createResultWriter(createMatchResultRepository(database.db).write)
+      : undefined;
   const service = createGameService(
-    config.GAME_QUESTION_SOURCE === 'published' && database
-      ? { loadQuestions: databaseQuestionLoader(database.db) }
-      : {},
+    {
+      ...(config.GAME_QUESTION_SOURCE === 'published' && database
+        ? { loadQuestions: databaseQuestionLoader(database.db) }
+        : {}),
+      ...(resultWriter ? { resultWriter } : {}),
+    },
     config.CONTENT_ADMIN_ENABLED && database
       ? {
           db: database.db,
@@ -49,6 +63,7 @@ async function start() {
     closing = true;
     console.info(JSON.stringify({ event: 'service_stopping' }));
     await service.gracefullyShutdown(false);
+    await resultWriter?.drain();
     await database?.close();
   }
   process.once('SIGINT', () => {
@@ -67,6 +82,7 @@ async function start() {
         milestone: 'M4',
         contentAdminEnabled: config.CONTENT_ADMIN_ENABLED,
         questionSource: config.GAME_QUESTION_SOURCE,
+        matchResultsEnabled: config.MATCH_RESULTS_ENABLED,
       }),
     );
   } catch {

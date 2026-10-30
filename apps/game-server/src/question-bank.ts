@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { createHash } from 'node:crypto';
 import { ServerError } from '@colyseus/core';
 import { idSchema, ROOM_ADMISSION_ERRORS } from '@mamalik/shared';
 import { QUESTION_FIXTURES } from '@mamalik/question-fixtures';
@@ -34,6 +35,7 @@ export function bankError(code: BankError) {
 }
 export interface QuestionBank {
   readonly ids: readonly string[];
+  readonly fingerprint: string;
   get(id: string): ServerQuestion;
 }
 
@@ -52,6 +54,9 @@ export function createQuestionBank(
   if (records.size < minimum) throw bankError('CONTENT_BANK_INSUFFICIENT');
   return Object.freeze({
     ids: Object.freeze([...records.keys()]),
+    fingerprint: createHash('sha256')
+      .update(JSON.stringify(parsed.data))
+      .digest('hex'),
     get(id: string) {
       const entry = records.get(id);
       if (!entry) throw bankError('CONTENT_BANK_INVALID');

@@ -23,6 +23,10 @@ const configSchema = z
     GAME_QUESTION_SOURCE: z
       .enum(['development', 'published'])
       .default('development'),
+    MATCH_RESULTS_ENABLED: z
+      .enum(['true', 'false'])
+      .default('false')
+      .transform((value) => value === 'true'),
     SUPABASE_URL: optionalValue(
       z
         .url()
@@ -48,6 +52,12 @@ const configSchema = z
     DATABASE_URL: optionalValue(databaseUrlSchema),
   })
   .superRefine((value, context) => {
+    if (value.MATCH_RESULTS_ENABLED && !value.DATABASE_URL)
+      context.addIssue({
+        code: 'custom',
+        path: ['DATABASE_URL'],
+        message: 'Required for match results',
+      });
     if (value.GAME_QUESTION_SOURCE === 'published' && !value.DATABASE_URL)
       context.addIssue({
         code: 'custom',

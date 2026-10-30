@@ -417,6 +417,9 @@ test('three browsers finish the same match through lost frames, in-question reco
         'FINISHED',
       );
       await expect(client.locator('.match-placements li')).toHaveCount(3);
+      await expect(
+        client.locator('[data-result-storage="disabled"]'),
+      ).toHaveText('الحفظ الدائم غير مفعّل لهذه المباراة.');
       await expect(client.locator('#online-results-title')).toBeFocused();
     }
     expect(battles).toBeGreaterThan(0);

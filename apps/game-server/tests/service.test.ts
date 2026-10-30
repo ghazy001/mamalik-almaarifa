@@ -23,6 +23,20 @@ describe('server boundary', () => {
       expect(() => readConfig({ GAME_SERVER_PORT })).toThrow();
     expect(() => readConfig({ NODE_ENV: 'unknown' })).toThrow();
   });
+  it('requires an explicit database opt-in for result persistence independently of Auth', () => {
+    expect(readConfig({}).MATCH_RESULTS_ENABLED).toBe(false);
+    expect(() => readConfig({ MATCH_RESULTS_ENABLED: 'true' })).toThrow();
+    expect(() => readConfig({ MATCH_RESULTS_ENABLED: 'yes' })).toThrow();
+    expect(
+      readConfig({
+        MATCH_RESULTS_ENABLED: 'true',
+        DATABASE_URL: 'postgresql://localhost/local_fixture',
+      }),
+    ).toMatchObject({
+      MATCH_RESULTS_ENABLED: true,
+      CONTENT_ADMIN_ENABLED: false,
+    });
+  });
   it('derives identity from transport; rejects actor injection without mutation', () => {
     const state = initial();
     const command = {
@@ -86,6 +100,7 @@ describe('standalone Colyseus health service', () => {
       gameplayRoomsEnabled: true,
       contentAdminEnabled: false,
       questionSource: 'development',
+      matchResultsEnabled: false,
     });
     const disabled = await fetch(
       `http://127.0.0.1:${address.port}/admin/questions`,

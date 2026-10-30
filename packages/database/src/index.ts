@@ -18,3 +18,9 @@ export type {
   ContentRole,
 } from './permissions.js';
 export type { ContentDatabase } from './client.js';
+export {
+  createMatchResultRepository,
+  matchArchiveSchema,
+  MatchArchiveConflict,
+} from './match-archive.js';
+export type { MatchArchive } from './match-archive.js';

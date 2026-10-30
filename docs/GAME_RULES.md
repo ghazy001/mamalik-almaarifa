@@ -51,3 +51,7 @@ Client recovery cannot reset a question deadline or replace an accepted answer. 
 - Review and source the real question bank in M4; no repeated IDs per match in v1.
 
 Changing any of these product rules requires a reviewed rule version update and tests.
+
+## M4 result archiving (rules unchanged)
+
+Optional server-side archives persist the core-calculated outcome and final owners after FINISHED, including prepared-match aborts. Storage failure never changes score, winner or turn progression. Protocol v3 resultStorage reports persistence separately; rules version remains 1. Guest seat IDs are positions, not accounts. Archive provenance is not a full replay/action log. See M4_RESULT_ARCHIVES.md for exact contents and delivery limits.

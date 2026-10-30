@@ -5,9 +5,11 @@ import {
   legalTargets,
   placements,
   publicView,
+  DEFAULT_RULES,
 } from '@mamalik/game-core';
 import type { MatchState, Rules, ServerAction } from '@mamalik/game-core';
-import { findFixture, QUESTION_FIXTURES } from '@mamalik/question-fixtures';
+import { developmentQuestionBank } from './question-bank.js';
+import type { QuestionBank } from './question-bank.js';
 import type { RoomSnapshot } from '@mamalik/shared';
 import { processIntent, snapshot } from './commands.js';
 
@@ -17,15 +19,19 @@ export interface SessionOptions {
   seed: number;
   rules?: Partial<Omit<Rules, 'version'>>;
   resolutionMs?: number;
+  bank?: QuestionBank;
 }
 
 /** Server-only explicit-time orchestration. Every domain mutation goes through core. */
 export function createServerMatch(options: SessionOptions) {
+  const bank =
+    options.bank ??
+    developmentQuestionBank(options.rules?.maxTurns ?? DEFAULT_RULES.maxTurns);
   let state: MatchState = createMatch({
     id: options.id,
     players: options.players,
     seed: options.seed,
-    questionIds: QUESTION_FIXTURES.map((fixture) => fixture.question.id),
+    questionIds: bank.ids,
     ...(options.rules ? { rules: options.rules } : {}),
   });
   let reveal: RoomSnapshot['reveal'] = null;
@@ -46,7 +52,7 @@ export function createServerMatch(options: SessionOptions) {
           answer.choiceId,
         ]),
       );
-      const fixture = findFixture(previous.duel.question.id);
+      const fixture = bank.get(previous.duel.question.id);
       reveal = {
         question: snapshot(previous).question!,
         explanation: fixture.explanation,
@@ -105,7 +111,7 @@ export function createServerMatch(options: SessionOptions) {
       const questionId = state.questionDeck[state.usedQuestionIds.length];
       const result = processIntent(state, input, playerId, {
         now,
-        ...(questionId ? { question: findFixture(questionId).question } : {}),
+        ...(questionId ? { question: bank.get(questionId).question } : {}),
       });
       if (result.ok) {
         accept(result.state);

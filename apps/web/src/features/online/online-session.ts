@@ -1,4 +1,5 @@
 import { Client } from '@colyseus/sdk';
+import { admissionErrorMessage } from './admission-errors';
 import type { Room } from '@colyseus/sdk';
 import {
   PROTOCOL_VERSION,
@@ -297,12 +298,11 @@ export function createOnlineSession(endpoint: string) {
         return;
       }
       attach(next);
-    } catch {
+    } catch (error) {
       if (alive && generation === current)
         publish({
           status: 'error',
-          error:
-            'تعذّر الاتصال. تحقّق من تشغيل خدمة اللعبة ورمز الدعوة أو مهلة الاستعادة.',
+          error: admissionErrorMessage(error),
         });
     }
   }

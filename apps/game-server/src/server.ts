@@ -31,6 +31,7 @@ export function createGameService(
           protocolVersion: PROTOCOL_VERSION,
           gameplayRoomsEnabled: true,
           contentAdminEnabled: Boolean(contentAdmin),
+          questionSource: settings.loadQuestions ? 'published' : 'development',
         });
       });
     },

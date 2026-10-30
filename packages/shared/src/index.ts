@@ -1,6 +1,12 @@
 import { z } from 'zod';
 
 export const PROTOCOL_VERSION = 2 as const;
+/** HTTP matchmaking failures, separate from in-room gameplay command errors. */
+export const ROOM_ADMISSION_ERRORS = {
+  CONTENT_BANK_INSUFFICIENT: 'CONTENT_BANK_INSUFFICIENT',
+  CONTENT_BANK_UNAVAILABLE: 'CONTENT_BANK_UNAVAILABLE',
+  CONTENT_BANK_INVALID: 'CONTENT_BANK_INVALID',
+} as const;
 export const idSchema = z.string().regex(/^[a-zA-Z0-9_-]{1,64}$/);
 export const errorCodeSchema = z.enum([
   'INVALID_PHASE',

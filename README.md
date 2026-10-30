@@ -1,6 +1,6 @@
 # ممالك المعرفة · Mamalik Al-Ma'rifa
 
-Original Arabic-first strategy trivia. The M1 foundation and M2 offline match are implemented: deterministic rules, strict protocol schemas, an RTL web shell, a standalone Colyseus health service, and original interactive Phaser terrain. Play a complete local match against two scripted opponents at `/play`, or find two real guests through basic matchmaking or private invitations at `/online`. M3 is complete for the documented local guest-match scope. M4 includes PostgreSQL question storage, a Supabase-authenticated content API, and an Arabic sign-in/editorial workspace. Reviewed live-room banks, player accounts and durable match results remain.
+Original Arabic-first strategy trivia. The M1 foundation and M2 offline match are implemented: deterministic rules, strict protocol schemas, an RTL web shell, a standalone Colyseus health service, and original interactive Phaser terrain. Play a complete local match against two scripted opponents at `/play`, or find two real guests through basic matchmaking or private invitations at `/online`. M3 is complete for the documented local guest-match scope. M4 includes PostgreSQL question storage, a Supabase-authenticated content API, and an Arabic sign-in/editorial workspace. Opt-in published room snapshots are implemented; a reviewed release question set, player accounts and durable match results remain.
 
 ## Local setup
 
@@ -39,7 +39,7 @@ See [M3 recovery behavior and verification](docs/M3_RESILIENCE.md), [matchmaking
 
 ## Local question storage (M4 first slice)
 
-The game preview still uses public development fixtures. This optional workflow stores sourced questions separately; it does not change live rooms or require cloud credentials. With Docker/Compose available:
+The default preview uses public development fixtures. This optional storage workflow needs no cloud credentials and changes no live room until published source mode is explicitly enabled below. With Docker/Compose available:
 
 ```sh
 docker compose up -d --wait
@@ -72,6 +72,12 @@ Open `/signin`, sign in, and use the role-appropriate draft, revision, review, p
 
 To verify without cloud credentials, first `pnpm build`, then `pnpm test:content-web` with the local PostgreSQL bootstrap URL. This provisions only an isolated random test database and starts signed local Auth/HTTP fixtures for six desktop/mobile/landscape journeys. It does not validate hosted Supabase. Without configuration the portal clearly shows an unavailable state and guest play still works. See [setup, manual workflow, verification and limits](docs/M4_EDITORIAL_UI.md) and [ADR 0009](docs/ADR/0009-server-cookie-editorial-session.md).
 
+## Published online question banks (M4 fourth slice)
+
+Set `GAME_QUESTION_SOURCE=published` and DATABASE_URL on the game server after `pnpm db:migrate`. It needs at least 36 published unique questions under normal rules and rejects invalid/unavailable/insufficient banks without a fixture fallback. A room pins exact revisions before its first seat joins; publication/retirement affects later rooms, and active matches keep running without database reads. The first reference is revealed after resolution. This option does not require Supabase credentials when CONTENT_ADMIN_ENABLED=false.
+
+Development remains the default and `/play` still uses inspectable public fixtures. No release questions are automatically approved or published. Run `pnpm test:room-bank` with the local PostgreSQL bootstrap URL for isolated real database/socket and standalone-startup checks. See [configuration, room lifetime behavior, admission errors and exact evidence](docs/M4_PUBLISHED_ROOM_BANK.md) and [ADR 0010](docs/ADR/0010-published-room-question-snapshots.md).
+
 ## Play a local match
 
 Open `/play`, or choose **العب مباراة محلية** from the home page. You control فيروز against two explicitly scripted opponents. Start, select an adjacent target through the canvas or Arabic territory controls, then **ابدأ التحدّي**. Answer within 15 seconds and review the resolution/source before continuing. The map and scores update through the shared rules. Defend your lands when attacked; capture all castles or lead on score at the 36-turn limit. Results include placements and **مباراة جديدة**.
@@ -95,6 +101,7 @@ pnpm typecheck
 pnpm test
 pnpm test:database # requires the local PostgreSQL bootstrap URL above
 pnpm test:admin    # signed local Auth fixture + real HTTP/PostgreSQL permissions
+pnpm test:room-bank # published revisions + two real three-client matches
 pnpm build
 pnpm simulate
 pnpm --filter @mamalik/web exec playwright install chromium
@@ -120,7 +127,7 @@ docs/                 Design, exact rules, architecture, protocol, milestones, A
 .github/workflows/    Reproducible quality gates
 ```
 
-Database-backed content tooling, identity/permissions and the protected editorial workspace are implemented. Room account identity, reviewed-bank integration, durable results and Howler remain future slices. Private guest rooms and basic guest matchmaking are implemented; bounded network recovery is verified. Competitive latency fairness and public-release operations remain explicit release gates. Phaser powers public snapshot rendering for the preview and offline match. See [rules and reversible assumptions](docs/GAME_RULES.md), [architecture](docs/ARCHITECTURE.md), [protocol](docs/PROTOCOL.md) and [milestones](docs/MILESTONES.md). Preserve `AGENTS.md` as the engineering charter.
+Database-backed content tooling, identity/permissions and the protected editorial workspace are implemented. Room account identity, a reviewed release question set, durable results and Howler remain future slices. Private guest rooms and basic guest matchmaking are implemented; bounded network recovery is verified. Competitive latency fairness and public-release operations remain explicit release gates. Phaser powers public snapshot rendering for the preview and offline match. See [rules and reversible assumptions](docs/GAME_RULES.md), [architecture](docs/ARCHITECTURE.md), [protocol](docs/PROTOCOL.md) and [milestones](docs/MILESTONES.md). Preserve `AGENTS.md` as the engineering charter.
 
 ## Five concepts to learn
 

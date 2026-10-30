@@ -85,6 +85,7 @@ describe('standalone Colyseus health service', () => {
       protocolVersion: PROTOCOL_VERSION,
       gameplayRoomsEnabled: true,
       contentAdminEnabled: false,
+      questionSource: 'development',
     });
     const disabled = await fetch(
       `http://127.0.0.1:${address.port}/admin/questions`,

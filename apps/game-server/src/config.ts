@@ -20,6 +20,9 @@ const configSchema = z
       .enum(['true', 'false'])
       .default('false')
       .transform((value) => value === 'true'),
+    GAME_QUESTION_SOURCE: z
+      .enum(['development', 'published'])
+      .default('development'),
     SUPABASE_URL: optionalValue(
       z
         .url()
@@ -45,6 +48,12 @@ const configSchema = z
     DATABASE_URL: optionalValue(databaseUrlSchema),
   })
   .superRefine((value, context) => {
+    if (value.GAME_QUESTION_SOURCE === 'published' && !value.DATABASE_URL)
+      context.addIssue({
+        code: 'custom',
+        path: ['DATABASE_URL'],
+        message: 'Required for published room questions',
+      });
     if (!value.CONTENT_ADMIN_ENABLED) return;
     for (const key of [
       'SUPABASE_URL',

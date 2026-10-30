@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { Room } from '@colyseus/core';
+import { Room, ServerError } from '@colyseus/core';
 import type { Client } from '@colyseus/core';
 import { DEFAULT_RULES } from '@mamalik/game-core';
 import type { Rules } from '@mamalik/game-core';
@@ -13,6 +13,8 @@ import {
 } from '@mamalik/shared';
 import type { ErrorCode, RoomMode } from '@mamalik/shared';
 import { createServerMatch } from './match-session.js';
+import { developmentQuestionBank } from './question-bank.js';
+import type { QuestionBank } from './question-bank.js';
 
 interface Seat {
   playerId: string;
@@ -25,6 +27,7 @@ export interface RoomSettings {
   reconnectSeconds?: number;
   seed?: number;
   readyTimeoutMs?: number;
+  loadQuestions?: (minimum: number) => Promise<QuestionBank>;
 }
 const playerIds = ['p_teal', 'p_blue', 'p_gold'] as const;
 
@@ -39,6 +42,7 @@ export function kingdomRoom(
     private seats = new Map<string, Seat>();
     private rates = new Map<string, { start: number; count: number }>();
     private match: ReturnType<typeof createServerMatch> | null = null;
+    private bank!: QuestionBank;
     private sequence = 0;
     private closed = false;
     private reportedFinish = false;
@@ -47,7 +51,14 @@ export function kingdomRoom(
     private epoch = performance.now();
     private now = () => performance.now() - this.epoch;
 
-    override async onCreate() {
+    override async onCreate(options: unknown) {
+      // Validate before any database read. No client can choose the bank or rules.
+      if (!joinOptionsSchema.safeParse(options).success)
+        throw new ServerError(400, 'INVALID_INPUT');
+      const minimum = settings.rules?.maxTurns ?? DEFAULT_RULES.maxTurns;
+      this.bank = settings.loadQuestions
+        ? await settings.loadQuestions(minimum)
+        : developmentQuestionBank(minimum);
       this.roomId = randomBytes(8).toString('hex');
       console.info(
         JSON.stringify({ event: 'room_created', roomRef: this.logRef }),
@@ -113,6 +124,7 @@ export function kingdomRoom(
             return { id, name: seat.name };
           }),
           seed: settings.seed ?? randomBytes(4).readUInt32LE(),
+          bank: this.bank,
           ...(settings.rules ? { rules: settings.rules } : {}),
           ...(settings.resolutionMs
             ? { resolutionMs: settings.resolutionMs }

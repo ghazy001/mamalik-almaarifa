@@ -9,8 +9,9 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json",
     "lint": "eslint src tests",
-    "test": "vitest run --exclude tests/content-admin.postgres.test.ts",
-    "test:admin": "node --import tsx ../../packages/database/scripts/test-database.ts server"
+    "test": "vitest run --exclude tests/content-admin.postgres.test.ts --exclude tests/published-bank.postgres.test.ts",
+    "test:admin": "node --import tsx ../../packages/database/scripts/test-database.ts server",
+    "test:room-bank": "node --import tsx ../../packages/database/scripts/test-database.ts rooms"
   },
   "dependencies": {
     "@colyseus/core": "0.18.23",

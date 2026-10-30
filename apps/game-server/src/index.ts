@@ -4,6 +4,7 @@ import { readConfig } from './config.js';
 import { createGameService } from './server.js';
 import { openDatabase } from '@mamalik/database';
 import { createContentAuthenticator } from './content-auth.js';
+import { databaseQuestionLoader } from './question-bank.js';
 
 loadEnv({
   path: fileURLToPath(new URL('../../../.env', import.meta.url)),
@@ -11,14 +12,17 @@ loadEnv({
 });
 async function start() {
   const config = readConfig(process.env);
-  const database = config.CONTENT_ADMIN_ENABLED
-    ? openDatabase(config.DATABASE_URL!)
-    : null;
+  const database =
+    config.CONTENT_ADMIN_ENABLED || config.GAME_QUESTION_SOURCE === 'published'
+      ? openDatabase(config.DATABASE_URL!)
+      : null;
   // Fail on unavailable/unmigrated content storage; do not serve an unprotected fallback.
   if (database) {
     try {
       await database.db.execute(
-        'SELECT m.issuer, m.subject, m.role FROM content.memberships m CROSS JOIN content.requests r CROSS JOIN content.access_audit a LIMIT 0',
+        config.CONTENT_ADMIN_ENABLED
+          ? 'SELECT m.issuer, m.subject, m.role FROM content.memberships m CROSS JOIN content.requests r CROSS JOIN content.access_audit a LIMIT 0'
+          : 'SELECT content, status FROM content.question_revisions LIMIT 0',
       );
     } catch {
       await database.close();
@@ -26,8 +30,10 @@ async function start() {
     }
   }
   const service = createGameService(
-    {},
-    database
+    config.GAME_QUESTION_SOURCE === 'published' && database
+      ? { loadQuestions: databaseQuestionLoader(database.db) }
+      : {},
+    config.CONTENT_ADMIN_ENABLED && database
       ? {
           db: database.db,
           authenticate: createContentAuthenticator(
@@ -59,7 +65,8 @@ async function start() {
         host: config.GAME_SERVER_HOST,
         port: config.GAME_SERVER_PORT,
         milestone: 'M4',
-        contentAdminEnabled: Boolean(database),
+        contentAdminEnabled: config.CONTENT_ADMIN_ENABLED,
+        questionSource: config.GAME_QUESTION_SOURCE,
       }),
     );
   } catch {

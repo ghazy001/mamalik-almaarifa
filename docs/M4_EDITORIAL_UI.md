@@ -1,5 +1,7 @@
 # M4 third slice — Arabic editorial workspace
 
+Historical record of the third M4 increment. Subsequent published room-bank integration and current evidence are in [M4_PUBLISHED_ROOM_BANK.md](M4_PUBLISHED_ROOM_BANK.md).
+
 The web application now provides `/signin` and `/admin` for existing content-team accounts. It connects the protected content API to Arabic draft/revision/review/publication/retirement controls. Rules v1 and gameplay Protocol v2 are unchanged. M4 remains in progress: hosted Supabase verification, player identity, reviewed live-room decks, durable results/history and basic ranking remain.
 
 ## Implemented behavior

@@ -196,11 +196,11 @@ Original isometric map scene, territory hover/touch selection, accessible Arabic
 
 Three-client Colyseus rooms, invites/basic matchmaking, sync, phase timers, answer validation, reconnect/forfeit. **Done:** three real browser sessions reliably finish a match under reasonable latency and reconnect scenarios.
 
-### M4 — Identity, content, persistence **(CURRENT — PROTECTED EDITORIAL WORKSPACE)**
+### M4 — Identity, content, persistence **(CURRENT — PUBLISHED ROOM QUESTION BANKS)**
 
 Supabase Auth, question CMS/review with sources, PostgreSQL migrations, history/basic ranking, admin authorization. **Done:** audited question workflow and durable accurate results.
 
-Local storage, the opt-in authenticated content API and Arabic sign-in/editorial workspace are implemented: Supabase verification, project-scoped roles, server-derived audit identity, transactional permissions/idempotency, private-schema RLS and server-only HttpOnly cookie sessions. The web proxy forwards intents; the game service authorizes every content request. Local signed-token fixtures, real PostgreSQL and browser tests verify the boundary without cloud credentials. M4 remains incomplete: hosted Supabase verification, player account integration, live-room reviewed-bank integration and durable match history remain. See `docs/M4_EDITORIAL_UI.md`, historical records and ADRs 0007–0009.
+Local storage, authenticated content operations, Arabic editorial workspace and opt-in published room banks are implemented. In published mode each room admits players only after loading a validated private revision snapshot, without development fallback; active rooms perform no content reads during play. Identity/roles, transaction idempotency, RLS and HttpOnly editorial sessions remain enforced. Local signed Auth, real PostgreSQL/socket and browser tests verify these boundaries without cloud credentials. M4 remains incomplete: hosted verification, player account integration, a reviewed release question set and durable match history remain. See `docs/M4_PUBLISHED_ROOM_BANK.md`, historical records and ADRs 0007–0010.
 
 ### M5 — Premium polish and onboarding
 

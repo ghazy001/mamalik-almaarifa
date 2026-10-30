@@ -33,6 +33,7 @@
       "persistent": true,
       "passThroughEnv": [
         "CONTENT_ADMIN_ENABLED",
+        "GAME_QUESTION_SOURCE",
         "SUPABASE_URL",
         "SUPABASE_PUBLISHABLE_KEY",
         "DATABASE_URL"

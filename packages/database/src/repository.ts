@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { z } from 'zod';
 import { and, asc, eq, sql } from 'drizzle-orm';
 import type { ContentConnection } from './client.js';
 import {
@@ -212,12 +213,16 @@ export function createQuestionRepository(db: ContentConnection) {
 
     // Read once when preparing a future room; never query for each answer.
     // These include secret answers and must stay on the server.
-    async loadPublished() {
-      const rows = await db
+    async loadPublished(limit?: number) {
+      const query = db
         .select()
         .from(revisions)
         .where(eq(revisions.status, 'PUBLISHED'))
-        .orderBy(asc(revisions.questionId));
+        .orderBy(asc(revisions.questionId))
+        .$dynamic();
+      const rows = await (limit === undefined
+        ? query
+        : query.limit(z.number().int().min(1).max(1001).parse(limit)));
       return rows.map((row) => ({
         id: `${row.questionId}_v${row.revision}`,
         questionId: row.questionId,

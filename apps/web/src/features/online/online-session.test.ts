@@ -1,4 +1,4 @@
-import { PROTOCOL_VERSION } from '@mamalik/shared';
+import { PROTOCOL_VERSION, ROOM_ADMISSION_ERRORS } from '@mamalik/shared';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { createMatch, publicView } from '@mamalik/game-core';
 import type { RoomSnapshot } from '@mamalik/shared';
@@ -383,4 +383,31 @@ it('reserves only one seat while connecting or awaiting the first snapshot', asy
   expect(session.getSnapshot().snapshot).toBeNull();
   await session.connect('queue', 'مكرر');
   expect(sdk.queue).toHaveBeenCalledTimes(1);
+});
+
+it.each(Object.values(ROOM_ADMISSION_ERRORS))(
+  'shows a safe Arabic bank admission error for code %s',
+  async (code) => {
+    sdk.queue.mockRejectedValueOnce({ code: 503, message: code });
+    const session = createOnlineSession('http://127.0.0.1:2567');
+    await session.connect('queue', 'معرفة');
+    expect(session.getSnapshot()).toMatchObject({
+      status: 'error',
+      snapshot: null,
+    });
+    expect(session.getSnapshot().error).toContain('مكتبة الأسئلة');
+    expect(session.getSnapshot().error).not.toContain('private');
+  },
+);
+
+it('keeps arbitrary admission failures out of the Arabic interface', async () => {
+  sdk.create.mockRejectedValueOnce({
+    code: 503,
+    message: 'private SQL / credentials',
+  });
+  const session = createOnlineSession('http://127.0.0.1:2567');
+  await session.connect('create', 'معرفة');
+  expect(session.getSnapshot().status).toBe('error');
+  expect(session.getSnapshot().error).toContain('تعذّر الاتصال');
+  expect(session.getSnapshot().error).not.toMatch(/private|SQL|credentials/);
 });

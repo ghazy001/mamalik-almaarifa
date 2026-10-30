@@ -28,7 +28,9 @@ The second slice adds opt-in Supabase `getUser` verification and project-scoped 
 
 The third slice adds Arabic `/signin` and `/admin`, server-only HttpOnly cookie sessions, a fixed same-origin content proxy, explicit role/status controls and safe uncertain-write retries. The game service remains the authorization authority. See M4_EDITORIAL_UI.md and ADR 0009 for current configuration, browser evidence and limitations; earlier records are historical.
 
-M4 is not complete. Hosted Supabase verification, player account integration, live-room reviewed-bank integration, durable idempotent match results/history and basic ranking remain. Existing fixtures import only as drafts, and live matches still use the public development pack. Trusted operator CLI labels remain outside the account-authorization boundary.
+The fourth slice connects optional published revisions to private/queued rooms. Each room pins a validated private snapshot before admitting players; insufficient/invalid/unavailable banks reject new rooms without fallback. Running rooms finish without database reads and retain their initial revisions across content changes. Development remains the default. See M4_PUBLISHED_ROOM_BANK.md and ADR 0010 for configuration, operational bounds and current evidence.
+
+M4 is not complete. Hosted verification, player account integration, a reviewed release bank, durable idempotent match results/history and basic ranking remain. Existing fixtures import only as drafts; publishing public fixtures does not make them confidential. Trusted operator CLI labels remain outside the account-authorization boundary.
 
 ## M5 — Polish and onboarding
 

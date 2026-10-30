@@ -14,7 +14,10 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "simulate": "pnpm --filter @mamalik/game-core simulate",
-    "test:e2e": "pnpm --filter @mamalik/web test:e2e"
+    "test:e2e": "pnpm --filter @mamalik/web test:e2e",
+    "test:database": "pnpm --filter @mamalik/database test:integration",
+    "db:migrate": "pnpm --filter @mamalik/database db:migrate",
+    "content": "pnpm --filter @mamalik/question-fixtures... build && pnpm --filter @mamalik/database content"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

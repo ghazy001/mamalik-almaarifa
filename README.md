@@ -1,6 +1,6 @@
 # ممالك المعرفة · Mamalik Al-Ma'rifa
 
-Original Arabic-first strategy trivia. The M1 foundation and M2 offline match are implemented: deterministic rules, strict protocol schemas, an RTL web shell, a standalone Colyseus health service, and original interactive Phaser terrain. Play a complete local match against two scripted opponents at `/play`, or find two real guests through basic matchmaking or private invitations at `/online`. M3 is complete for the documented local guest-match scope. Identity, reviewed content and persistence are next in M4.
+Original Arabic-first strategy trivia. The M1 foundation and M2 offline match are implemented: deterministic rules, strict protocol schemas, an RTL web shell, a standalone Colyseus health service, and original interactive Phaser terrain. Play a complete local match against two scripted opponents at `/play`, or find two real guests through basic matchmaking or private invitations at `/online`. M3 is complete for the documented local guest-match scope. M4 has begun with local PostgreSQL question storage and a review/publication CLI; accounts, authenticated administration and durable match results remain.
 
 ## Local setup
 
@@ -37,6 +37,25 @@ Open `/online` and enter a guest name. Choose **ابحث عن لاعبين** on 
 
 See [M3 recovery behavior and verification](docs/M3_RESILIENCE.md), [matchmaking behavior and limits](docs/M3_MATCHMAKING.md) and the [first private-room slice](docs/M3_PRIVATE_ROOMS.md). Protocol v2 adds room mode/readiness deadlines; restart both services and reload tabs together after upgrading. Rules remain v1. Guest seats are transport identities, not accounts. The shared development question fixtures are public through the offline demo/source; reviewed server-only content and persistent results remain M4.
 
+## Local question storage (M4 first slice)
+
+The game preview still uses public development fixtures. This optional workflow stores sourced questions separately; it does not change live rooms or require cloud credentials. With Docker/Compose available:
+
+```sh
+docker compose up -d --wait
+# Add DATABASE_URL and DATABASE_TEST_ADMIN_URL from .env.example to your root .env.
+# Preserve any existing configuration; these credentials are local-only.
+pnpm db:migrate
+pnpm content import-fixtures
+pnpm content list
+pnpm content bank-check
+pnpm test:database
+```
+
+Import creates 18 sourced **drafts**, skips 18 arithmetic fixtures lacking reference URLs, and publishes nothing. Repeating it preserves existing content. For a local workflow exercise, take an ID from `list`, inspect its original fixture/source, then run `pnpm content approve <id> 1 local-reviewer "Local workflow exercise"` and `pnpm content publish <id> 1 local-publisher`. `bank-check` shows published IDs/count without printing answers. This is a trusted local CLI: actor labels are audit metadata, not authenticated users or proof of human review. See [the full workflow, commands and limits](docs/M4_CONTENT_STORAGE.md).
+
+`pnpm test:database` requires an explicitly configured bootstrap URL with CREATE DATABASE/ROLE privileges. It creates and removes its own random database and non-superuser role; it never truncates your content database. Database tasks run directly, outside Turbo caching. `docker compose stop` preserves local data. Compose setup is optional; an existing PostgreSQL 16 instance can use the same non-superuser owner/database arrangement in `packages/database/scripts/local-init.sql`. Keep bootstrap credentials out of app/client configuration.
+
 ## Play a local match
 
 Open `/play`, or choose **العب مباراة محلية** from the home page. You control فيروز against two explicitly scripted opponents. Start, select an adjacent target through the canvas or Arabic territory controls, then **ابدأ التحدّي**. Answer within 15 seconds and review the resolution/source before continuing. The map and scores update through the shared rules. Defend your lands when attacked; capture all castles or lead on score at the 36-turn limit. Results include placements and **مباراة جديدة**.
@@ -58,6 +77,7 @@ pnpm format:check
 pnpm lint
 pnpm typecheck
 pnpm test
+pnpm test:database # requires the local PostgreSQL bootstrap URL above
 pnpm build
 pnpm simulate
 pnpm --filter @mamalik/web exec playwright install chromium
@@ -76,12 +96,13 @@ apps/game-server/     Private/queued Colyseus rooms, timers, reconnect, /health,
 packages/game-core/   Pure state machine, topology, battle/scoring rules, simulation
 packages/shared/      Zod commands, events, public-state contract, protocol errors
 packages/question-fixtures/ Development questions for server and explicit offline demo
+packages/database/    Server-only Drizzle schema, SQL migrations, content repository/CLI
 packages/config/      Shared strict TypeScript configuration
 docs/                 Design, exact rules, architecture, protocol, milestones, ADR
 .github/workflows/    Reproducible quality gates
 ```
 
-Database/auth packages, reviewed content and Howler begin in later milestones. Private guest rooms and basic guest matchmaking are implemented; bounded network recovery is verified. Competitive latency fairness and public-release operations remain explicit release gates. Phaser powers public snapshot rendering for the preview and offline match. See [rules and reversible assumptions](docs/GAME_RULES.md), [architecture](docs/ARCHITECTURE.md), [protocol](docs/PROTOCOL.md) and [milestones](docs/MILESTONES.md). Preserve `AGENTS.md` as the engineering charter.
+Database-backed content tooling has begun; Supabase identity, authenticated administration, live-room reviewed-bank integration, durable results and Howler remain future slices. Private guest rooms and basic guest matchmaking are implemented; bounded network recovery is verified. Competitive latency fairness and public-release operations remain explicit release gates. Phaser powers public snapshot rendering for the preview and offline match. See [rules and reversible assumptions](docs/GAME_RULES.md), [architecture](docs/ARCHITECTURE.md), [protocol](docs/PROTOCOL.md) and [milestones](docs/MILESTONES.md). Preserve `AGENTS.md` as the engineering charter.
 
 ## Five concepts to learn
 

@@ -1,0 +1,20 @@
+name: mamalik-content
+services:
+  postgres:
+    image: postgres:16.13
+    ports:
+      - '127.0.0.1:5433:5432'
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: local-bootstrap-only
+      POSTGRES_DB: postgres
+    volumes:
+      - content-data:/var/lib/postgresql/data
+      - ./packages/database/scripts/local-init.sql:/docker-entrypoint-initdb.d/001-content.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d postgres']
+      interval: 2s
+      timeout: 3s
+      retries: 15
+volumes:
+  content-data:

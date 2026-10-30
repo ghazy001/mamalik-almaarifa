@@ -22,7 +22,9 @@ This is not a production-release or network-fairness certification. Rules v1 sti
 
 ## M4 — Identity, content, persistence
 
-Supabase Auth, PostgreSQL/Drizzle migrations, sourced/reviewed question workflow, secure admin authorization, idempotent durable results/history and basic ranking. Create database package only when this work begins.
+In progress. The first slice adds the server-only database package, versioned SQL migrations, validated sourced Arabic questions, immutable content revisions, transactional draft/approval/publication/retirement, append-only audit entries and a trusted local CLI. Real PostgreSQL integration tests exercise workflow failures, races, rollback and database guards under a non-superuser role. See M4_CONTENT_STORAGE.md and ADR 0007.
+
+M4 is not complete. Supabase Auth, authenticated admin roles/UI, live-room reviewed-bank integration, durable idempotent results/history and basic ranking remain. Existing fixtures import only as drafts, and live matches still use the public development pack. CLI labels are not identity or authorization.
 
 ## M5 — Polish and onboarding
 

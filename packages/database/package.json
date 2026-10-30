@@ -1,0 +1,35 @@
+{
+  "name": "@mamalik/database",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "browser": null,
+      "node": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json",
+    "lint": "eslint src tests scripts drizzle.config.ts",
+    "test": "vitest run tests/content.test.ts",
+    "test:integration": "node --import tsx scripts/test-database.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "node --import tsx src/cli.ts migrate",
+    "content": "node --import tsx src/cli.ts"
+  },
+  "dependencies": {
+    "@mamalik/question-fixtures": "workspace:*",
+    "dotenv": "^17.2.0",
+    "drizzle-orm": "0.45.4",
+    "pg": "8.23.1",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@mamalik/config": "workspace:*",
+    "@types/pg": "8.23.1",
+    "drizzle-kit": "0.31.11"
+  }
+}

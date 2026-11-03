@@ -174,6 +174,11 @@ export const resultParticipants = gameSchema
         table.issuer,
         table.subject,
       ),
+      uniqueIndex('participant_owner_lookup').on(
+        table.issuer,
+        table.subject,
+        table.matchId,
+      ),
       check(
         'participant_seat',
         sql`${table.playerId} IN ('p_teal', 'p_blue', 'p_gold')`,

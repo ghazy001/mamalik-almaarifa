@@ -24,6 +24,13 @@ export default function PlayerAccountPage() {
         </Link>
       </header>
       <main id="main">
+        {enabled && (
+          <p>
+            <Link href="/history" className="content-back">
+              سجل مبارياتي ←
+            </Link>
+          </p>
+        )}
         <SignIn enabled={enabled} player />
       </main>
     </div>

@@ -254,8 +254,8 @@ export function OnlineMatch({
             {accountsEnabled && account
               ? 'يرتبط الحساب بالمقعد بعد تحقق الخادم. '
               : 'مقاعد ضيوف دون حسابات. '}
-            يحتفظ هذا التبويب برمز استعادة مؤقت؛ لا تشاركه. لا يتوفر سجل مباريات
-            في هذه الواجهة بعد.
+            يحتفظ هذا التبويب برمز استعادة مؤقت؛ لا تشاركه.{' '}
+            {accountsEnabled && <Link href="/history">سجل مبارياتي</Link>}
           </p>
         </section>
       )}
@@ -430,6 +430,11 @@ export function OnlineMatch({
               <Button onClick={() => void session.leave()}>
                 العودة إلى الغرف
               </Button>
+              {accountsEnabled && (
+                <Link href="/history" className="content-back">
+                  سجل مبارياتي
+                </Link>
+              )}
             </section>
           )}
           {state && model && (

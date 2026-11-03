@@ -1,4 +1,11 @@
 import { z } from 'zod';
+export {
+  historyCursorSchema,
+  historyQuerySchema,
+  matchHistoryItemSchema,
+  matchHistoryPageSchema,
+} from './history.js';
+export type { MatchHistoryPage } from './history.js';
 
 export const PROTOCOL_VERSION = 3 as const;
 export const roomTicketSchema = z.string().regex(/^[a-f0-9]{64}$/);

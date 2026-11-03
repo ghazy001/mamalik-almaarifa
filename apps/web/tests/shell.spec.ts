@@ -13,7 +13,7 @@ test('Arabic shell is responsive, keyboard accessible, and honest about developm
     'المعرفة',
   );
   await expect(
-    page.getByText('حسابات اللاعبين وسجل النتائج غير متاحين بعد.', {
+    page.getByText('وسجلّه الشخصي يتطلبان تفعيل خدمات الحساب.', {
       exact: false,
     }),
   ).toBeVisible();

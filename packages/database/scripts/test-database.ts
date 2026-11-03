@@ -10,12 +10,17 @@ config({
   quiet: true,
 });
 
-async function main() {
-  const target = process.argv[2] ?? 'database';
+async function main(target: string, project?: string) {
   if (
-    !['database', 'server', 'web', 'rooms', 'results', 'players'].includes(
-      target,
-    )
+    ![
+      'database',
+      'server',
+      'web',
+      'rooms',
+      'results',
+      'players',
+      'history',
+    ].includes(target)
   )
     throw new Error('INVALID_TEST_TARGET');
   const adminUrl = process.env.DATABASE_TEST_ADMIN_URL;
@@ -72,7 +77,12 @@ async function main() {
                 ? 'tests/match-results.postgres.test.ts'
                 : target === 'players'
                   ? 'tests/player-admission.postgres.test.ts'
-                  : '--config=playwright.content.config.ts',
+                  : target === 'history'
+                    ? 'tests/history.postgres.test.ts'
+                    : '--config=playwright.content.config.ts',
+        ...(project
+          ? [`--project=${project}`, `--output=test-results-content/${project}`]
+          : []),
       ],
       {
         cwd: fileURLToPath(
@@ -119,7 +129,19 @@ async function main() {
   }
 }
 
-main().catch((error: unknown) => {
+async function run() {
+  const target = process.argv[2] ?? 'database';
+  if (target === 'web') {
+    // Each layout exercises many real sign-ins. Fresh services keep independent
+    // journeys within the unchanged production sign-in budget without sleeps.
+    for (const project of ['desktop', 'mobile', 'landscape']) {
+      await main(target, project);
+      if (process.exitCode) return;
+    }
+  } else await main(target);
+}
+
+run().catch((error: unknown) => {
   console.error(
     error instanceof Error &&
       error.message === 'DATABASE_TEST_ADMIN_URL_REQUIRED'

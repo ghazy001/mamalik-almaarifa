@@ -7,11 +7,13 @@ import type { RoomSettings } from './kingdom-room.js';
 import { installContentAdmin } from './content-admin.js';
 import type { ContentAdmin } from './content-admin.js';
 import { installPlayerAccess } from './player-access.js';
+import type { PlayerHistory } from './player-history.js';
 
 /** Persistent guest rooms. Settings/modes are server-injected, not client options. */
 export function createGameService(
   settings: RoomSettings = {},
   contentAdmin?: ContentAdmin,
+  playerHistory?: PlayerHistory,
 ) {
   const service = new Server({
     greet: false,
@@ -23,7 +25,7 @@ export function createGameService(
     express: (app) => {
       app.disable('x-powered-by');
       installContentAdmin(app, contentAdmin);
-      installPlayerAccess(app, settings.playerAccess);
+      installPlayerAccess(app, settings.playerAccess, playerHistory);
       app.get('/health', (_request: Request, response: Response) => {
         response.setHeader('Cache-Control', 'no-store');
         response.json({

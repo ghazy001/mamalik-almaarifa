@@ -362,6 +362,11 @@ it('starts the standalone account-enabled service and commits its private bindin
       guests.push(await sdk.joinById(guests[0]!.roomId, { name: 'Guest' }));
     for (const guest of guests) guest.reconnection.enabled = false;
     const prepared = await wait((value) => value.state?.phase === 'LOBBY');
+    const history = await fetch('http://127.0.0.1:49005/player/history', {
+      headers: { Authorization: `Bearer ${await auth.token(subject)}` },
+    });
+    expect(history.status).toBe(200);
+    expect(await history.json()).toMatchObject({ items: expect.any(Array) });
     child.kill('SIGTERM');
     expect(await exited).toBe(0);
     expect(

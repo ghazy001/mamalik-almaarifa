@@ -25,3 +25,7 @@ export {
   matchParticipantsSchema,
 } from './match-archive.js';
 export type { MatchArchive, MatchParticipant } from './match-archive.js';
+export {
+  createMatchHistoryRepository,
+  InvalidHistoryCursor,
+} from './match-history.js';

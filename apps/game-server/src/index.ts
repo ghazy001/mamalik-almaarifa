@@ -7,6 +7,7 @@ import { createContentAuthenticator } from './content-auth.js';
 import { databaseQuestionLoader } from './question-bank.js';
 import { createResultWriter } from './result-writer.js';
 import { createPlayerAccess } from './player-access.js';
+import { createPlayerHistory } from './player-history.js';
 
 loadEnv({
   path: fileURLToPath(new URL('../../../.env', import.meta.url)),
@@ -70,6 +71,9 @@ async function start() {
             config.SUPABASE_PUBLISHABLE_KEY!,
           ),
         }
+      : undefined,
+    config.PLAYER_AUTH_ENABLED && database
+      ? createPlayerHistory(database.db)
       : undefined,
   );
   let closing = false;

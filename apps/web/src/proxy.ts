@@ -41,6 +41,8 @@ export const config = {
   matcher: [
     '/signin',
     '/account',
+    '/history',
+    '/api/history',
     '/admin/:path*',
     '/api/auth/:path*',
     '/api/content/:path*',

@@ -12,6 +12,8 @@ import { startAuthFixture } from './support/auth-server.js';
 import { CONTENT_ACCOUNTS } from './support/content-accounts.js';
 import { createPlayerAccess } from '../src/player-access.js';
 import { createResultWriter } from '../src/result-writer.js';
+import { createPlayerHistory } from '../src/player-history.js';
+import { finishedArchive } from './support/result-fixture.js';
 const url = process.env.DATABASE_URL;
 if (!url || !/^\/mamalik_test_[0-9a-f]{32}$/.test(new URL(url).pathname))
   throw new Error('Use pnpm test:content-web');
@@ -22,6 +24,20 @@ const auth = await startAuthFixture({
   accounts: Object.values(CONTENT_ACCOUNTS),
 });
 const access = createAccessRepository(database.db);
+for (let index = 0; index < 21; index++)
+  await createMatchResultRepository(database.db).write(
+    {
+      ...finishedArchive(),
+      matchId: `m_browser_history_${String(index).padStart(2, '0')}`,
+    },
+    [
+      {
+        playerId: 'p_teal',
+        issuer: auth.issuer,
+        subject: CONTENT_ACCOUNTS.historian.id,
+      },
+    ],
+  );
 for (const role of ['editor', 'reviewer', 'publisher'] as const)
   await access.grant(
     { issuer: auth.issuer, subject: CONTENT_ACCOUNTS[role].id },
@@ -98,6 +114,7 @@ const service = createGameService(
     authenticate: createContentAuthenticator(auth.url, auth.key),
     requestsPerMinute: 1000,
   },
+  createPlayerHistory(database.db),
 );
 await service.listen(2574, '127.0.0.1');
 let closing = false;

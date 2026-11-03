@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "participant_owner_lookup" ON "game"."result_participants" USING btree ("issuer","subject","match_id");

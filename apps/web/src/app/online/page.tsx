@@ -52,7 +52,15 @@ export default function OnlinePage() {
       </main>
       <footer>
         <span className="footer-brand">ممالك المعرفة</span>
-        <p>تجربة تطوير · سجل المباريات غير متاح في هذه الواجهة.</p>
+        <p>
+          تجربة تطوير
+          {process.env.WEB_PLAYER_AUTH_ENABLED === 'true' && (
+            <>
+              {' '}
+              · <Link href="/history">سجل مبارياتي</Link>
+            </>
+          )}
+        </p>
       </footer>
     </div>
   );

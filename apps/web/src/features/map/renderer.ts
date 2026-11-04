@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { WORLD_HEIGHT, WORLD_WIDTH } from './geography';
-import { EMPTY_SELECTION } from './model';
+import { EMPTY_SELECTION, sameMapModel } from './model';
 import type {
   MapEffect,
   MapIntent,
@@ -481,7 +481,7 @@ export function createMapRenderer(
     height: WORLD_HEIGHT,
     scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
     render: { antialias: true, roundPixels: false },
-    fps: { target: 30 },
+    fps: { target: 30, limit: 30 },
     audio: { noAudio: true },
     banner: false,
     input: { keyboard: false, touch: { capture: false } },
@@ -493,7 +493,7 @@ export function createMapRenderer(
   resize.observe(parent);
   return {
     setModel(value: MapModel) {
-      if (model === value) return;
+      if (sameMapModel(model, value)) return;
       model = value;
       nodes = new Map(model.territories.map((node) => [node.id, node]));
       scene.paintMap();

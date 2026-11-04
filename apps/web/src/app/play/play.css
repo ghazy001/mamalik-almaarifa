@@ -77,12 +77,13 @@
   justify-content: space-between;
   gap: 20px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 0.6875rem;
 }
 .match-countdown strong {
   color: var(--gold);
-  font-size: 20px;
+  font-size: 1.25rem;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 .match-time-track {
   width: 100%;
@@ -109,9 +110,11 @@
   border-radius: 18px;
   padding: 32px;
   width: min(760px, calc(100% - 32px));
+  max-width: calc(100% - 32px);
   max-height: calc(100dvh - 32px);
   margin: auto;
   overflow-y: auto;
+  overflow-wrap: anywhere;
   box-shadow: 0 32px 90px #0009;
 }
 .battle-dialog::backdrop {
@@ -123,6 +126,7 @@
 }
 .battle-topline {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: 16px;
@@ -138,7 +142,7 @@
   padding: 10px 14px;
   min-height: 44px;
   font: inherit;
-  font-size: 10px;
+  font-size: 0.625rem;
   cursor: pointer;
 }
 .battle-minimize:focus-visible,
@@ -148,23 +152,23 @@
 }
 .battle-context {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 0.75rem;
   margin-block: 12px 18px;
 }
 .battle-dialog h2 {
-  font-size: clamp(22px, 3vw, 31px);
+  font-size: clamp(1.375rem, 3vw, 1.9375rem);
   line-height: 1.9;
   margin-block: 20px 8px;
   outline: none;
 }
 .battle-original-question {
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 2;
   color: var(--text);
   margin-bottom: 18px;
 }
 .battle-guidance {
-  font-size: 12px;
+  font-size: 0.75rem;
   line-height: 2;
   color: var(--muted);
   min-height: 24px;
@@ -188,7 +192,8 @@
   border-radius: 10px;
   color: var(--text);
   font: inherit;
-  font-size: 16px;
+  font-size: 1rem;
+  min-inline-size: 0;
   text-align: start;
 }
 button.battle-choice {
@@ -199,24 +204,29 @@ button.battle-choice:not(:disabled):hover {
   background: #193743;
 }
 .battle-choice small {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: var(--gold);
 }
 .battle-choice-label {
   display: flex;
   align-items: center;
   gap: 14px;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.battle-choice-label bdi {
+  min-inline-size: 0;
 }
 .battle-choice-marker {
   display: inline-grid;
   place-items: center;
   flex-shrink: 0;
-  width: 27px;
-  height: 27px;
+  width: 1.6875rem;
+  height: 1.6875rem;
   border: 1px solid #78918d;
   border-radius: 50%;
   color: var(--gold);
-  font-size: 11px;
+  font-size: 0.6875rem;
 }
 .battle-choice[aria-pressed='true'],
 .battle-choice[data-chosen='true'] {
@@ -235,7 +245,7 @@ button.battle-choice:not(:disabled):hover {
 .battle-explanation {
   border-top: 1px solid var(--border);
   padding-block: 16px 4px;
-  font-size: 12px;
+  font-size: 0.75rem;
   line-height: 2;
   color: var(--muted);
 }
@@ -254,7 +264,7 @@ button.battle-choice:not(:disabled):hover {
 .battle-local-note {
   margin: 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 0.625rem;
 }
 .battle-continue {
   width: 100%;
@@ -379,20 +389,20 @@ button.battle-choice:not(:disabled):hover {
   .battle-choice {
     min-height: 64px;
     padding: 14px 16px;
-    font-size: 15px;
+    font-size: 0.9375rem;
   }
   .battle-dialog h2 {
-    font-size: 23px;
+    font-size: 1.4375rem;
   }
   .battle-topline {
     align-items: start;
   }
   .battle-topline .eyebrow {
-    font-size: 10px;
+    font-size: 0.625rem;
   }
   .battle-minimize {
     padding-inline: 10px;
-    font-size: 9px;
+    font-size: 0.5625rem;
   }
   .match-results {
     padding: 23px;

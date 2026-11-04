@@ -184,3 +184,7 @@ Exercise: change the **simulation's** `maxTurns` to 6, run `pnpm simulate`, and 
 ## Optional game audio
 
 On `/learn`, `/play` or `/online`, click **تشغيل الصوت** to enable short original cues. Arabic mute/volume controls are also available inside the question dialog. Each page starts muted; backgrounding mutes again and requires another enable click. Audio is optional, never determines an outcome and loads its local asset only after opt-in. See [behavior, asset generation and verification](docs/M5_AUDIO.md).
+
+## Mobile rendering and text checks
+
+Stop `pnpm dev` before rebuilding, then run `pnpm build` and `pnpm profile:web` for production browser profiles and a 320px/200% Arabic quiz reflow check. Reports are written under `apps/web/test-results/`; the same six cases also run in `pnpm test:e2e`. CPU throttling is a local observation, not phone certification. See [method, measured regressions and limits](docs/M5_MOBILE_QUALITY.md).

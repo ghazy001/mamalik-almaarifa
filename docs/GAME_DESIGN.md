@@ -33,3 +33,7 @@ The home page and local lobby link to `/learn`: choose a canonical legal neighbo
 ## Optional sound
 
 Practice, local and online game pages now offer original short tonal cues for your turn/question, public territory outcomes and completion. Audio starts muted, has adjustable volume and remains optional inside the question dialog. No cue reveals correctness before resolution; all information remains visible. Returning from a hidden tab requires re-enabling sound, preventing background/backlog playback. No music or ticking is introduced. See M5_AUDIO.md; physical-device listening and newcomer observation remain pending.
+
+## Responsive rendering quality
+
+Equivalent public map snapshots now preserve terrain and ongoing effects; the renderer explicitly caps its intended cadence at 30 frames per second. This does not change turn or answer deadlines. Quiz text scales with user text settings, and long Arabic/mixed labels wrap inside the native dialog. Repeatable narrow-text and socket-driven rendering checks accompany observational browser profiles. Physical-device performance and human understanding remain unverified; see M5_MOBILE_QUALITY.md.

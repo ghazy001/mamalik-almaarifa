@@ -123,3 +123,7 @@ A dedicated per-instance explicit-time web adapter drives a one-turn game-core s
 ## M5 presentation audio
 
 A per-game-page React provider exposes one memory-only audio controller to normal and modal controls. A monotonic public-state cursor projects turn/question/resolved-outcome/finish cues without reading answers or changing rules. An injected port isolates Howler and a local original WAV sprite; it is constructed only by the enable gesture. Generation guards cancel stale callbacks, backgrounding/navigation unload sounds, and failure leaves gameplay usable. Phaser audio stays disabled. No server, database or protocol change. See M5_AUDIO.md and ADR 0016 for defaults, ownership and device limits.
+
+## M5 rendering observation and reuse
+
+The renderer compares the entire public visual model before repainting. Equivalent snapshots retain scene objects/effects; actual ownership, legal-action, player or map changes rebuild normally. Phaser has an explicit 30-frame limit, independent of domain/server time. Quiz typography scales and permits mixed-text wrapping. Test-only canvas/PerformanceObserver/CDP probes record production-build samples and exercise unchanged real room snapshots; no production metrics API or secret-bearing report is introduced. See M5_MOBILE_QUALITY.md and ADR 0017 for measurement limits and remaining device work.

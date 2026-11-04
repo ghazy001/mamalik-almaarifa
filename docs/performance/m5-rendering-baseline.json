@@ -1,0 +1,75 @@
+{
+  "sourceCommit": "2ab5ef5",
+  "recordedAt": "2026-11-04",
+  "environment": "Local Apple Silicon host; Chromium via Playwright; CPU 4x; local loopback, no network throttle; 80 ms simulated gameplay RTT; browser cache disabled",
+  "status": "Expected regression failures before fixes",
+  "map-profile": {
+    "cpuSlowdown": 4,
+    "mapReadyObservedMs": 3093.100000023842,
+    "frames": {
+      "count": 120,
+      "p95Ms": 50.100000000000364,
+      "maxMs": 66.69999999999891,
+      "elapsedMs": 5005.700000047684,
+      "canvasClears": 121
+    },
+    "territoryTextDraws": 15,
+    "largestContentfulPaintMs": 536,
+    "canvasClears": 312,
+    "selectionFrameMs": [
+      111.40000009536743, 50.10000002384186, 49.10000002384186,
+      50.799999952316284, 51.89999997615814, 54.60000002384186
+    ],
+    "firstContentfulPaintMs": 536,
+    "resourceBytes": {
+      "transfer": 732146,
+      "decoded": 2136459,
+      "largestScriptDecoded": 1375609
+    },
+    "longTasksSummary": {
+      "count": 22,
+      "totalMs": 2118,
+      "maxMs": 427
+    }
+  },
+  "sync-profile": {
+    "cpuSlowdown": 4,
+    "viewport": {
+      "width": 412,
+      "height": 839,
+      "dpr": 2.625
+    },
+    "cacheDisabled": true,
+    "network": "local loopback; no network throttling",
+    "mapReadyObservedMs": 2176,
+    "firstContentfulPaintMs": 392,
+    "territoryTextDraws": 45,
+    "largestContentfulPaintMs": 392,
+    "canvasClears": 227,
+    "selectionFrameMs": [],
+    "redundantTerritoryTextDraws": 30,
+    "frames": {
+      "count": 120,
+      "p95Ms": 50.100000000000364,
+      "maxMs": 66.80000000000109,
+      "elapsedMs": 5030,
+      "canvasClears": 121
+    },
+    "resourceBytes": {
+      "transfer": 855086,
+      "decoded": 2533961,
+      "largestScriptDecoded": 1375609
+    },
+    "longTasksSummary": {
+      "count": 8,
+      "totalMs": 738,
+      "maxMs": 276
+    }
+  },
+  "reflow": {
+    "contentWidth": 485,
+    "availableWidth": 248,
+    "answerFontPx": 15,
+    "originalSize": 15
+  }
+}

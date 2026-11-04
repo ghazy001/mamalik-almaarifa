@@ -23,6 +23,39 @@ export interface MapSelection {
   readonly selectedId: string | null;
   readonly hoveredId: string | null;
 }
+
+/** New public snapshots may carry identical visuals. Preserve the scene in that case. */
+export function sameMapModel(left: MapModel, right: MapModel): boolean {
+  const stringsEqual = (a: readonly string[], b: readonly string[]) =>
+    a.length === b.length && a.every((value, index) => value === b[index]);
+  return (
+    left === right ||
+    (left.activePlayerId === right.activePlayerId &&
+      stringsEqual(left.legalTargetIds, right.legalTargetIds) &&
+      left.players.length === right.players.length &&
+      left.players.every((player, index) => {
+        const other = right.players[index]!;
+        return (
+          player.id === other.id &&
+          player.name === other.name &&
+          player.color === other.color
+        );
+      }) &&
+      left.territories.length === right.territories.length &&
+      left.territories.every((node, index) => {
+        const other = right.territories[index]!;
+        return (
+          node.id === other.id &&
+          node.name === other.name &&
+          node.x === other.x &&
+          node.y === other.y &&
+          node.castle === other.castle &&
+          node.ownerId === other.ownerId &&
+          stringsEqual(node.neighbors, other.neighbors)
+        );
+      }))
+  );
+}
 export interface MapEffect {
   readonly key: string;
   readonly targetId: string;

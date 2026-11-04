@@ -1,0 +1,222 @@
+{
+  "parentCommit": "2ab5ef5",
+  "recordedAt": "2026-11-04",
+  "implementation": "sameMapModel; fps.limit=30; rem quiz text; explicit dialog max-width; wrapping and single-line countdown",
+  "playwright": "1.64.1",
+  "environment": "Local macOS arm64; Chromium; desktop CPU 1x, mobile and landscape CPU 4x; browser cache disabled; loopback network; 80 ms simulated gameplay RTT",
+  "profiles": {
+    "desktop": {
+      "map-profile": {
+        "cpuSlowdown": 1,
+        "mapReadyObservedMs": 1063.8999999761581,
+        "frames": {
+          "count": 120,
+          "p95Ms": 50.100000000000364,
+          "maxMs": 116.60000000000036,
+          "elapsedMs": 5194.399999976158,
+          "canvasClears": 121
+        },
+        "territoryTextDraws": 15,
+        "largestContentfulPaintMs": 92,
+        "canvasClears": 282,
+        "selectionFrameMs": [
+          111.70000004768372, 51.10000002384186, 43.700000047683716,
+          42.89999997615814, 41.299999952316284, 43.699999928474426
+        ],
+        "firstContentfulPaintMs": 92,
+        "resourceBytes": {
+          "transfer": 732309,
+          "decoded": 2137011,
+          "largestScriptDecoded": 1375626
+        },
+        "longTasksSummary": {
+          "count": 32,
+          "totalMs": 2250,
+          "maxMs": 412
+        }
+      },
+      "sync-profile": {
+        "cpuSlowdown": 1,
+        "viewport": {
+          "width": 1440,
+          "height": 1000,
+          "dpr": 1
+        },
+        "cacheDisabled": true,
+        "network": "local loopback; no network throttling",
+        "mapReadyObservedMs": 1272.3000000715256,
+        "firstContentfulPaintMs": 108,
+        "territoryTextDraws": 15,
+        "largestContentfulPaintMs": 108,
+        "canvasClears": 260,
+        "selectionFrameMs": [],
+        "redundantTerritoryTextDraws": 0,
+        "frames": {
+          "count": 120,
+          "p95Ms": 50,
+          "maxMs": 83.40000000000055,
+          "elapsedMs": 4461,
+          "canvasClears": 121
+        },
+        "resourceBytes": {
+          "transfer": 855159,
+          "decoded": 2534764,
+          "largestScriptDecoded": 1375626
+        },
+        "longTasksSummary": {
+          "count": 8,
+          "totalMs": 805,
+          "maxMs": 379
+        }
+      },
+      "reflow": {
+        "contentWidth": 286,
+        "availableWidth": 286,
+        "answerFontPx": 30,
+        "originalSize": 15
+      }
+    },
+    "mobile": {
+      "map-profile": {
+        "cpuSlowdown": 4,
+        "mapReadyObservedMs": 1928.3999999761581,
+        "frames": {
+          "count": 120,
+          "p95Ms": 50.100000000000364,
+          "maxMs": 83.30000000000109,
+          "elapsedMs": 4947.899999976158,
+          "canvasClears": 121
+        },
+        "territoryTextDraws": 15,
+        "largestContentfulPaintMs": 244,
+        "canvasClears": 293,
+        "selectionFrameMs": [
+          103.5, 51.10000002384186, 49, 52.700000047683716, 49.39999997615814,
+          48.09999990463257
+        ],
+        "firstContentfulPaintMs": 244,
+        "resourceBytes": {
+          "transfer": 732309,
+          "decoded": 2137011,
+          "largestScriptDecoded": 1375626
+        },
+        "longTasksSummary": {
+          "count": 27,
+          "totalMs": 2311,
+          "maxMs": 365
+        }
+      },
+      "sync-profile": {
+        "cpuSlowdown": 4,
+        "viewport": {
+          "width": 412,
+          "height": 839,
+          "dpr": 2.625
+        },
+        "cacheDisabled": true,
+        "network": "local loopback; no network throttling",
+        "mapReadyObservedMs": 1828.6000000238419,
+        "firstContentfulPaintMs": 172,
+        "territoryTextDraws": 15,
+        "largestContentfulPaintMs": 172,
+        "canvasClears": 244,
+        "selectionFrameMs": [],
+        "redundantTerritoryTextDraws": 0,
+        "frames": {
+          "count": 120,
+          "p95Ms": 50.099999999999454,
+          "maxMs": 66.60000000000036,
+          "elapsedMs": 5020.100000023842,
+          "canvasClears": 121
+        },
+        "resourceBytes": {
+          "transfer": 855159,
+          "decoded": 2534764,
+          "largestScriptDecoded": 1375626
+        },
+        "longTasksSummary": {
+          "count": 7,
+          "totalMs": 682,
+          "maxMs": 274
+        }
+      },
+      "reflow": {
+        "contentWidth": 286,
+        "availableWidth": 286,
+        "answerFontPx": 30,
+        "originalSize": 15
+      }
+    },
+    "landscape": {
+      "map-profile": {
+        "cpuSlowdown": 4,
+        "mapReadyObservedMs": 2394.4000000953674,
+        "frames": {
+          "count": 120,
+          "p95Ms": 66.60000000000036,
+          "maxMs": 66.70000000000073,
+          "elapsedMs": 5265.100000023842,
+          "canvasClears": 121
+        },
+        "territoryTextDraws": 15,
+        "largestContentfulPaintMs": 248,
+        "canvasClears": 307,
+        "selectionFrameMs": [
+          122.79999995231628, 59.09999990463257, 94.30000007152557,
+          55.09999990463257, 49.699999928474426, 51.60000002384186
+        ],
+        "firstContentfulPaintMs": 248,
+        "resourceBytes": {
+          "transfer": 732309,
+          "decoded": 2137011,
+          "largestScriptDecoded": 1375626
+        },
+        "longTasksSummary": {
+          "count": 64,
+          "totalMs": 4573,
+          "maxMs": 431
+        }
+      },
+      "sync-profile": {
+        "cpuSlowdown": 4,
+        "viewport": {
+          "width": 740,
+          "height": 360,
+          "dpr": 1
+        },
+        "cacheDisabled": true,
+        "network": "local loopback; no network throttling",
+        "mapReadyObservedMs": 2000,
+        "firstContentfulPaintMs": 144,
+        "territoryTextDraws": 15,
+        "largestContentfulPaintMs": 144,
+        "canvasClears": 225,
+        "selectionFrameMs": [],
+        "redundantTerritoryTextDraws": 0,
+        "frames": {
+          "count": 120,
+          "p95Ms": 50.100000000000364,
+          "maxMs": 66.70000000000073,
+          "elapsedMs": 5100.600000023842,
+          "canvasClears": 121
+        },
+        "resourceBytes": {
+          "transfer": 855159,
+          "decoded": 2534764,
+          "largestScriptDecoded": 1375626
+        },
+        "longTasksSummary": {
+          "count": 19,
+          "totalMs": 1501,
+          "maxMs": 409
+        }
+      },
+      "reflow": {
+        "contentWidth": 286,
+        "availableWidth": 286,
+        "answerFontPx": 30,
+        "originalSize": 15
+      }
+    }
+  }
+}

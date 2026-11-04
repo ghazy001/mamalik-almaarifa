@@ -8,3 +8,4 @@ playwright-report
 test-results
 AGENTS.md
 **/next-env.d.ts
+/content/private/

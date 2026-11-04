@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
+import { resolve } from 'node:path';
 import { config } from 'dotenv';
 import { ZodError } from 'zod';
 import { openDatabase } from './client.js';
@@ -7,6 +8,12 @@ import { ContentError } from './content.js';
 import { migrateDatabase } from './migrate.js';
 import { createQuestionRepository } from './repository.js';
 import { createAccessRepository } from './access.js';
+import {
+  importQuestionPack,
+  QuestionPackError,
+  readQuestionPack,
+  summarizeQuestionPack,
+} from './question-pack.js';
 
 config({
   path: fileURLToPath(new URL('../../../.env', import.meta.url)),
@@ -28,14 +35,31 @@ async function main() {
     'bank-check': 0,
     'grant-role': 4,
     'revoke-role': 4,
+    'pack-check': 1,
+    'pack-import': 2,
   };
   if (!command || sizes[command] !== args.length) throw new Error('USAGE');
+  const pack =
+    command === 'pack-check' || command === 'pack-import'
+      ? await readQuestionPack(
+          resolve(
+            fileURLToPath(new URL('../../../', import.meta.url)),
+            args[0]!,
+          ),
+        )
+      : null;
+  if (command === 'pack-check') {
+    console.log(JSON.stringify(summarizeQuestionPack(pack), null, 2));
+    return;
+  }
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error('DATABASE_URL_REQUIRED');
   const { db, close } = openDatabase(url);
   const repository = createQuestionRepository(db);
   try {
-    if (command === 'grant-role' || command === 'revoke-role') {
+    if (command === 'pack-import') {
+      console.log(JSON.stringify(await importQuestionPack(db, pack, args[1]!)));
+    } else if (command === 'grant-role' || command === 'revoke-role') {
       const access = createAccessRepository(db);
       const operation = command === 'grant-role' ? access.grant : access.revoke;
       console.log(
@@ -131,7 +155,7 @@ async function main() {
 main().catch((error: unknown) => {
   // Do not print database URLs, SQL parameters, question answers or driver errors.
   const code =
-    error instanceof ContentError
+    error instanceof ContentError || error instanceof QuestionPackError
       ? error.code
       : error instanceof ZodError
         ? 'INVALID_INPUT'
@@ -142,7 +166,7 @@ main().catch((error: unknown) => {
   console.error(code);
   if (code === 'USAGE')
     console.error(
-      'Commands: migrate | import-fixtures | list | draft <json-file> <author> | revise <id> <expected-revision> <json-file> <author> | approve <id> <revision> <reviewer> <note> | publish <id> <revision> <actor> | retire <id> <revision> <actor> <note> | history <id> | bank-check | grant-role <issuer> <subject-uuid> <role> <operator> | revoke-role <issuer> <subject-uuid> <role> <operator>',
+      'Commands: pack-check <root-relative-json-file> | pack-import <root-relative-json-file> <author> | migrate | import-fixtures | list | draft <json-file> <author> | revise <id> <expected-revision> <json-file> <author> | approve <id> <revision> <reviewer> <note> | publish <id> <revision> <actor> | retire <id> <revision> <actor> <note> | history <id> | bank-check | grant-role <issuer> <subject-uuid> <role> <operator> | revoke-role <issuer> <subject-uuid> <role> <operator>',
     );
   process.exitCode = 1;
 });

@@ -105,3 +105,9 @@ The fixed Next history proxy reuses the HttpOnly session and validates query and
 The basic-v1 policy is owner-approved and versioned separately from Rules v1. A server-only repository uses one PostgreSQL statement to filter eligible saved matches, aggregate same-project accounts and apply dense rank, returning only the viewer's summary. It derives from immutable result/participant rows with no new table, migration, increment balance or result-writer hook. A pure policy evaluator and SQL parity fixtures check eligibility and point awards.
 
 Fresh player authorization, the shared history/standing concurrency budget and strict response validation protect GET `/player/standing`. Next extracts its HttpOnly credential and proxies only to the fixed endpoint; no identity selectors are accepted. `/standing` presents an opt-in Arabic screen with in-memory, cancellable session state. Public peers/profiles, MMR and seasons remain out of scope. See M4_BASIC_RANKING.md and ADR 0014 for exact criteria, consistency and outstanding release limits.
+
+## Private draft pack boundary
+
+Local answer-bearing candidates and their review worksheet live under Git-ignored `content/private/`, separately backed up. The server-only database package validates a strict DRAFT/PENDING JSON envelope offline and imports existing question-content fields in a single transaction. Stable per-question keys and immutable revision-1 comparison reject accidental replacement while preserving later editorial revisions. Key sorting permits concurrent retries without reversed lock ordering. Generic CI fixtures contain no private candidate content.
+
+Evidence notes, provisional difficulty and pack digest remain authoring artifacts, not database approval records. Existing authenticated editorial review/publication guards remain authoritative. No client asset, protocol, runtime sampler or schema changes. See M4_QUESTION_PACK.md and ADR 0015 for limits and the pending human review gate.

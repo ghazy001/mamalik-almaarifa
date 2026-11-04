@@ -40,6 +40,8 @@ M4 is not complete. Hosted verification and a reviewed release bank remain. Exis
 
 The eighth slice adds owner-approved private personal standing under basic-v1: published matchmaking, three same-project accounts, standard rules, eligible completed results, 3/1/0 win points and dense ties. See M4_BASIC_RANKING.md and ADR 0014. No public leaderboard or MMR is included.
 
+The ninth slice prepares 42 private sourced Arabic DRAFT/PENDING candidates, a human review worksheet, offline validation and an atomic retry-safe draft importer. Generic tests and CI use public synthetic fixtures; answer-bearing artifacts stay Git-ignored and require private backup. No question is automatically approved or published. See M4_QUESTION_PACK.md and ADR 0015. Independent human review of at least 36 accepted questions and hosted verification remain outstanding.
+
 ## M5 — Polish and onboarding
 
 Original premium hybrid 2.5D art, opt-in controllable Howler audio, tutorial, Arabic human QA, reduced motion, mobile performance profiling and reviewed starter question bank. New testers must play without oral instructions.

@@ -56,6 +56,10 @@ Import creates 18 sourced **drafts**, skips 18 arithmetic fixtures lacking refer
 
 `pnpm test:database` requires an explicitly configured bootstrap URL with CREATE DATABASE/ROLE privileges. It creates and removes its own random database and non-superuser role; it never truncates your content database. Database tasks run directly, outside Turbo caching. `docker compose stop` preserves local data. Compose setup is optional; an existing PostgreSQL 16 instance can use the same non-superuser owner/database arrangement in `packages/database/scripts/local-init.sql`. Keep bootstrap credentials out of app/client configuration.
 
+## Private Arabic draft pack (M4 ninth slice)
+
+This checkout includes 42 sourced Arabic candidates and a review worksheet under Git-ignored `content/private/`. They remain DRAFT/PENDING and are absent from a fresh clone; keep a private backup. Run `pnpm content pack-check content/private/starter-ar-v1.json` without a database. The optional `pack-import <root-relative-file> <author>` creates drafts transactionally, safely retries identical content and rejects changed existing keys. It never approves or publishes. Run `pnpm test:packs` with the local test bootstrap URL for isolated database checks. See [review/import steps, limits and verification](docs/M4_QUESTION_PACK.md) and [private content handling](content/README.md). At least 36 accepted independently reviewed published questions are still required.
+
 ## Content identity and permissions (M4 second slice)
 
 The persistent game service now has an opt-in Supabase-authenticated content API. Editor, reviewer and publisher roles come from private PostgreSQL memberships; client metadata cannot grant them. New question authors/reviewers come from verified account identity, and HTTP write retries use a transactional idempotency ledger. Guest play remains available without configuring this feature.
@@ -130,6 +134,7 @@ pnpm test:results   # transactional result archives + real three-client save sta
 pnpm test:players   # verified account admission + private durable bindings
 pnpm test:history   # owner-scoped history + microsecond-safe pagination
 pnpm test:standing  # eligibility, ties, project isolation, retries and private totals
+pnpm test:packs     # private draft import guards, batch rollback and concurrent retries
 pnpm build
 pnpm simulate
 pnpm --filter @mamalik/web exec playwright install chromium
@@ -155,7 +160,7 @@ docs/                 Design, exact rules, architecture, protocol, milestones, A
 .github/workflows/    Reproducible quality gates
 ```
 
-Database-backed content tooling, identity/permissions and the protected editorial workspace are implemented. Published banks and optional durable result archives are also implemented. Verified account admission is implemented. Authorized personal history and private basic standing are implemented. A reviewed release question set and Howler remain future slices. Private guest rooms and basic guest matchmaking are implemented; bounded network recovery is verified. Competitive latency fairness and public-release operations remain explicit release gates. Phaser powers public snapshot rendering for the preview and offline match. See [rules and reversible assumptions](docs/GAME_RULES.md), [architecture](docs/ARCHITECTURE.md), [protocol](docs/PROTOCOL.md) and [milestones](docs/MILESTONES.md). Preserve `AGENTS.md` as the engineering charter.
+Database-backed content tooling, identity/permissions and the protected editorial workspace are implemented. Published banks and optional durable result archives are also implemented. Verified account admission is implemented. Authorized personal history and private basic standing are implemented. A private 42-question sourced draft pack is prepared; independent human review/publication and Howler remain future slices. Private guest rooms and basic guest matchmaking are implemented; bounded network recovery is verified. Competitive latency fairness and public-release operations remain explicit release gates. Phaser powers public snapshot rendering for the preview and offline match. See [rules and reversible assumptions](docs/GAME_RULES.md), [architecture](docs/ARCHITECTURE.md), [protocol](docs/PROTOCOL.md) and [milestones](docs/MILESTONES.md). Preserve `AGENTS.md` as the engineering charter.
 
 ## Five concepts to learn
 

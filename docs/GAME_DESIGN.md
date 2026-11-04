@@ -29,3 +29,7 @@ M4 includes local sourced-question storage, a Supabase-authenticated content API
 ## Optional first-play practice
 
 The home page and local lobby link to `/learn`: choose a canonical legal neighbor without time pressure, answer one timed public development question, review the outcome, then learn the victory/scoring rules and choose a full match. It is skippable, repeatable, keyboard/touch accessible and usable without canvas. It has no saved results, account dependency or completion tracking. This begins M5 independently after the owner's explicit deferral of question review; M4 release gates remain incomplete. Human newcomer observation is still required. See M5_ONBOARDING.md.
+
+## Optional sound
+
+Practice, local and online game pages now offer original short tonal cues for your turn/question, public territory outcomes and completion. Audio starts muted, has adjustable volume and remains optional inside the question dialog. No cue reveals correctness before resolution; all information remains visible. Returning from a hidden tab requires re-enabling sound, preventing background/backlog playback. No music or ticking is introduced. See M5_AUDIO.md; physical-device listening and newcomer observation remain pending.

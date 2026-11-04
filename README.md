@@ -180,3 +180,7 @@ Database-backed content tooling, identity/permissions and the protected editoria
 5. `apps/web/src/app/tokens.css`: presentation tokens and real RTL layout live in the web layer, separate from domain outcomes.
 
 Exercise: change the **simulation's** `maxTurns` to 6, run `pnpm simulate`, and inspect the shorter result. Restore the edit, then run `pnpm test`. Do not change production defaults without updating the rules and tests.
+
+## Optional game audio
+
+On `/learn`, `/play` or `/online`, click **تشغيل الصوت** to enable short original cues. Arabic mute/volume controls are also available inside the question dialog. Each page starts muted; backgrounding mutes again and requires another enable click. Audio is optional, never determines an outcome and loads its local asset only after opt-in. See [behavior, asset generation and verification](docs/M5_AUDIO.md).

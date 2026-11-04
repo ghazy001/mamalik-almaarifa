@@ -8,6 +8,7 @@ import {
   useSyncExternalStore,
 } from 'react';
 import Link from 'next/link';
+import { useMatchAudio } from '../audio/GameAudio';
 import { DEFAULT_RULES } from '@mamalik/game-core';
 import { Button } from '../../components/ui/button';
 import { MapBoard, TerritoryControls } from '../map/map-board';
@@ -25,6 +26,7 @@ export function Practice() {
     session.getSnapshot,
     session.getSnapshot,
   );
+  useMatchAudio(view.state, view.humanId);
   const epoch = useRef<number | null>(null);
   const now = useCallback(() => {
     epoch.current ??= performance.now();

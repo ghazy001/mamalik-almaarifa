@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { GameAudio } from '../../features/audio/GameAudio';
 import type { Metadata } from 'next';
 import { KingdomMark } from '../../components/kingdom-mark';
 import { OnlineMatch } from '../../features/online/online-match';
@@ -45,10 +46,12 @@ export default function OnlinePage() {
             أسئلة ونتائج يحسمها الخادم.
           </p>
         </div>
-        <OnlineMatch
-          endpoint={endpoint}
-          accountsEnabled={process.env.WEB_PLAYER_AUTH_ENABLED === 'true'}
-        />
+        <GameAudio>
+          <OnlineMatch
+            endpoint={endpoint}
+            accountsEnabled={process.env.WEB_PLAYER_AUTH_ENABLED === 'true'}
+          />
+        </GameAudio>
       </main>
       <footer>
         <span className="footer-brand">ممالك المعرفة</span>

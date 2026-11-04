@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { AudioControls } from '../audio/GameAudio';
 import { Button } from '../../components/ui/button';
 import { GEOGRAPHY } from '../map/geography';
 import type { LocalView } from './local-session';
@@ -254,6 +255,7 @@ export function BattleDialog({
         {!resolved && (
           <p className="battle-local-note">لا تظهر صحة الإجابات قبل الحسم.</p>
         )}
+        <AudioControls />
       </dialog>
     </>
   );

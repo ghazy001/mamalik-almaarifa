@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { GameAudio } from '../../features/audio/GameAudio';
 import type { Metadata } from 'next';
 import { KingdomMark } from '../../components/kingdom-mark';
 import { LocalMatch } from '../../features/match/local-match';
@@ -36,7 +37,9 @@ export default function PlayPage() {
             هذه المباراة محلية؛ الغرف الخاصة في صفحة مستقلة.
           </p>
         </div>
-        <LocalMatch />
+        <GameAudio>
+          <LocalMatch />
+        </GameAudio>
       </main>
       <footer>
         <span className="footer-brand">ممالك المعرفة</span>

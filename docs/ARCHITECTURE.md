@@ -119,3 +119,7 @@ An uncached `pnpm test:m4` journey connects the standard room, published loader,
 ## M5 guided local practice
 
 A dedicated per-instance explicit-time web adapter drives a one-turn game-core state and projects sanitized map/question views. Target-selection time is intentionally frozen for reading, while the question starts a normal elapsed deadline. The React route supplies monotonic time, reuses the Phaser/DOM map and native battle dialog, and emits intents only. Map projection identity stays stable during countdown-only updates. Practice uses an existing public fixture and never calls multiplayer, identity or persistence services. No competitive rules/protocol change. See M5_ONBOARDING.md for the owner's question-review deferral and remaining gates.
+
+## M5 presentation audio
+
+A per-game-page React provider exposes one memory-only audio controller to normal and modal controls. A monotonic public-state cursor projects turn/question/resolved-outcome/finish cues without reading answers or changing rules. An injected port isolates Howler and a local original WAV sprite; it is constructed only by the enable gesture. Generation guards cancel stale callbacks, backgrounding/navigation unload sounds, and failure leaves gameplay usable. Phaser audio stays disabled. No server, database or protocol change. See M5_AUDIO.md and ADR 0016 for defaults, ownership and device limits.

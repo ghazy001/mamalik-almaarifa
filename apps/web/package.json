@@ -28,7 +28,8 @@
     "clsx": "^2.1.1",
     "tailwind-merge": "^3.3.0",
     "@mamalik/question-fixtures": "workspace:*",
-    "@colyseus/sdk": "0.18.8"
+    "@colyseus/sdk": "0.18.8",
+    "howler": "2.2.4"
   },
   "devDependencies": {
     "@mamalik/config": "workspace:*",
@@ -37,6 +38,7 @@
     "tailwindcss": "^4.1.0",
     "@tailwindcss/postcss": "^4.1.0",
     "@playwright/test": "^1.56.0",
-    "@axe-core/playwright": "^4.10.0"
+    "@axe-core/playwright": "^4.10.0",
+    "@types/howler": "2.2.13"
   }
 }

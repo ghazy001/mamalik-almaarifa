@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { GameAudio } from '../../features/audio/GameAudio';
 import type { Metadata } from 'next';
 import { KingdomMark } from '../../components/kingdom-mark';
 import { Practice } from '../../features/learn/Practice';
@@ -37,7 +38,9 @@ export default function LearnPage() {
             ثم انطلق إلى مباراة كاملة.
           </p>
         </div>
-        <Practice />
+        <GameAudio>
+          <Practice />
+        </GameAudio>
       </main>
       <footer>
         <Link className="footer-brand" href="/">

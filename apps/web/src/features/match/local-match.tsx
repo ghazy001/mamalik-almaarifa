@@ -9,6 +9,7 @@ import {
   useSyncExternalStore,
 } from 'react';
 import Link from 'next/link';
+import { useMatchAudio } from '../audio/GameAudio';
 import { Button } from '../../components/ui/button';
 import { MapBoard, TerritoryControls } from '../map/map-board';
 import type { MapIntent, MapSelection } from '../map/model';
@@ -23,6 +24,7 @@ export function LocalMatch() {
     session.getSnapshot,
     session.getSnapshot,
   );
+  useMatchAudio(view.state, view.humanId);
   const epoch = useRef<number | null>(null);
   const now = useCallback(() => {
     if (epoch.current === null) epoch.current = performance.now();

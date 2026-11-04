@@ -8,7 +8,7 @@ Open `/learn` from the home page or the local-match lobby. Three visible steps i
 
 Continue to learn about the three castles, normal 36-turn match, scoring, home-castle elimination and ties. Start a full local match, open real multiplayer, retry with fresh ownership/choice state or skip directly to `/play`. A failed attempt still lets the player read the lesson and retry; completion is not a competitive win. The guide is optional, revisitable and never inserted into a running match.
 
-The Arabic RTL layout uses existing ink/teal/gold tokens, focus management, touch controls, reduced motion and the canvas fallback. It adds no assets or dependencies. One existing public development fixture (`q_space_1`) supplies the question; answers remain inspectable in the offline bundle. The private release bank is not imported. There are no accounts, gameplay sockets, database writes, saved points, completion tracking or browser storage in practice.
+The Arabic RTL layout uses existing ink/teal/gold tokens, focus management, touch controls, reduced motion and the canvas fallback. The initial onboarding slice added no assets or dependencies; subsequent optional sound is documented separately in M5_AUDIO.md. One existing public development fixture (`q_space_1`) supplies the question; answers remain inspectable in the offline bundle. The private release bank is not imported. There are no accounts, gameplay sockets, database writes, saved points, completion tracking or browser storage in practice.
 
 ## Architecture and teaching exception
 
@@ -16,7 +16,7 @@ The Arabic RTL layout uses existing ink/teal/gold tokens, focus management, touc
 
 React supplies monotonic elapsed time and subscribes to sanitized snapshots. Countdown ticks retain the map projection identity, avoiding terrain rebuilds. The renderer receives public map data and emits intents. The shared native battle dialog keeps focus, minimization, countdown and resolved cards; its optional continuation label preserves existing local/online defaults. No tutorial logic enters game-core, the shared protocol or the server.
 
-On small screens instructions/target controls come before the map. The guide can be completed without canvas precision. Human observation is still needed to establish whether unassisted newcomers understand play within 30 seconds; automated journeys do not prove that. Sound, art polish, physical-device profiling and reviewed release content remain future work.
+On small screens instructions/target controls come before the map. The guide can be completed without canvas precision. Human observation is still needed to establish whether unassisted newcomers understand play within 30 seconds; automated journeys do not prove that. Optional sound was subsequently added (M5_AUDIO.md); art polish, physical-device profiling/listening and reviewed release content remain future work.
 
 ## Verification
 
@@ -47,4 +47,4 @@ Desktop/mobile/landscape screenshots were inspected for Arabic readability, dire
 4. `features/match/battle-dialog.tsx`: a shared accessible dialog preserves keyboard and timeout behavior.
 5. `tests/learn.spec.ts`: real user journeys check that selection, answers, navigation and retries work together.
 
-Exercise: wait over ten seconds before selecting a target at `/learn`, start the question and minimize it. After fifteen seconds it resolves without a conquest. Read the explanation, continue and retry; ownership returns to the initial castles. Complete a correct attempt and choose a full local match. Next recommended independent M5 task: opt-in sound controls and concise interaction cues, followed by observed newcomer testing. Resume question review only when the owner requests it.
+Exercise: wait over ten seconds before selecting a target at `/learn`, start the question and minimize it. After fifteen seconds it resolves without a conquest. Read the explanation, continue and retry; ownership returns to the initial castles. Complete a correct attempt and choose a full local match. The subsequent optional sound slice is documented in M5_AUDIO.md. Next recommended independent M5 work: observed newcomer testing and measured mobile quality. Resume question review only when the owner requests it.

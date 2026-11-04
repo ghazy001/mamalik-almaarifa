@@ -1,0 +1,46 @@
+.game-audio {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.8rem;
+  margin-block: 0.5rem 1rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+  background: #0b1c29;
+  color: #d2dfdc;
+  font-size: 0.8rem;
+}
+.game-audio button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding-inline: 0.8rem;
+  border: 1px solid #658b89;
+  border-radius: 0.5rem;
+  color: #c6f5e6;
+  background: #102e38;
+  cursor: pointer;
+}
+.game-audio button:hover {
+  background: #1a414a;
+}
+.game-audio :focus-visible {
+  outline: 2px solid #e0bd76;
+  outline-offset: 3px;
+}
+.game-audio input {
+  width: 110px;
+  height: 44px;
+  accent-color: #72d3bb;
+  direction: ltr;
+}
+.game-audio [role='status'] {
+  flex: 1 1 140px;
+}
+.battle-dialog .game-audio {
+  margin-block: 0.75rem 0;
+  font-size: 0.75rem;
+}

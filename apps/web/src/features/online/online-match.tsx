@@ -9,6 +9,7 @@ import {
   useSyncExternalStore,
 } from 'react';
 import Link from 'next/link';
+import { useMatchAudio } from '../audio/GameAudio';
 import { Button } from '../../components/ui/button';
 import { MapBoard, TerritoryControls } from '../map/map-board';
 import { projectMap, PLAYER_COLORS } from '../map/project';
@@ -124,6 +125,7 @@ export function OnlineMatch({
     if (state?.phase === 'FINISHED') resultHeading.current?.focus();
   }, [state?.phase]);
   const connected = view.status === 'connected';
+  useMatchAudio(state, humanId, connected);
   const busy =
     view.status === 'connecting' ||
     view.status === 'reconnecting' ||

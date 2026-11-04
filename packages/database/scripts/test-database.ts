@@ -22,6 +22,7 @@ async function main(target: string, project?: string) {
       'history',
       'standing',
       'packs',
+      'm4',
     ].includes(target)
   )
     throw new Error('INVALID_TEST_TARGET');
@@ -69,23 +70,25 @@ async function main(target: string, project?: string) {
           ),
         ),
         target === 'web' ? 'test' : 'run',
-        target === 'packs'
-          ? 'tests/question-pack.postgres.test.ts'
-          : target === 'database'
-            ? 'tests/postgres.integration.test.ts'
-            : target === 'server'
-              ? 'tests/content-admin.postgres.test.ts'
-              : target === 'rooms'
-                ? 'tests/published-bank.postgres.test.ts'
-                : target === 'results'
-                  ? 'tests/match-results.postgres.test.ts'
-                  : target === 'players'
-                    ? 'tests/player-admission.postgres.test.ts'
-                    : target === 'history'
-                      ? 'tests/history.postgres.test.ts'
-                      : target === 'standing'
-                        ? 'tests/standing.postgres.test.ts'
-                        : '--config=playwright.content.config.ts',
+        target === 'm4'
+          ? 'tests/m4-acceptance.postgres.test.ts'
+          : target === 'packs'
+            ? 'tests/question-pack.postgres.test.ts'
+            : target === 'database'
+              ? 'tests/postgres.integration.test.ts'
+              : target === 'server'
+                ? 'tests/content-admin.postgres.test.ts'
+                : target === 'rooms'
+                  ? 'tests/published-bank.postgres.test.ts'
+                  : target === 'results'
+                    ? 'tests/match-results.postgres.test.ts'
+                    : target === 'players'
+                      ? 'tests/player-admission.postgres.test.ts'
+                      : target === 'history'
+                        ? 'tests/history.postgres.test.ts'
+                        : target === 'standing'
+                          ? 'tests/standing.postgres.test.ts'
+                          : '--config=playwright.content.config.ts',
         ...(project
           ? [`--project=${project}`, `--output=test-results-content/${project}`]
           : []),

@@ -42,6 +42,8 @@ The eighth slice adds owner-approved private personal standing under basic-v1: p
 
 The ninth slice prepares 42 private sourced Arabic DRAFT/PENDING candidates, a human review worksheet, offline validation and an atomic retry-safe draft importer. Generic tests and CI use public synthetic fixtures; answer-bearing artifacts stay Git-ignored and require private backup. No question is automatically approved or published. See M4_QUESTION_PACK.md and ADR 0015. Independent human review of at least 36 accepted questions and hosted verification remain outstanding.
 
+The tenth slice adds `pnpm test:m4`: a combined local acceptance gate for standard 36-turn published-account matchmaking, private revision pinning, reconnect, pending/committed results, accurate own history/standing and a separate compiled-server restart. It uses real sockets/PostgreSQL and signed local Auth/synthetic content, without approving the private candidates or certifying hosted services. See M4_ACCEPTANCE.md. Human review and hosted verification still gate M4 completion.
+
 ## M5 — Polish and onboarding
 
 Original premium hybrid 2.5D art, opt-in controllable Howler audio, tutorial, Arabic human QA, reduced motion, mobile performance profiling and reviewed starter question bank. New testers must play without oral instructions.

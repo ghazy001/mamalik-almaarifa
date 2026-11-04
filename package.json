@@ -17,6 +17,7 @@
     "test:e2e": "pnpm --filter @mamalik/web test:e2e",
     "test:database": "pnpm --filter @mamalik/database test:integration",
     "test:packs": "pnpm --filter @mamalik/database... build && node --import tsx packages/database/scripts/test-database.ts packs",
+    "test:m4": "pnpm --filter @mamalik/game-server... build && pnpm --filter @mamalik/game-server test:m4",
     "test:admin": "pnpm --filter @mamalik/database... build && pnpm --filter @mamalik/game-server test:admin",
     "test:room-bank": "pnpm --filter @mamalik/game-server... build && pnpm --filter @mamalik/game-server test:room-bank",
     "test:results": "pnpm --filter @mamalik/game-server... build && pnpm --filter @mamalik/game-server test:results",

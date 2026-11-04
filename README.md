@@ -60,6 +60,10 @@ Import creates 18 sourced **drafts**, skips 18 arithmetic fixtures lacking refer
 
 This checkout includes 42 sourced Arabic candidates and a review worksheet under Git-ignored `content/private/`. They remain DRAFT/PENDING and are absent from a fresh clone; keep a private backup. Run `pnpm content pack-check content/private/starter-ar-v1.json` without a database. The optional `pack-import <root-relative-file> <author>` creates drafts transactionally, safely retries identical content and rejects changed existing keys. It never approves or publishes. Run `pnpm test:packs` with the local test bootstrap URL for isolated database checks. See [review/import steps, limits and verification](docs/M4_QUESTION_PACK.md) and [private content handling](content/README.md). At least 36 accepted independently reviewed published questions are still required.
 
+## Combined M4 acceptance
+
+Run `pnpm test:m4` with the local PostgreSQL test bootstrap URL to verify a standard 36-turn three-account queued match through published revisions, reconnect, durable results, private history/standing and a compiled-server restart. It takes about two minutes, uses signed local Auth fixtures and synthetic questions in an isolated disposable database, and leaves the private review pack untouched. See [exact coverage and limits](docs/M4_ACCEPTANCE.md). Human review and hosted verification remain required.
+
 ## Content identity and permissions (M4 second slice)
 
 The persistent game service now has an opt-in Supabase-authenticated content API. Editor, reviewer and publisher roles come from private PostgreSQL memberships; client metadata cannot grant them. New question authors/reviewers come from verified account identity, and HTTP write retries use a transactional idempotency ledger. Guest play remains available without configuring this feature.
@@ -135,6 +139,7 @@ pnpm test:players   # verified account admission + private durable bindings
 pnpm test:history   # owner-scoped history + microsecond-safe pagination
 pnpm test:standing  # eligibility, ties, project isolation, retries and private totals
 pnpm test:packs     # private draft import guards, batch rollback and concurrent retries
+pnpm test:m4        # standard account match → saved result → private history/standing → restart
 pnpm build
 pnpm simulate
 pnpm --filter @mamalik/web exec playwright install chromium

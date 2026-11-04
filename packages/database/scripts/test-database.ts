@@ -20,6 +20,7 @@ async function main(target: string, project?: string) {
       'results',
       'players',
       'history',
+      'standing',
     ].includes(target)
   )
     throw new Error('INVALID_TEST_TARGET');
@@ -79,7 +80,9 @@ async function main(target: string, project?: string) {
                   ? 'tests/player-admission.postgres.test.ts'
                   : target === 'history'
                     ? 'tests/history.postgres.test.ts'
-                    : '--config=playwright.content.config.ts',
+                    : target === 'standing'
+                      ? 'tests/standing.postgres.test.ts'
+                      : '--config=playwright.content.config.ts',
         ...(project
           ? [`--project=${project}`, `--output=test-results-content/${project}`]
           : []),

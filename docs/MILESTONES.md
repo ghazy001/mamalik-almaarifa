@@ -36,7 +36,9 @@ The sixth slice adds existing-account admission through server-verified one-use 
 
 The seventh slice adds owner-authorized personal history: verified issuer/subject SQL scoping, sanitized own-result summaries, precision-safe 20-item keyset pages and a protected Arabic screen. See M4_PERSONAL_HISTORY.md and ADR 0013.
 
-M4 is not complete. Hosted verification, a reviewed release bank and basic ranking remain. Existing fixtures import only as drafts; publishing public fixtures does not make them confidential. Trusted operator CLI labels remain outside the account-authorization boundary.
+M4 is not complete. Hosted verification and a reviewed release bank remain. Existing fixtures import only as drafts; publishing public fixtures does not make them confidential. Trusted operator CLI labels remain outside the account-authorization boundary.
+
+The eighth slice adds owner-approved private personal standing under basic-v1: published matchmaking, three same-project accounts, standard rules, eligible completed results, 3/1/0 win points and dense ties. See M4_BASIC_RANKING.md and ADR 0014. No public leaderboard or MMR is included.
 
 ## M5 — Polish and onboarding
 

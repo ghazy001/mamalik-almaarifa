@@ -8,6 +8,7 @@ import { databaseQuestionLoader } from './question-bank.js';
 import { createResultWriter } from './result-writer.js';
 import { createPlayerAccess } from './player-access.js';
 import { createPlayerHistory } from './player-history.js';
+import { createPlayerStanding } from './player-standing.js';
 
 loadEnv({
   path: fileURLToPath(new URL('../../../.env', import.meta.url)),
@@ -74,6 +75,9 @@ async function start() {
       : undefined,
     config.PLAYER_AUTH_ENABLED && database
       ? createPlayerHistory(database.db)
+      : undefined,
+    config.PLAYER_AUTH_ENABLED && database
+      ? createPlayerStanding(database.db)
       : undefined,
   );
   let closing = false;

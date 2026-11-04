@@ -7,6 +7,8 @@ import type { ContentIdentity } from '@mamalik/database';
 import { ContentHttpError } from './content-auth.js';
 import { historyQuerySchema, matchHistoryPageSchema } from '@mamalik/shared';
 import type { PlayerHistory } from './player-history.js';
+import type { PlayerStanding } from './player-standing.js';
+import { personalStandingSchema, standingQuerySchema } from '@mamalik/shared';
 
 /** Process-local, single-use admission credentials. Never carries a provider JWT. */
 export function createPlayerAccess(
@@ -61,6 +63,7 @@ export function installPlayerAccess(
   app: Application,
   access?: PlayerAccess,
   history?: PlayerHistory,
+  standing?: PlayerStanding,
 ) {
   const router = express.Router();
   app.use('/player', router);
@@ -119,7 +122,35 @@ export function installPlayerAccess(
       }
     },
   );
-  let historyReads = 0;
+  let activeReads = 0;
+  router.get('/standing', async (request, response) => {
+    if (!standing) {
+      response.status(404).json({ error: 'STANDING_DISABLED' });
+      return;
+    }
+    if (!standingQuerySchema.safeParse(request.query).success) {
+      response.status(400).json({ error: 'INVALID_STANDING_QUERY' });
+      return;
+    }
+    // The aggregate and history endpoints share the same eight-read budget.
+    if (activeReads >= 8) {
+      response.status(503).json({ error: 'STANDING_UNAVAILABLE' });
+      return;
+    }
+    activeReads++;
+    try {
+      const identity = await access!.verify(request.headers.authorization);
+      response.json(personalStandingSchema.parse(await standing(identity)));
+    } catch (error) {
+      const status =
+        error instanceof ContentHttpError && error.status === 401 ? 401 : 503;
+      response.status(status).json({
+        error: status === 401 ? 'UNAUTHENTICATED' : 'STANDING_UNAVAILABLE',
+      });
+    } finally {
+      activeReads--;
+    }
+  });
   router.get('/history', async (request, response) => {
     if (!history) {
       response.status(404).json({ error: 'HISTORY_DISABLED' });
@@ -130,11 +161,11 @@ export function installPlayerAccess(
       response.status(400).json({ error: 'INVALID_HISTORY_QUERY' });
       return;
     }
-    if (historyReads >= 8) {
+    if (activeReads >= 8) {
       response.status(503).json({ error: 'HISTORY_UNAVAILABLE' });
       return;
     }
-    historyReads++;
+    activeReads++;
     try {
       const identity = await access!.verify(request.headers.authorization);
       response.json(
@@ -158,7 +189,7 @@ export function installPlayerAccess(
               : 'HISTORY_UNAVAILABLE',
       });
     } finally {
-      historyReads--;
+      activeReads--;
     }
   });
   router.use(

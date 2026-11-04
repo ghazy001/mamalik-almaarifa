@@ -28,7 +28,14 @@ export default function HistoryPage() {
       </header>
       <main id="main">
         {enabled ? (
-          <HistoryPanel />
+          <>
+            <p>
+              <Link href="/standing" className="content-back">
+                ترتيبي الشخصي ←
+              </Link>
+            </p>
+            <HistoryPanel />
+          </>
         ) : (
           <section className="history-panel content-empty">
             <h1>سجل المباريات غير متاح حاليًا</h1>

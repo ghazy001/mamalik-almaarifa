@@ -270,3 +270,5 @@ export const clockReplySchema = z.strictObject({
   serverNow: z.number().finite().nonnegative(),
 });
 export type RoomSnapshot = z.infer<typeof roomSnapshotSchema>;
+export { personalStandingSchema, standingQuerySchema } from './standing.js';
+export type { PersonalStanding } from './standing.js';

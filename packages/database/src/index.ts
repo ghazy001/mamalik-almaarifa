@@ -1,4 +1,9 @@
 export { openDatabase, databaseUrlSchema } from './client.js';
+export {
+  BASIC_RANKING_POLICY,
+  rankingContributions,
+} from './ranking-policy.js';
+export { createBasicRankingRepository } from './basic-ranking.js';
 export { migrateDatabase } from './migrate.js';
 export { questionContentSchema, ContentError } from './content.js';
 export type { QuestionContent } from './content.js';

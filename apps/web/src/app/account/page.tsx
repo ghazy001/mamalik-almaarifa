@@ -29,6 +29,10 @@ export default function PlayerAccountPage() {
             <Link href="/history" className="content-back">
               سجل مبارياتي ←
             </Link>
+            {' · '}
+            <Link href="/standing" className="content-back">
+              ترتيبي الشخصي ←
+            </Link>
           </p>
         )}
         <SignIn enabled={enabled} player />

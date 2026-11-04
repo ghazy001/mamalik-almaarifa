@@ -367,6 +367,14 @@ it('starts the standalone account-enabled service and commits its private bindin
     });
     expect(history.status).toBe(200);
     expect(await history.json()).toMatchObject({ items: expect.any(Array) });
+    const standing = await fetch('http://127.0.0.1:49005/player/standing', {
+      headers: { Authorization: `Bearer ${await auth.token(subject)}` },
+    });
+    expect(standing.status).toBe(200);
+    expect(await standing.json()).toMatchObject({
+      policyVersion: 'basic-v1',
+      position: null,
+    });
     child.kill('SIGTERM');
     expect(await exited).toBe(0);
     expect(

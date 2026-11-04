@@ -1,4 +1,9 @@
 export const CONTENT_ACCOUNTS = {
+  standingPlayer: {
+    id: '00000000-0000-4000-8000-000000000007',
+    email: 'standing@fixture.invalid',
+    password: 'Fixture-only-password-2026!',
+  },
   historian: {
     id: '00000000-0000-4000-8000-000000000005',
     email: 'history@fixture.invalid',

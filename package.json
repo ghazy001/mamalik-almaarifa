@@ -23,7 +23,8 @@
     "db:migrate": "pnpm --filter @mamalik/database db:migrate",
     "content": "pnpm --filter @mamalik/question-fixtures... build && pnpm --filter @mamalik/database content",
     "test:players": "pnpm --filter @mamalik/game-server... build && pnpm --filter @mamalik/game-server test:players",
-    "test:history": "pnpm --filter @mamalik/game-server... build && pnpm --filter @mamalik/game-server test:history"
+    "test:history": "pnpm --filter @mamalik/game-server... build && pnpm --filter @mamalik/game-server test:history",
+    "test:standing": "pnpm --filter @mamalik/game-server... build && pnpm --filter @mamalik/game-server test:standing"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

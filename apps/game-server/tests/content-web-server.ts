@@ -14,6 +14,8 @@ import { createPlayerAccess } from '../src/player-access.js';
 import { createResultWriter } from '../src/result-writer.js';
 import { createPlayerHistory } from '../src/player-history.js';
 import { finishedArchive } from './support/result-fixture.js';
+import { createPlayerStanding } from '../src/player-standing.js';
+import { rankingArchive, rankingQuestion } from './support/ranking-fixture.js';
 const url = process.env.DATABASE_URL;
 if (!url || !/^\/mamalik_test_[0-9a-f]{32}$/.test(new URL(url).pathname))
   throw new Error('Use pnpm test:content-web');
@@ -24,6 +26,40 @@ const auth = await startAuthFixture({
   accounts: Object.values(CONTENT_ACCOUNTS),
 });
 const access = createAccessRepository(database.db);
+const standingQuestion = await createQuestionRepository(
+  database.db,
+).createDraft(rankingQuestion, 'standing-fixture-editor');
+await createQuestionRepository(database.db).approve(
+  standingQuestion.questionId,
+  1,
+  'standing-fixture-reviewer',
+  'Test only',
+);
+await createQuestionRepository(database.db).publish(
+  standingQuestion.questionId,
+  1,
+  'standing-fixture-publisher',
+);
+await createMatchResultRepository(database.db).write(
+  rankingArchive('m_browser_standing', standingQuestion.questionId),
+  [
+    {
+      playerId: 'p_teal',
+      issuer: auth.issuer,
+      subject: CONTENT_ACCOUNTS.standingPlayer.id,
+    },
+    {
+      playerId: 'p_blue',
+      issuer: auth.issuer,
+      subject: CONTENT_ACCOUNTS.editor.id,
+    },
+    {
+      playerId: 'p_gold',
+      issuer: auth.issuer,
+      subject: CONTENT_ACCOUNTS.reviewer.id,
+    },
+  ],
+);
 for (let index = 0; index < 21; index++)
   await createMatchResultRepository(database.db).write(
     {
@@ -115,6 +151,7 @@ const service = createGameService(
     requestsPerMinute: 1000,
   },
   createPlayerHistory(database.db),
+  createPlayerStanding(database.db),
 );
 await service.listen(2574, '127.0.0.1');
 let closing = false;

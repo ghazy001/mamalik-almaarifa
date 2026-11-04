@@ -1,0 +1,11 @@
+# ADR 0014 — Private cumulative standing from immutable results
+
+Status: accepted by owner for the local M4 increment, implementation dated 2026-11-04.
+
+The owner approved the proposed eligibility/points defaults and private personal standing instead of a public board. Basic-v1 includes saved published-source matchmaking results with three distinct same-project accounts, normal Rules v1 configuration, at least one consumed question and CASTLES/TURN_LIMIT finishes. Sole wins award 3, joint winners each receive 1 and other placements receive 0. Equal totals share dense position; no eligible matches means unranked. Already saved eligible results count. Full policy and caveats live in M4_BASIC_RANKING.md and GAME_RULES.md.
+
+Derive totals and position from the immutable result/participant rows in one SQL statement. This avoids an increment balance, update races, retry double counting and a backfill migration. Rank only the verified Auth project and return only the viewer's strict summary. The response identifies basic-v1; later point/eligibility changes require an explicit reviewed policy version rather than silently changing its meaning. PostgreSQL aggregation still has a cost; request/concurrency/statement budgets are safeguards, not measured public capacity.
+
+Reuse fresh game-service account verification and the Next HttpOnly-session proxy. Add no identity query selectors, public aliases, peer records or editorial-role requirement. History and standing share the existing eight-read cap. Arabic UI stores one summary in memory, clears it before revalidation and rejects late responses; returning focus refreshes. Already delivered idle views are not instantly erased by remote revocation.
+
+Rules v1, Protocol v3 and result-write semantics remain unchanged. No new migration, mutable score table, MMR, ranked queue, season, public profile or cloud service is introduced. Published source is not proof of secret/release-quality questions; excluded LAST_PLAYER results do not establish that other outcomes had no earlier forfeit. Distinct verified accounts are not proof of distinct humans. A reviewed release bank, fairness/abuse review, hosted verification and capacity work remain release requirements.

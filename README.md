@@ -1,6 +1,6 @@
 # ممالك المعرفة · Mamalik Al-Ma'rifa
 
-Original Arabic-first strategy trivia. The M1 foundation and M2 offline match are implemented: deterministic rules, strict protocol schemas, an RTL web shell, a standalone Colyseus health service, and original interactive Phaser terrain. Play a complete local match against two scripted opponents at `/play`, or find two real guests through basic matchmaking or private invitations at `/online`. M3 is complete for the documented local guest-match scope. M4 includes PostgreSQL question storage, a Supabase-authenticated content API, and an Arabic sign-in/editorial workspace. Opt-in published banks, durable result archives and existing-account player admission are implemented. Private personal history is implemented; a reviewed release question set and basic ranking remain.
+Original Arabic-first strategy trivia. The M1 foundation and M2 offline match are implemented: deterministic rules, strict protocol schemas, an RTL web shell, a standalone Colyseus health service, and original interactive Phaser terrain. Play a complete local match against two scripted opponents at `/play`, or find two real guests through basic matchmaking or private invitations at `/online`. M3 is complete for the documented local guest-match scope. M4 includes PostgreSQL question storage, a Supabase-authenticated content API, and an Arabic sign-in/editorial workspace. Opt-in published banks, durable result archives and existing-account player admission are implemented. Private personal history and basic personal standing are implemented; a reviewed release question set and hosted verification remain.
 
 ## Local setup
 
@@ -70,7 +70,7 @@ For an existing Supabase project, set `CONTENT_ADMIN_ENABLED=true`, `SUPABASE_UR
 
 Open `/signin`, sign in, and use the role-appropriate draft, revision, review, publication and retirement controls. A different account must review a question. The server verifies permissions on every request, including retries; profile metadata cannot grant access. Session tokens remain in HttpOnly cookies and server requests. Uncertain writes keep the same idempotency key in memory until retried; reloading loses unsaved/pending form state, so inspect the revision list before starting a replacement operation.
 
-To verify without cloud credentials, first `pnpm build`, then `pnpm test:content-web` with the local PostgreSQL bootstrap URL. Each layout gets an isolated random database and fresh signed local Auth/HTTP fixtures; twelve desktop/mobile/landscape journeys cover editorial work, player admission and history. Isolation keeps independent runs within the unchanged sign-in budget. This does not validate hosted Supabase. Without configuration the portal clearly shows an unavailable state and guest play still works. See [setup, manual workflow, verification and limits](docs/M4_EDITORIAL_UI.md) and [ADR 0009](docs/ADR/0009-server-cookie-editorial-session.md).
+To verify without cloud credentials, first `pnpm build`, then `pnpm test:content-web` with the local PostgreSQL bootstrap URL. Each layout gets an isolated random database and fresh signed local Auth/HTTP fixtures; fifteen desktop/mobile/landscape journeys cover editorial work, player admission and history. Isolation keeps independent runs within the unchanged sign-in budget. This does not validate hosted Supabase. Without configuration the portal clearly shows an unavailable state and guest play still works. See [setup, manual workflow, verification and limits](docs/M4_EDITORIAL_UI.md) and [ADR 0009](docs/ADR/0009-server-cookie-editorial-session.md).
 
 ## Published online question banks (M4 fourth slice)
 
@@ -88,13 +88,19 @@ Run `pnpm test:results` with the local PostgreSQL bootstrap URL for nine isolate
 
 Existing Supabase accounts can opt into verified room admission through `/account`. On the game server enable PLAYER_AUTH_ENABLED and MATCH_RESULTS_ENABLED with DATABASE_URL/Supabase URL/key, after `pnpm db:migrate`. On Next enable WEB_AUTH_ENABLED and WEB_PLAYER_AUTH_ENABLED with the existing origin/Supabase/upstream settings above. CONTENT_ADMIN_URL must point to the same service as GAME_SERVER_URL; it also supplies the server-side player ticket endpoint. Editorial API access may remain disabled. Restart both services.
 
-Sign in, select **اللعب بحسابي**, then create/join/search. Guests can share the room, but one account can hold only one seat per room, including during reconnect grace. Provider tokens remain HttpOnly/server-side; room tickets are single-use and short-lived. Private participant rows commit with results. Sign-out does not forfeit an active seat. Signup, recovery and ranking remain future work; personal history is described below. Run `pnpm test:players` or the expanded `pnpm test:content-web`; see [setup, rules, limits and verification](docs/M4_PLAYER_ADMISSION.md) and [ADR 0012](docs/ADR/0012-verified-player-seat-binding.md).
+Sign in, select **اللعب بحسابي**, then create/join/search. Guests can share the room, but one account can hold only one seat per room, including during reconnect grace. Provider tokens remain HttpOnly/server-side; room tickets are single-use and short-lived. Private participant rows commit with results. Sign-out does not forfeit an active seat. Signup and recovery remain future work; personal history and standing are described below. Run `pnpm test:players` or the expanded `pnpm test:content-web`; see [setup, rules, limits and verification](docs/M4_PLAYER_ADMISSION.md) and [ADR 0012](docs/ADR/0012-verified-player-seat-binding.md).
 
 ## Personal match history (M4 seventh slice)
 
 With the existing player-account settings enabled, run `pnpm db:migrate` for the history lookup index and restart after rebuilding. Sign in at `/account`, enter and finish a game with account admission, then open `/history`. Only committed results bound to the verified account/project appear. Twenty-record pages show the player's result/stats and saved time; guest matches are not retroactively linked. No ranking or public profile is included.
 
 Run `pnpm test:history` with the local bootstrap database URL; `pnpm test:content-web` also covers real authorized history on desktop/mobile/landscape. See [setup, API, pagination, limits and evidence](docs/M4_PERSONAL_HISTORY.md) and [ADR 0013](docs/ADR/0013-owner-scoped-match-history.md).
+
+## Private personal standing (M4 eighth slice)
+
+With the existing account/history settings enabled, sign in at `/account` and open `/standing`. No new migration or secret is needed. Basic-v1 awards 3 points for a sole win, 1 to each shared winner and 0 otherwise; equal totals share dense positions. Only saved published-question matchmaking matches with three verified accounts from the same project, standard Rules v1 and CASTLES/TURN_LIMIT finishes after at least one question count. Previously saved eligible games count. Guests, private/development/shortened games, aborts and LAST_PLAYER finishes remain practice history.
+
+The page exposes only your totals/position and shows unranked honestly. This is cumulative standing, not a public leaderboard, MMR or competitive certification. Run `pnpm test:standing` with the local test bootstrap URL, or `pnpm build` then `pnpm test:content-web` for the Arabic browser journeys. See [policy, setup, API, limits and evidence](docs/M4_BASIC_RANKING.md) and [ADR 0014](docs/ADR/0014-basic-ranking.md).
 
 ## Play a local match
 
@@ -123,6 +129,7 @@ pnpm test:room-bank # published revisions + two real three-client matches
 pnpm test:results   # transactional result archives + real three-client save status
 pnpm test:players   # verified account admission + private durable bindings
 pnpm test:history   # owner-scoped history + microsecond-safe pagination
+pnpm test:standing  # eligibility, ties, project isolation, retries and private totals
 pnpm build
 pnpm simulate
 pnpm --filter @mamalik/web exec playwright install chromium
@@ -142,13 +149,13 @@ apps/game-server/     Private/queued Colyseus rooms, timers, reconnect, /health,
 packages/game-core/   Pure state machine, topology, battle/scoring rules, simulation
 packages/shared/      Zod commands, events, public-state contract, protocol errors
 packages/question-fixtures/ Development questions for server and explicit offline demo
-packages/database/    Server-only Drizzle schema, SQL migrations, content repository/CLI
+packages/database/    Server-only Drizzle schema, SQL migrations, content/history/standing repositories and CLI
 packages/config/      Shared strict TypeScript configuration
 docs/                 Design, exact rules, architecture, protocol, milestones, ADR
 .github/workflows/    Reproducible quality gates
 ```
 
-Database-backed content tooling, identity/permissions and the protected editorial workspace are implemented. Published banks and optional durable result archives are also implemented. Verified account admission is implemented. Authorized personal history is implemented. A reviewed release question set, basic ranking and Howler remain future slices. Private guest rooms and basic guest matchmaking are implemented; bounded network recovery is verified. Competitive latency fairness and public-release operations remain explicit release gates. Phaser powers public snapshot rendering for the preview and offline match. See [rules and reversible assumptions](docs/GAME_RULES.md), [architecture](docs/ARCHITECTURE.md), [protocol](docs/PROTOCOL.md) and [milestones](docs/MILESTONES.md). Preserve `AGENTS.md` as the engineering charter.
+Database-backed content tooling, identity/permissions and the protected editorial workspace are implemented. Published banks and optional durable result archives are also implemented. Verified account admission is implemented. Authorized personal history and private basic standing are implemented. A reviewed release question set and Howler remain future slices. Private guest rooms and basic guest matchmaking are implemented; bounded network recovery is verified. Competitive latency fairness and public-release operations remain explicit release gates. Phaser powers public snapshot rendering for the preview and offline match. See [rules and reversible assumptions](docs/GAME_RULES.md), [architecture](docs/ARCHITECTURE.md), [protocol](docs/PROTOCOL.md) and [milestones](docs/MILESTONES.md). Preserve `AGENTS.md` as the engineering charter.
 
 ## Five concepts to learn
 

@@ -59,3 +59,11 @@ Optional server-side archives persist the core-calculated outcome and final owne
 ## Account admission (rules unchanged)
 
 Optional verified accounts and guests can share private/queued rooms. One verified issuer/subject may hold one seat per room, including during reconnect grace. Pre-match leave releases that seat; prepared-game identity remains bound for its result. Account status gives no tactical or scoring advantage. Sign-out does not forfeit a running seat, and bearer recovery keeps the existing 30-second grace without fresh provider verification. No anti-multiple-account or ranked matchmaking claim is made. See M4_PLAYER_ADMISSION.md.
+
+## Basic standing policy basic-v1 (owner-approved, match rules unchanged)
+
+Private personal standing includes saved published-source matchmaking results only when all three distinct verified accounts belong to one Auth project, the configuration is Rules v1 with 36 turns and 10/15-second windows, at least one question was consumed, and the finish reason is CASTLES or TURN_LIMIT. Early castle victories remain eligible. Private/guest/development/custom-rule games, ABORTED and LAST_PLAYER results do not contribute for anyone. Previously saved eligible results count.
+
+The saved sole winner receives 3 standing points; each joint winner receives 1; others receive 0. Equal cumulative totals share a dense position (1, 1, 2); no secondary identity/time tie-breaker exists. Accounts with eligible losses can rank at zero points; accounts with no eligible results are unranked. No in-match winner, score or deadline changes. A single statement derives the viewer's totals/position within their verified project. See M4_BASIC_RANKING.md for the authoritative eligibility/visibility policy and limits.
+
+This is not a public ranked competition or an MMR system. Existing fairness/content release gates remain. LAST_PLAYER exclusion does not prove the absence of earlier forfeits in an otherwise eligible match, and distinct accounts do not prove distinct people.

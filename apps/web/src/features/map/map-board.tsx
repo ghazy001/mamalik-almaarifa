@@ -24,7 +24,7 @@ export function MapBoard({
   onIntent: (intent: MapIntent) => void;
   effect?: MapEffect | null;
   caption?: string;
-  milestone?: 'M2' | 'M3';
+  milestone?: 'M2' | 'M3' | 'M5';
 }) {
   return (
     <section className="map-board" aria-labelledby="board-title">

@@ -46,6 +46,8 @@ The tenth slice adds `pnpm test:m4`: a combined local acceptance gate for standa
 
 ## M5 — Polish and onboarding
 
+Started independently at the owner's request on 2026-11-04 while M4 question review is explicitly deferred. `/learn` adds optional Arabic guided practice on the real map/rule core: untimed target selection, one timed public-fixture question, outcome/retry, victory guidance and full-match links. It adds no persistence, accounts or approval of private candidates. See M5_ONBOARDING.md for verification and limits. M4 remains incomplete; hosted verification and reviewed-bank gates remain.
+
 Original premium hybrid 2.5D art, opt-in controllable Howler audio, tutorial, Arabic human QA, reduced motion, mobile performance profiling and reviewed starter question bank. New testers must play without oral instructions.
 
 ## M6 — Beta, security, release

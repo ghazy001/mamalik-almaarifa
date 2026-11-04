@@ -147,6 +147,16 @@ h1 span {
   color: var(--muted);
   margin-top: 16px;
 }
+.onboarding-entry {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  color: var(--gold);
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
 .heraldry {
   position: relative;
   height: 440px;

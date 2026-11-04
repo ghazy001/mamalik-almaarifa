@@ -110,6 +110,10 @@ With the existing account/history settings enabled, sign in at `/account` and op
 
 The page exposes only your totals/position and shows unranked honestly. This is cumulative standing, not a public leaderboard, MMR or competitive certification. Run `pnpm test:standing` with the local test bootstrap URL, or `pnpm build` then `pnpm test:content-web` for the Arabic browser journeys. See [policy, setup, API, limits and evidence](docs/M4_BASIC_RANKING.md) and [ADR 0014](docs/ADR/0014-basic-ranking.md).
 
+## Learn the game
+
+Open `/learn`, or select **جديد على المملكة؟ تعلّم اللعب بخطوة قصيرة** on the home page. Choose a neighboring territory at your own pace, answer a 15-second practice question, then learn scoring/victory and continue to a full match. Canvas and keyboard/touch controls share the same rule core. Practice uses a public development question and saves no results. It can be skipped or repeated. See [behavior, timing and verification](docs/M5_ONBOARDING.md). Release-question review remains deferred at the owner's request; M4 is still incomplete.
+
 ## Play a local match
 
 Open `/play`, or choose **العب مباراة محلية** from the home page. You control فيروز against two explicitly scripted opponents. Start, select an adjacent target through the canvas or Arabic territory controls, then **ابدأ التحدّي**. Answer within 15 seconds and review the resolution/source before continuing. The map and scores update through the shared rules. Defend your lands when attacked; capture all castles or lead on score at the 36-turn limit. Results include placements and **مباراة جديدة**.

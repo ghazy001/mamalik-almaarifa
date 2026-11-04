@@ -45,6 +45,7 @@ export function BattleDialog({
   answerPending = false,
   connectionNotice = '',
   onRestore,
+  continueLabel = 'متابعة الدور التالي',
 }: {
   view: Pick<
     LocalView,
@@ -63,6 +64,7 @@ export function BattleDialog({
   answerPending?: boolean;
   connectionNotice?: string;
   onRestore?: () => void;
+  continueLabel?: string;
 }) {
   const resolved = view.state.phase === 'RESOLUTION';
   const question = resolved ? view.reveal?.question : view.state.question;
@@ -235,7 +237,7 @@ export function BattleDialog({
         )}
         {resolved && onContinue && (
           <Button className="battle-continue" onClick={onContinue}>
-            متابعة الدور التالي
+            {continueLabel}
           </Button>
         )}
         {resolved && !onContinue && (

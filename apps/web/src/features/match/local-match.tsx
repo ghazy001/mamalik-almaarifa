@@ -224,6 +224,9 @@ export function LocalMatch() {
                 أنت تقود مملكة فيروز ضد خصمين مبرمجين. اختر أرضًا مجاورة، ثم أجب
                 عن سؤال. القلعة تساوي ثلاث نقاط والأرض العادية نقطة واحدة.
               </p>
+              <Link className="onboarding-entry" href="/learn" prefetch={false}>
+                تعلّم اللعب أولًا
+              </Link>
               <Button
                 className="match-primary-action"
                 onClick={() => session.start(now())}

@@ -115,3 +115,7 @@ Evidence notes, provisional difficulty and pack digest remain authoring artifact
 ## Combined local M4 verification
 
 An uncached `pnpm test:m4` journey connects the standard room, published loader, verified tickets, result writer, PostgreSQL archive/participant references and protected history/standing HTTP reads. It checks pre-commit visibility and exact persisted results, then starts the actual compiled entrypoint against the same disposable database to verify reads after the original service stops. Default rule/timing/request budgets remain in force. The signed local Auth provider, synthetic fixture publications, loader failure and write gate are test-only; this adds no production bypass, public API or private-bank approval. See M4_ACCEPTANCE.md for scope and remaining human/hosted gates.
+
+## M5 guided local practice
+
+A dedicated per-instance explicit-time web adapter drives a one-turn game-core state and projects sanitized map/question views. Target-selection time is intentionally frozen for reading, while the question starts a normal elapsed deadline. The React route supplies monotonic time, reuses the Phaser/DOM map and native battle dialog, and emits intents only. Map projection identity stays stable during countdown-only updates. Practice uses an existing public fixture and never calls multiplayer, identity or persistence services. No competitive rules/protocol change. See M5_ONBOARDING.md for the owner's question-review deferral and remaining gates.

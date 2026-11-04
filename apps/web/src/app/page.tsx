@@ -75,6 +75,10 @@ export default function Home() {
             <p className="availability">
               مباراة محلية أو لعب جماعي · ثلاثة ضيوف دون حسابات
             </p>
+            <Link className="onboarding-entry" href="/learn" prefetch={false}>
+              جديد على المملكة؟ تعلّم اللعب بخطوة قصيرة{' '}
+              <span aria-hidden="true">←</span>
+            </Link>
           </div>
           <div className="heraldry" aria-hidden="true">
             <div className="orbit orbit-one" />

@@ -67,3 +67,7 @@ Private personal standing includes saved published-source matchmaking results on
 The saved sole winner receives 3 standing points; each joint winner receives 1; others receive 0. Equal cumulative totals share a dense position (1, 1, 2); no secondary identity/time tie-breaker exists. Accounts with eligible losses can rank at zero points; accounts with no eligible results are unranked. No in-match winner, score or deadline changes. A single statement derives the viewer's totals/position within their verified project. See M4_BASIC_RANKING.md for the authoritative eligibility/visibility policy and limits.
 
 This is not a public ranked competition or an MMR system. Existing fairness/content release gates remain. LAST_PLAYER exclusion does not prove the absence of earlier forfeits in an otherwise eligible match, and distinct accounts do not prove distinct people.
+
+## Optional onboarding practice
+
+`/learn` is an explicitly local one-question teaching exercise, not a standard or saved match. It freezes selection time while the player reads, then uses the normal 15-second answer deadline. Core adjacency, capture and resolution remain authoritative within the local exercise; its one-turn configuration cannot contribute to history or basic standing. Incorrect/expired answers can be followed by a fresh retry, never a replacement answer within the same challenge. Complete local/online matches keep the normal rules above. See M5_ONBOARDING.md.

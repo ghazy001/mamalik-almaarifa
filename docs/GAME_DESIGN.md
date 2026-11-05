@@ -37,3 +37,5 @@ Practice, local and online game pages now offer original short tonal cues for yo
 ## Responsive rendering quality
 
 Equivalent public map snapshots now preserve terrain and ongoing effects; the renderer explicitly caps its intended cadence at 30 frames per second. This does not change turn or answer deadlines. Quiz text scales with user text settings, and long Arabic/mixed labels wrap inside the native dialog. Repeatable narrow-text and socket-driven rendering checks accompany observational browser profiles. Physical-device performance and human understanding remain unverified; see M5_MOBILE_QUALITY.md.
+
+Static WebGL artwork now uses a fixed supersampled cache, preserving independent target input, selection outlines and conquest effects. Actual captures refresh the artwork, and graphics recovery shows the latest public state. Canvas keeps direct drawing. Same-host observations show fewer steady draw submissions, with an explicit texture-memory cost; this does not certify phone performance. See M5_TERRAIN_CACHE.md before increasing the art budget.

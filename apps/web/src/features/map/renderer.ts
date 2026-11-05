@@ -12,6 +12,9 @@ import type {
 type Graphics = Phaser.GameObjects.Graphics;
 type Vertex = readonly [number, number];
 const gold = 0xddbc78;
+// Offscreen framebuffers lack the main canvas's antialiasing. Supersample once
+// per visual change; keep the cache independent of CSS size / device DPR.
+const ARTWORK_SCALE = 2;
 
 function polygon(
   g: Graphics,
@@ -289,6 +292,7 @@ export function createMapRenderer(
   class KingdomScene extends Phaser.Scene {
     private overlay: Graphics | null = null;
     private initialized = false;
+    private cacheEnabled = true;
     constructor() {
       super('kingdom-map');
     }
@@ -296,6 +300,20 @@ export function createMapRenderer(
     create() {
       if (disposed) return;
       this.initialized = true;
+      // Dynamic textures lose their pixels on context loss. Rebuild from the
+      // latest public projection after Phaser restores its own GL resources.
+      this.game.renderer.on(
+        Phaser.Renderer.Events.RESTORE_WEBGL,
+        this.paintMap,
+        this,
+      );
+      this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+        this.game.renderer.off(
+          Phaser.Renderer.Events.RESTORE_WEBGL,
+          this.paintMap,
+          this,
+        );
+      });
       this.paintMap();
       this.playEffect();
       this.input.on('gameout', () =>
@@ -309,6 +327,8 @@ export function createMapRenderer(
 
     paintMap() {
       if (!this.initialized || disposed) return;
+      if ('contextLost' in this.game.renderer && this.game.renderer.contextLost)
+        return;
       this.tweens.killAll();
       this.children.removeAll(true);
       const sea = this.add.graphics();
@@ -356,6 +376,9 @@ export function createMapRenderer(
           model.territories.indexOf(node),
           color ? Number.parseInt(color.slice(1), 16) : null,
         );
+      }
+      this.cacheArtwork();
+      for (const node of model.territories) {
         const hit = this.add.zone(node.x, node.y, 126, 68).setDepth(node.y + 2);
         hit.setInteractive(
           new Phaser.Geom.Polygon([63, 0, 126, 34, 63, 68, 0, 34]),
@@ -376,6 +399,37 @@ export function createMapRenderer(
       }
       this.overlay = this.add.graphics().setDepth(1000);
       this.drawSelection();
+    }
+
+    private cacheArtwork() {
+      // Canvas keeps the direct renderer. Only static artwork is baked; input,
+      // selection and transient effects remain independent scene objects.
+      if (!this.cacheEnabled || this.game.renderer.type !== Phaser.WEBGL)
+        return;
+      this.children.depthSort();
+      const artwork = [...this.children.getChildren()];
+      let board: Phaser.GameObjects.RenderTexture | null = null;
+      try {
+        board = this.add
+          .renderTexture(
+            0,
+            0,
+            WORLD_WIDTH * ARTWORK_SCALE,
+            WORLD_HEIGHT * ARTWORK_SCALE,
+          )
+          .setOrigin(0)
+          .setScale(1 / ARTWORK_SCALE);
+        board.camera.setOrigin(0, 0).setZoom(ARTWORK_SCALE);
+        // Phaser 4 buffers draw commands. Flush before destroying their inputs.
+        board.draw(artwork).render();
+      } catch {
+        board?.destroy();
+        this.cacheEnabled = false;
+        console.warn('Map texture cache unavailable; using direct artwork.');
+        return;
+      }
+      for (const object of artwork) object.destroy();
+      // Scene removal destroys this unsaved RenderTexture and its GPU texture.
     }
 
     playEffect() {

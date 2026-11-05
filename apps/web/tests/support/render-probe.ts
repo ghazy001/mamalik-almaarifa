@@ -5,6 +5,7 @@ interface RenderProbe {
   longTasks: { start: number; duration: number }[];
   largestContentfulPaintMs: number | null;
   canvasClears: number;
+  drawCalls: number;
   selectionFrameMs: number[];
 }
 declare global {
@@ -25,6 +26,7 @@ export async function observeRendering(page: Page, cpuRate: number) {
       longTasks: [],
       largestContentfulPaintMs: null,
       canvasClears: 0,
+      drawCalls: 0,
       selectionFrameMs: [],
     };
     const draw = CanvasRenderingContext2D.prototype.fillText;
@@ -46,6 +48,18 @@ export async function observeRendering(page: Page, cpuRate: number) {
           window.mamalikRenderProbe.canvasClears++;
         return clear.apply(this, args);
       };
+      for (const method of ['drawArrays', 'drawElements'] as const) {
+        const draw = prototype[method];
+        prototype[method] = function (mode, count, type, offset?: number) {
+          if (
+            this.canvas instanceof HTMLCanvasElement &&
+            this.canvas.matches('.phaser-surface canvas')
+          )
+            window.mamalikRenderProbe.drawCalls++;
+          // drawArrays has three arguments; its extra argument is ignored.
+          return draw.call(this, mode, count, type, offset!);
+        };
+      }
     }
     if (PerformanceObserver.supportedEntryTypes.includes('longtask'))
       new PerformanceObserver((list) => {
@@ -77,11 +91,13 @@ export async function sampleFrames(page: Page) {
         maxMs: number;
         elapsedMs: number;
         canvasClears: number;
+        drawCalls: number;
       }>((resolve) => {
         const intervals: number[] = [];
         let previous: number | null = null;
         const started = performance.now();
         const clears = window.mamalikRenderProbe.canvasClears;
+        const draws = window.mamalikRenderProbe.drawCalls;
         const frame = (now: number) => {
           if (previous !== null) intervals.push(now - previous);
           previous = now;
@@ -94,6 +110,7 @@ export async function sampleFrames(page: Page) {
               maxMs: intervals.at(-1)!,
               elapsedMs: performance.now() - started,
               canvasClears: window.mamalikRenderProbe.canvasClears - clears,
+              drawCalls: window.mamalikRenderProbe.drawCalls - draws,
             });
           }
         };

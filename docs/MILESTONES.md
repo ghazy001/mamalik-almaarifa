@@ -48,7 +48,9 @@ The tenth slice adds `pnpm test:m4`: a combined local acceptance gate for standa
 
 Started independently at the owner's request on 2026-11-04 while M4 question review is explicitly deferred. `/learn` adds optional Arabic guided practice on the real map/rule core: untimed target selection, one timed public-fixture question, outcome/retry, victory guidance and full-match links. It adds no persistence, accounts or approval of private candidates. A second slice adds original opt-in Howler cues to practice/local/online pages with Arabic mute/volume controls inside and outside question dialogs, cancellation and silent background/reconnect handling. A third slice avoids equivalent-map rebuilds, enforces the intended render cap, fixes narrow enlarged-text quiz reflow and records repeatable browser work/timing samples. See M5_ONBOARDING.md, M5_AUDIO.md and M5_MOBILE_QUALITY.md for verification and limits. M4 remains incomplete; hosted verification and reviewed-bank gates remain.
 
-Remaining: original premium hybrid 2.5D art, physical-device audio/listening QA, observed newcomer validation, Arabic human QA, reduced-motion/device performance profiling and the deferred reviewed starter question bank. New testers must play without oral instructions.
+A fourth slice caches static WebGL artwork, preserves independent interaction/effects, recovers from real graphics context loss and keeps Canvas direct rendering. Production-browser observations compare draw submissions before/after; fixed-size supersampling trades bounded memory for lower steady drawing work. See M5_TERRAIN_CACHE.md and ADR 0018 for evidence and limits.
+
+Remaining: original premium hybrid 2.5D art, physical-device audio/listening QA, observed newcomer validation, Arabic human QA, reduced-motion/device performance and memory profiling and the deferred reviewed starter question bank. New testers must play without oral instructions.
 
 ## M6 — Beta, security, release
 

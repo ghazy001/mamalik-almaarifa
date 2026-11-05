@@ -74,6 +74,8 @@ jobs:
             apps/web/test-results/**/sync-profile.json
             apps/web/test-results/**/reflow.json
             apps/web/test-results/**/quiz-narrow-*.png
+            apps/web/test-results/**/board.png
+            apps/web/test-results/**/terrain-*.png
       - run: pnpm test:content-web
         env:
           DATABASE_TEST_ADMIN_URL: postgresql://postgres:local-ci-only@127.0.0.1:5432/postgres

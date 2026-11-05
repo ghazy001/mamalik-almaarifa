@@ -46,6 +46,12 @@ test('production rendering profile keeps terrain stable across real room syncs',
       .toBe(index + 1);
   }
   const mapFrames = await sampleFrames(page);
+  expect(mapFrames.canvasClears).toBeGreaterThan(0);
+  expect(mapFrames.drawCalls).toBeGreaterThan(0);
+  expect(mapFrames.drawCalls / mapFrames.canvasClears).toBeLessThanOrEqual(4);
+  await page.locator('.phaser-surface canvas').screenshot({
+    path: info.outputPath('board.png'),
+  });
   const mapReport = await page.evaluate(
     ({ rate, mapReadyAt, mapFrames }) => ({
       cpuSlowdown: rate,
@@ -109,6 +115,9 @@ test('production rendering profile keeps terrain stable across real room syncs',
       timeout: 10000,
     });
     const frames = await sampleFrames(page);
+    expect(frames.canvasClears).toBeGreaterThan(0);
+    expect(frames.drawCalls).toBeGreaterThan(0);
+    expect(frames.drawCalls / frames.canvasClears).toBeLessThanOrEqual(4);
     const report = await page.evaluate(
       ({ rate, readyAt, frames, start }) => ({
         cpuSlowdown: rate,
